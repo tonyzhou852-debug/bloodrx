@@ -38,7 +38,8 @@ app.post("/api/analyze", async (req, res) => {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 8096,
-        messages: req.body.messages,
+system: "You are a clinical analysis assistant. Return ONLY a valid JSON object. Be concise — keep findings to the 10 most important markers only, antibiotics to maximum 3 recommendations, and keep all text fields under 200 characters each. Never truncate the JSON — always close all brackets properly.",
+messages: req.body.messages,
       }),
     });
 
