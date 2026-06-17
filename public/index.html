@@ -5,24 +5,28 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BloodRx Clinical Analyzer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap&font-display=swap" rel="stylesheet">
 <style>
-/* ─── Reset & Base ─────────────────────────────────────────── */
+/* ─── Reset & Tokens ───────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --ink:        #0d1117;
-  --ink-2:      #3a3f47;
+  --ink:        #111827;
+  --ink-2:      #374151;
   --ink-3:      #6b7280;
   --ink-4:      #9ca3af;
   --border:     #e5e7eb;
   --border-2:   #d1d5db;
   --surface:    #ffffff;
-  --bg:         #f4f5f7;
-  --bg-2:       #f9fafb;
-  --accent:     #2563eb;
-  --accent-2:   #1d4ed8;
-  --accent-bg:  #eff6ff;
-  --accent-bd:  #bfdbfe;
+  --bg:         #f7f8f9;
+  --bg-2:       #f3f4f6;
+
+  /* Brand — deep clinical red */
+  --brand:      #b91c1c;
+  --brand-dark: #991b1b;
+  --brand-bg:   #fff1f1;
+  --brand-bd:   #fecaca;
+
+  /* Semantic */
   --green:      #059669;
   --green-bg:   #ecfdf5;
   --green-bd:   #a7f3d0;
@@ -32,26 +36,49 @@
   --red:        #dc2626;
   --red-bg:     #fef2f2;
   --red-bd:     #fecaca;
+  --blue:       #2563eb;
+  --blue-bg:    #eff6ff;
+  --blue-bd:    #bfdbfe;
   --purple:     #7c3aed;
   --purple-bg:  #f5f3ff;
   --purple-bd:  #ddd6fe;
+
   --radius-sm:  6px;
   --radius:     10px;
   --radius-lg:  14px;
   --radius-xl:  18px;
   --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
-  --shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-md:  0 4px 6px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.04);
+  --shadow:     0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+
+  /* Animation tokens — §7 */
+  --t-fast: 150ms;
+  --t-mid:  250ms;
+  --ease-out: cubic-bezier(0,0,.2,1);
 }
+
+/* §7: reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* §1: skip link */
+.skip-link {
+  position: absolute; top: -100px; left: 12px;
+  background: var(--brand); color: #fff;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500; z-index: 9999; text-decoration: none;
+}
+.skip-link:focus { top: 12px; }
+
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px; line-height: 1.6;
+  font-size: 16px; line-height: 1.6;
   color: var(--ink); background: var(--bg);
-  min-height: 100vh; -webkit-font-smoothing: antialiased;
+  min-height: 100dvh; -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Top bar ───────────────────────────────────────────────── */
+/* ─── Nav ───────────────────────────────────────────────────── */
 .topbar {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -60,49 +87,72 @@ body {
 }
 .topbar-inner {
   max-width: 1100px; margin: 0 auto;
-  padding: 0 1.5rem;
-  height: 58px;
+  padding: 0 1.5rem; height: 60px;
   display: flex; align-items: center; gap: 1rem;
 }
 .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
 .logo-icon {
   width: 34px; height: 34px; border-radius: 9px;
-  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  background: var(--brand);
   display: flex; align-items: center; justify-content: center;
-  font-size: 17px; box-shadow: 0 2px 6px rgba(37,99,235,.35);
 }
+.logo-icon svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .logo-text { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -.3px; }
-.logo-text span { color: var(--accent); }
+.logo-text em { color: var(--brand); font-style: normal; }
 .topbar-tag {
   font-size: 10px; font-weight: 600; letter-spacing: .05em;
-  background: var(--accent-bg); color: var(--accent);
-  border: 1px solid var(--accent-bd); border-radius: 4px;
-  padding: 2px 7px; text-transform: uppercase;
+  background: var(--brand-bg); color: var(--brand);
+  border: 1px solid var(--brand-bd); border-radius: 4px;
+  padding: 2px 8px; text-transform: uppercase;
 }
 .topbar-right {
-  margin-left: auto; display: flex; align-items: center; gap: 12px;
+  margin-left: auto; display: flex; align-items: center; gap: 10px;
   font-size: 12px; color: var(--ink-3);
 }
-.topbar-right .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
+.topbar-right .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); display: inline-block;
+}
+
+/* ─── Hero ──────────────────────────────────────────────────── */
+.hero {
+  background: var(--ink);
+  padding: 48px 24px 44px; text-align: center;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase; color: #7fa8c4; margin-bottom: 18px;
+}
+.hero h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(28px, 5vw, 38px); font-weight: 400;
+  line-height: 1.15; letter-spacing: -.01em;
+  margin-bottom: 12px; color: #fff;
+}
+.hero h1 em { color: #f4a99a; font-style: normal; }
+.hero-sub {
+  font-size: 16px; color: #8aafc9;
+  max-width: 500px; margin: 0 auto 28px; line-height: 1.65;
+}
+.capability-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; color: #8aafc9;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px; padding: 5px 13px;
+}
+.chip svg { width: 12px; height: 12px; flex-shrink: 0; }
 
 /* ─── Page layout ───────────────────────────────────────────── */
 .page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 
-/* ─── Page heading ──────────────────────────────────────────── */
+/* ─── Page heading (shown above form) ──────────────────────── */
 .page-heading { margin-bottom: 1.75rem; }
-.page-heading h1 { font-size: 24px; font-weight: 700; letter-spacing: -.4px; color: var(--ink); }
+.page-heading h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; color: var(--ink); }
 .page-heading p  { font-size: 14px; color: var(--ink-3); margin-top: 4px; }
-.capability-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
-.chip {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 500; color: var(--ink-2);
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 20px; padding: 3px 10px;
-  box-shadow: var(--shadow-sm);
-}
-.chip svg { width: 12px; height: 12px; color: var(--accent); }
 
-/* ─── Section card ──────────────────────────────────────────── */
+/* ─── Section cards ─────────────────────────────────────────── */
 .section-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -114,64 +164,90 @@ body {
 .section-header {
   padding: 1.1rem 1.5rem;
   border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 12px;
   background: var(--bg-2);
 }
 .section-header .icon-wrap {
-  width: 30px; height: 30px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px;
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.icon-blue   { background: var(--accent-bg); }
+.icon-wrap svg { width: 17px; height: 17px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-blue   { background: var(--blue-bg); }
+.icon-blue svg   { stroke: var(--blue); }
 .icon-green  { background: var(--green-bg); }
+.icon-green svg  { stroke: var(--green); }
 .icon-amber  { background: var(--amber-bg); }
+.icon-amber svg  { stroke: var(--amber); }
 .icon-purple { background: var(--purple-bg); }
-.section-header h2 { font-size: 13px; font-weight: 600; color: var(--ink); }
-.section-header p  { font-size: 12px; color: var(--ink-3); margin-top: 1px; }
+.icon-purple svg { stroke: var(--purple); }
+.section-header h2 { font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -.01em; }
+.section-header p  { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
 .section-body { padding: 1.5rem; }
 
 /* ─── Form fields ───────────────────────────────────────────── */
 .field-group { margin-bottom: 1.1rem; }
 .field-group:last-child { margin-bottom: 0; }
+
+/* §8: visible labels with for= attribute in HTML */
 .field-label {
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 600;
   color: var(--ink-2); margin-bottom: 5px;
   text-transform: uppercase; letter-spacing: .04em;
 }
-.field-hint { font-size: 11px; color: var(--ink-4); margin-bottom: 6px; }
+.field-hint { font-size: 12px; color: var(--ink-4); margin-bottom: 7px; line-height: 1.5; }
+
+/* §2: min-height 44px touch targets; §6: 16px base font */
 input[type=text], input[type=number], select, textarea {
-  width: 100%; padding: 9px 12px;
+  width: 100%; padding: 10px 12px; min-height: 44px;
   border: 1px solid var(--border-2); border-radius: var(--radius-sm);
-  font-size: 13.5px; font-family: inherit; color: var(--ink);
-  background: var(--surface); transition: all .15s;
+  font-size: 15px; font-family: inherit; color: var(--ink);
+  background: var(--surface);
+  transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
   box-shadow: var(--shadow-sm);
+  touch-action: manipulation; /* §2 tap-delay */
 }
+/* §1: focus-states — 3px visible ring */
 input:focus, select:focus, textarea:focus {
-  outline: none; border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(185,28,28,.12);
 }
-textarea { resize: vertical; min-height: 72px; }
-select { height: 38px; cursor: pointer; }
+textarea { resize: vertical; min-height: 80px; }
+select {
+  height: 44px; cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
+}
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-@media (max-width:600px) { .grid-2,.grid-3 { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
 /* ─── Language row ──────────────────────────────────────────── */
-.lang-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.25rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
-.lang-row label { font-size: 12px; font-weight: 600; color: var(--ink-2); white-space: nowrap; text-transform: uppercase; letter-spacing: .04em; }
-.lang-row select { flex: 1; }
+.lang-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 1.25rem; padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.lang-row svg { width: 16px; height: 16px; flex-shrink: 0; stroke: var(--ink-4); fill: none; stroke-width: 2; stroke-linecap: round; }
+.lang-row label {
+  font-size: 12px; font-weight: 600; color: var(--ink-2);
+  white-space: nowrap; text-transform: uppercase; letter-spacing: .04em;
+}
+.lang-row select { flex: 1; min-height: 36px; height: 36px; }
 
 /* ─── Drop zone ─────────────────────────────────────────────── */
 .drop-zone {
-  border: 2px dashed var(--border-2);
+  border: 1.5px dashed var(--border-2);
   border-radius: var(--radius-lg); padding: 2.25rem 1rem;
-  text-align: center; cursor: pointer; transition: all .2s;
+  text-align: center; cursor: pointer;
+  transition: border-color var(--t-mid) var(--ease-out), background var(--t-mid) var(--ease-out);
   background: var(--bg-2); position: relative;
 }
 .drop-zone:hover, .drop-zone.over {
-  border-color: var(--accent); background: var(--accent-bg);
+  border-color: var(--brand); background: var(--brand-bg);
 }
+/* §1: focus-within for keyboard nav */
+.drop-zone:focus-within { box-shadow: 0 0 0 3px rgba(185,28,28,.12); }
 .drop-zone.has-files {
   border-color: var(--green); border-style: solid; background: var(--green-bg);
 }
@@ -179,12 +255,13 @@ select { height: 38px; cursor: pointer; }
   width: 52px; height: 52px; border-radius: 14px;
   background: var(--surface); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 24px; margin: 0 auto 12px;
-  box-shadow: var(--shadow);
+  margin: 0 auto 12px; box-shadow: var(--shadow);
 }
+.dz-icon-wrap svg { width: 24px; height: 24px; stroke: var(--ink-3); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .drop-zone.has-files .dz-icon-wrap { background: var(--green-bg); border-color: var(--green-bd); }
-.drop-zone p { font-size: 13.5px; color: var(--ink-2); font-weight: 500; }
-.dz-sub { font-size: 11.5px; color: var(--ink-4); margin-top: 4px; font-weight: 400 !important; }
+.drop-zone.has-files .dz-icon-wrap svg { stroke: var(--green); }
+.drop-zone p { font-size: 14px; color: var(--ink-2); font-weight: 500; }
+.dz-sub { font-size: 12px; color: var(--ink-4); margin-top: 4px; font-weight: 400 !important; }
 input[type=file] { display: none; }
 
 /* ─── File list ─────────────────────────────────────────────── */
@@ -193,107 +270,141 @@ input[type=file] { display: none; }
   display: flex; align-items: center; gap: 10px;
   background: var(--bg-2); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: 9px 12px;
-  transition: border-color .15s;
+  transition: border-color var(--t-fast);
 }
 .file-item:hover { border-color: var(--border-2); }
 .file-icon-box {
-  width: 34px; height: 34px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 17px; flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+/* §4: SVG icons not emoji — set via inline svg in JS below */
 .file-info { flex: 1; min-width: 0; }
 .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .file-meta { font-size: 11px; color: var(--ink-4); margin-top: 1px; }
-.file-remove { background: none; border: none; cursor: pointer; color: var(--ink-4); font-size: 14px; padding: 4px 6px; border-radius: 4px; flex-shrink: 0; line-height: 1; transition: all .15s; }
+
+/* §2: remove button ≥44px tap area */
+.file-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-4); font-size: 14px;
+  padding: 10px 8px; border-radius: 4px; flex-shrink: 0;
+  line-height: 1; transition: color var(--t-fast), background var(--t-fast);
+  min-height: 44px; display: flex; align-items: center;
+  touch-action: manipulation;
+}
 .file-remove:hover { color: var(--red); background: var(--red-bg); }
-.ftype-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+.ftype-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0;
+}
 .fb-pdf   { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bd); }
 .fb-image { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-bd); }
 .fb-text  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
 .fb-other { background: var(--bg-2);      color: var(--ink-3);  border: 1px solid var(--border); }
 
+/* §2: add-more touch target */
 .add-more-btn {
-  margin-top: 8px; width: 100%; padding: 8px;
+  margin-top: 8px; width: 100%; padding: 10px;
+  min-height: 44px; touch-action: manipulation;
   background: none; border: 1px dashed var(--border-2);
-  border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 500;
-  color: var(--ink-3); cursor: pointer; transition: all .15s;
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+  color: var(--ink-3); cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
   font-family: inherit;
 }
-.add-more-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.add-more-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-bg); }
+
+/* ─── Consent box ───────────────────────────────────────────── */
+.consent-box {
+  background: var(--amber-bg); border: 1px solid var(--amber-bd);
+  border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 0.75rem;
+}
+/* §2: checkbox label = 44px tap area */
+.consent-label {
+  display: flex; align-items: flex-start; gap: 10px;
+  cursor: pointer; font-size: 14px; color: var(--ink-2); line-height: 1.6;
+}
+.consent-label input[type=checkbox] {
+  width: 18px; height: 18px; min-width: 18px;
+  margin-top: 3px; flex-shrink: 0; cursor: pointer;
+  accent-color: var(--brand);
+}
+.consent-label a { color: var(--brand); }
+.consent-label a:hover { text-decoration: underline; }
 
 /* ─── Primary button ────────────────────────────────────────── */
+/* §2: min-height 44px, touch-action, press feedback; §4: one primary CTA */
 .analyze-btn {
-  width: 100%; padding: 13px;
-  background: linear-gradient(135deg, #1e40af, #2563eb);
-  color: #fff; border: none; border-radius: var(--radius);
-  font-size: 14px; font-weight: 600; font-family: inherit;
-  cursor: pointer; transition: all .2s; margin-top: 0.75rem;
+  width: 100%; padding: 14px; min-height: 52px;
+  background: var(--brand); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 16px; font-weight: 600; font-family: inherit;
+  cursor: pointer; margin-top: 0.75rem;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   letter-spacing: -.1px;
-  box-shadow: 0 2px 8px rgba(37,99,235,.4);
+  transition: background var(--t-fast) var(--ease-out), transform var(--t-fast);
+  touch-action: manipulation;
 }
-.analyze-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
-  box-shadow: 0 4px 12px rgba(37,99,235,.45);
-  transform: translateY(-1px);
-}
-.analyze-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.analyze-btn:hover:not(:disabled) { background: var(--brand-dark); }
+.analyze-btn:active:not(:disabled) { transform: scale(0.98); } /* §2: press-feedback */
+/* §1: focus-visible ring */
+.analyze-btn:focus-visible { box-shadow: 0 0 0 3px rgba(185,28,28,.3); outline: none; }
+.analyze-btn:disabled { background: var(--ink-4); cursor: not-allowed; transform: none; }
+.analyze-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 
 /* ─── Disclaimer ────────────────────────────────────────────── */
 .disclaimer {
   display: flex; gap: 10px; align-items: flex-start;
-  font-size: 11.5px; color: var(--ink-3); padding: 12px 14px;
+  font-size: 12px; color: var(--ink-3); padding: 12px 14px;
   background: var(--bg-2); border: 1px solid var(--border);
   border-radius: var(--radius); margin-top: 1rem; line-height: 1.6;
 }
-.disclaimer svg { flex-shrink: 0; margin-top: 1px; color: var(--amber); }
+.disclaimer svg { flex-shrink: 0; margin-top: 1px; }
 
 /* ─── Error ─────────────────────────────────────────────────── */
 .error-box {
   display: flex; gap: 10px; align-items: flex-start;
   background: var(--red-bg); border: 1px solid var(--red-bd);
   border-radius: var(--radius); padding: 12px 14px;
-  color: #7f1d1d; font-size: 13px; margin-top: 1rem; line-height: 1.6;
+  color: #7f1d1d; font-size: 14px; margin-top: 1rem; line-height: 1.6;
 }
 
 /* ─── Loading ───────────────────────────────────────────────── */
-#loading {
-  display: none; text-align: center;
-  padding: 5rem 1rem;
+#loading { display: none; text-align: center; padding: 5rem 1rem; }
+/* §3: progress bar instead of blocking spinner */
+.loading-progress-track {
+  width: 220px; height: 4px; background: var(--bg-2);
+  border-radius: 2px; margin: 0 auto 1.5rem; overflow: hidden;
 }
-.loading-ring {
-  width: 48px; height: 48px; margin: 0 auto 1.5rem;
-  border-radius: 50%;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  animation: spin .8s linear infinite;
+.loading-progress-bar {
+  height: 4px; background: var(--brand); border-radius: 2px;
+  animation: progress 25s linear forwards;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-#loading h3 { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
-#loading p  { font-size: 12.5px; color: var(--ink-3); }
+@keyframes progress { from { width: 0% } to { width: 90% } }
+#loading h3 { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+#loading p  { font-size: 13px; color: var(--ink-3); }
 .loading-steps { display: flex; flex-direction: column; gap: 4px; margin-top: 1.5rem; align-items: center; }
-.loading-step { font-size: 11.5px; color: var(--ink-4); display: flex; align-items: center; gap: 6px; }
-.loading-step.active { color: var(--accent); font-weight: 500; }
-.step-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.loading-step { font-size: 12px; color: var(--ink-4); display: flex; align-items: center; gap: 6px; }
+.loading-step.active { color: var(--brand); font-weight: 500; }
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
 /* ─── Results ───────────────────────────────────────────────── */
 #results { display: none; }
-
 .result-topbar {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;
 }
-.result-topbar h2 { font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
+.result-topbar h2 { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
 .new-analysis-btn {
-  padding: 7px 14px; background: var(--surface);
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
-  font-size: 12.5px; font-weight: 500; color: var(--ink-2);
-  cursor: pointer; font-family: inherit; transition: all .15s;
+  padding: 9px 16px; min-height: 44px; touch-action: manipulation;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+  color: var(--ink-2); cursor: pointer; font-family: inherit;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
   display: flex; align-items: center; gap: 6px;
 }
-.new-analysis-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.new-analysis-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-bg); }
 
-/* Patient header card */
+/* Patient card */
 .patient-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-xl); padding: 1.25rem 1.5rem;
@@ -302,13 +413,12 @@ input[type=file] { display: none; }
 }
 .patient-avatar {
   width: 50px; height: 50px; border-radius: 50%;
-  background: linear-gradient(135deg, #1e3a8a, #2563eb);
-  color: #fff; display: flex; align-items: center; justify-content: center;
+  background: var(--brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 16px; flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(37,99,235,.3);
 }
 .patient-info h3 { font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
-.patient-info p { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+.patient-info p  { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
 .patient-right { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 
 /* Severity badge */
@@ -324,11 +434,11 @@ input[type=file] { display: none; }
 .info-banner {
   display: flex; gap: 10px; align-items: flex-start;
   border-radius: var(--radius); padding: 10px 14px;
-  font-size: 12.5px; margin-bottom: 10px; line-height: 1.6;
+  font-size: 13px; margin-bottom: 10px; line-height: 1.6;
 }
-.banner-blue   { background: var(--accent-bg); border: 1px solid var(--accent-bd); color: #1e3a8a; }
-.banner-amber  { background: var(--amber-bg);  border: 1px solid var(--amber-bd);  color: #78350f; }
-.banner-green  { background: var(--green-bg);  border: 1px solid var(--green-bd);  color: #064e3b; }
+.banner-blue   { background: var(--blue-bg); border: 1px solid var(--blue-bd); color: #1e3a8a; }
+.banner-amber  { background: var(--amber-bg); border: 1px solid var(--amber-bd); color: #78350f; }
+.banner-green  { background: var(--green-bg); border: 1px solid var(--green-bd); color: #064e3b; }
 
 /* Result sections */
 .result-section { margin-bottom: 1rem; }
@@ -339,19 +449,29 @@ input[type=file] { display: none; }
 }
 .result-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-/* Summary block */
+/* Summary */
 .summary-block {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 1.1rem 1.4rem;
-  font-size: 13.5px; line-height: 1.8; box-shadow: var(--shadow-sm);
+  font-size: 14px; line-height: 1.8; box-shadow: var(--shadow-sm);
 }
-.differential { font-size: 12.5px; color: var(--ink-3); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.differential {
+  font-size: 13px; color: var(--ink-3);
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+}
 
 /* Findings table */
-.findings-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.findings-table {
+  width: 100%; border-collapse: collapse; background: var(--surface);
+  border-radius: var(--radius-lg); overflow: hidden;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
 .findings-table thead tr { background: var(--bg-2); border-bottom: 1px solid var(--border); }
-.findings-table th { padding: 9px 14px; font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; text-align: left; }
-.findings-table td { padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.findings-table th {
+  padding: 10px 14px; font-size: 11px; font-weight: 700;
+  color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; text-align: left;
+}
+.findings-table td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
 .findings-table tr:last-child td { border-bottom: none; }
 .findings-table tr:hover td { background: var(--bg-2); }
 .marker-name { font-weight: 600; }
@@ -361,9 +481,9 @@ input[type=file] { display: none; }
   font-size: 12px; font-weight: 600; padding: 2px 9px;
   border-radius: 6px; white-space: nowrap;
 }
-.val-normal   { background: var(--green-bg);  color: var(--green); border: 1px solid var(--green-bd); }
-.val-high     { background: var(--red-bg);    color: var(--red);   border: 1px solid var(--red-bd); }
-.val-low      { background: var(--amber-bg);  color: var(--amber); border: 1px solid var(--amber-bd); }
+.val-normal   { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.val-high     { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-bd); }
+.val-low      { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
 .val-critical { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
 .interp-text  { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
 
@@ -375,7 +495,7 @@ input[type=file] { display: none; }
   box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
 }
 .ab-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
-.ab-first::before  { background: var(--accent); }
+.ab-first::before  { background: var(--brand); }
 .ab-second::before { background: var(--green); }
 .ab-alt::before    { background: var(--amber); }
 .ab-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
@@ -384,44 +504,71 @@ input[type=file] { display: none; }
   font-size: 10px; font-weight: 700; padding: 3px 9px;
   border-radius: 4px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
 }
-.ab-pri-first  { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-bd); }
-.ab-pri-second { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
-.ab-pri-alt    { background: var(--amber-bg);  color: var(--amber);  border: 1px solid var(--amber-bd); }
-.ab-dosage { font-size: 12.5px; color: var(--ink-2); font-weight: 500; margin-bottom: 8px; }
+.ab-pri-first  { background: var(--brand-bg); color: var(--brand); border: 1px solid var(--brand-bd); }
+.ab-pri-second { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.ab-pri-alt    { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+.ab-dosage { font-size: 13px; color: var(--ink-2); font-weight: 500; margin-bottom: 8px; }
 .ab-dosage span { color: var(--ink-4); }
-.ab-reason { font-size: 12.5px; color: var(--ink-3); padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.6; }
-.ab-caution { display: flex; gap: 6px; align-items: flex-start; font-size: 12px; color: var(--amber); margin-top: 6px; background: var(--amber-bg); padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--amber-bd); }
+.ab-reason { font-size: 13px; color: var(--ink-3); padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.6; }
+.ab-caution {
+  display: flex; gap: 6px; align-items: flex-start; font-size: 12px;
+  color: var(--amber); margin-top: 6px; background: var(--amber-bg);
+  padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--amber-bd);
+}
 
 /* Monitoring */
 .monitoring-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 1.1rem 1.4rem;
-  font-size: 13.5px; line-height: 1.8; box-shadow: var(--shadow-sm);
+  font-size: 14px; line-height: 1.8; box-shadow: var(--shadow-sm);
 }
 
-/* Sources footer */
+/* Sources */
 .sources-row {
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
-  font-size: 11.5px; color: var(--ink-3); margin-bottom: 1rem;
+  font-size: 12px; color: var(--ink-3); margin-bottom: 1rem;
 }
 .source-chip {
   display: inline-flex; align-items: center; gap: 5px;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 500;
 }
+
+/* ─── Footer ────────────────────────────────────────────────── */
+.site-footer {
+  max-width: 860px; margin: 0 auto;
+  padding: 1.5rem; text-align: center;
+  font-size: 12px; color: var(--ink-4);
+  border-top: 1px solid var(--border); margin-top: 2rem;
+}
+.site-footer a { color: var(--ink-3); text-decoration: none; }
+.site-footer a:hover { color: var(--brand); }
+
+/* §5: responsive */
+@media (max-width: 600px) {
+  .topbar-right { display: none; }
+  .hero { padding: 36px 16px 32px; }
+  .page { padding: 1.5rem 1rem 3rem; }
+  .section-body, .section-header { padding: 1.1rem; }
+}
 </style>
 </head>
 <body>
 
-<!-- Top bar -->
-<nav class="topbar">
+<!-- §1: skip link -->
+<a href="#main-form" class="skip-link">Skip to main form</a>
+
+<!-- Nav -->
+<nav class="topbar" aria-label="Site navigation">
   <div class="topbar-inner">
-    <a href="#" class="logo">
-      <div class="logo-icon">🧬</div>
-      <span class="logo-text">Blood<span>Rx</span></span>
+    <a href="#" class="logo" aria-label="BloodRx home">
+      <div class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg>
+      </div>
+      <span class="logo-text">Blood<em>Rx</em></span>
     </a>
     <span class="topbar-tag">Clinical AI</span>
-    <div class="topbar-right">
+    <div class="topbar-right" aria-hidden="true">
       <span class="dot"></span> AI-powered analysis
       &nbsp;·&nbsp; Multilingual
       &nbsp;·&nbsp; For licensed clinicians
@@ -429,52 +576,67 @@ input[type=file] { display: none; }
   </div>
 </nav>
 
-<main class="page">
+<!-- Hero -->
+<div class="hero" role="banner">
+  <div class="hero-eyebrow" aria-hidden="true">
+    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
+    For licensed clinicians only
+    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
+  </div>
+  <h1>Blood Report Analysis &amp;<br><em>Antibiotic Recommendations</em></h1>
+  <p class="hero-sub">Submit patient documents in any format or language to receive a structured clinical analysis in seconds.</p>
+  <div class="capability-chips" role="list" aria-label="Supported capabilities">
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 3h6v1H5V8zm0 3h4v1H5v-1z"/></svg>
+      PDF Documents
+    </span>
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm5 1L3 9h3v3l5-5H8V4z"/></svg>
+      JPG / PNG Images
+    </span>
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v12H2V2zm2 2v8h8V4H4zm1 1h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/></svg>
+      TXT / CSV Files
+    </span>
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a1 1 0 110 2 1 1 0 010-2zm0 3a1 1 0 011 1v4a1 1 0 11-2 0V7a1 1 0 011-1z"/></svg>
+      Multiple files at once
+    </span>
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 2c.9 0 1.76.2 2.53.55L3.55 10.53A5 5 0 018 3zm0 10a5 5 0 01-2.53-.55l7-7A5 5 0 018 13z"/></svg>
+      25+ languages
+    </span>
+  </div>
+</div>
+
+<main class="page" id="main-form">
 
   <!-- Page heading -->
   <div class="page-heading" id="form-heading">
     <h1>Blood Report Analyzer</h1>
     <p>Submit patient documents in any format or language to receive a structured clinical analysis and antibiotic recommendations.</p>
-    <div class="capability-chips">
-      <span class="chip">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 3h6v1H5V8zm0 3h4v1H5v-1z"/></svg>
-        PDF Documents
-      </span>
-      <span class="chip">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm5 1L3 9h3v3l5-5H8V4z"/></svg>
-        JPG / PNG Images
-      </span>
-      <span class="chip">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v12H2V2zm2 2v8h8V4H4zm1 1h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/></svg>
-        TXT / CSV Files
-      </span>
-      <span class="chip">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a1 1 0 110 2 1 1 0 010-2zm0 3a1 1 0 011 1v4a1 1 0 11-2 0V7a1 1 0 011-1z"/></svg>
-        Multiple files at once
-      </span>
-      <span class="chip">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 2c.9 0 1.76.2 2.53.55L3.55 10.53A5 5 0 018 3zm0 10a5 5 0 01-2.53-.55l7-7A5 5 0 018 13z"/></svg>
-        25+ languages
-      </span>
-    </div>
   </div>
 
   <!-- FORM SECTION -->
   <div id="form-section">
 
     <!-- Patient information -->
-    <div class="section-card">
+    <div class="section-card" role="region" aria-labelledby="patient-heading">
       <div class="section-header">
-        <div class="icon-wrap icon-blue">👤</div>
+        <div class="icon-wrap icon-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
         <div>
-          <h2>Patient Information</h2>
+          <h2 id="patient-heading">Patient Information</h2>
           <p>Demographic and clinical context</p>
         </div>
       </div>
       <div class="section-body">
+
         <div class="lang-row">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           <label for="report-lang">Document language</label>
-          <select id="report-lang">
+          <select id="report-lang" name="report-lang">
             <option value="auto">Auto-detect (recommended)</option>
             <option value="English">English</option>
             <option value="Arabic">Arabic / العربية</option>
@@ -505,19 +667,20 @@ input[type=file] { display: none; }
         </div>
 
         <div class="field-group">
-          <label class="field-label">Patient name</label>
+          <!-- §8: visible label with for= (not placeholder-only) -->
+          <label class="field-label" for="p-name">Patient name</label>
           <div class="field-hint">Any script accepted — Arabic, Chinese, Cyrillic, Devanagari, Latin…</div>
-          <input type="text" id="p-name" dir="auto" placeholder="Full name" />
+          <input type="text" id="p-name" name="p-name" dir="auto" placeholder="Full name" autocomplete="off" />
         </div>
 
         <div class="grid-2 field-group">
           <div>
-            <label class="field-label">Age</label>
-            <input type="number" id="p-age" placeholder="Years" min="0" max="120" />
+            <label class="field-label" for="p-age">Age</label>
+            <input type="number" id="p-age" name="p-age" placeholder="Years" min="0" max="120" />
           </div>
           <div>
-            <label class="field-label">Gender</label>
-            <select id="p-gender">
+            <label class="field-label" for="p-gender">Gender</label>
+            <select id="p-gender" name="p-gender">
               <option value="">Select</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -527,78 +690,101 @@ input[type=file] { display: none; }
         </div>
 
         <div class="field-group">
-          <label class="field-label">Chief Complaint / Symptoms</label>
+          <label class="field-label" for="p-complaint">Chief Complaint / Symptoms</label>
           <div class="field-hint">Write in any language — automatically translated for analysis</div>
-          <textarea id="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough · حمى وسعال · Fièvre et toux · 发烧咳嗽 · Fieber und Husten"></textarea>
+          <textarea id="p-complaint" name="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough · حمى وسعال · Fièvre et toux · 发烧咳嗽 · Fieber und Husten"></textarea>
         </div>
 
         <div class="field-group">
-          <label class="field-label">Clinical Notes</label>
-          <div class="field-hint">Allergies, current medications, comorbidities — any language</div>
-          <textarea id="p-notes" rows="3" dir="auto" placeholder="e.g. Penicillin allergy, Type 2 diabetes, on Metformin · حساسية للبنسلين · Allergie à la pénicilline · 青霉素过敏"></textarea>
+          <label class="field-label" for="p-notes">Clinical Notes</label>
+          <!-- §8: helper text — explains what to include, especially drug allergies -->
+          <div class="field-hint">Allergies, current medications, comorbidities — any language. Include known drug allergies; this directly influences antibiotic selection.</div>
+          <textarea id="p-notes" name="p-notes" rows="3" dir="auto" placeholder="e.g. Penicillin allergy, Type 2 diabetes, on Metformin · حساسية للبنسلين · Allergie à la pénicilline · 青霉素过敏"></textarea>
         </div>
+
       </div>
     </div>
 
     <!-- Document upload -->
-    <div class="section-card">
+    <div class="section-card" role="region" aria-labelledby="docs-heading">
       <div class="section-header">
-        <div class="icon-wrap icon-green">📂</div>
+        <div class="icon-wrap icon-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
         <div>
-          <h2>Documents &amp; Reports</h2>
+          <h2 id="docs-heading">Documents &amp; Reports</h2>
           <p>Upload one or more files in any format or language</p>
         </div>
       </div>
       <div class="section-body">
-        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-in').click()">
-          <div class="dz-icon-wrap" id="dz-icon-wrap">📄</div>
+
+        <!-- §1: keyboard-accessible upload zone -->
+        <div class="drop-zone" id="drop-zone"
+          role="button" tabindex="0"
+          aria-label="Upload files. Click or press Enter to browse, or drag and drop files here."
+          onclick="document.getElementById('file-in').click()"
+          onkeydown="if(event.key==='Enter'||event.key===' '){document.getElementById('file-in').click()}">
+          <div class="dz-icon-wrap" id="dz-icon-wrap">
+            <svg id="dz-svg" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          </div>
           <p id="dz-text">Click to select files, or drag &amp; drop here</p>
-          <p class="dz-sub">PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; Multiple files supported &nbsp;·&nbsp; Max 20 MB each</p>
+          <p class="dz-sub">PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; Multiple files &nbsp;·&nbsp; Max 20 MB each</p>
+          <label for="file-in" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Choose files to upload</label>
           <input type="file" id="file-in" multiple
             accept=".pdf,.jpg,.jpeg,.png,.txt,.csv,application/pdf,image/jpeg,image/png,text/plain,text/csv"
-            onchange="addFiles(this.files)">
+            onchange="addFiles(this.files)"
+            aria-label="Choose files to upload">
         </div>
 
         <div id="file-list" class="file-list" style="display:none"></div>
-        <button class="add-more-btn" id="add-more-btn" style="display:none" onclick="document.getElementById('file-in').click()">
+        <button class="add-more-btn" id="add-more-btn" style="display:none"
+          onclick="document.getElementById('file-in').click()"
+          type="button">
           + Add more files
         </button>
 
-        <div id="err-box" class="error-box" style="display:none">
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+        <!-- §8: error-placement — below the related control -->
+        <div id="err-box" class="error-box" style="display:none" role="alert">
+          <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
           <span id="err-msg"></span>
         </div>
 
         <!-- Consent checkbox -->
-        <div id="consent-box" style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:var(--radius);padding:1rem 1.25rem;margin-top:0.75rem">
-          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--ink-2);line-height:1.6">
-            <input type="checkbox" id="consent-check" onchange="updateAnalyzeBtn()" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer">
+        <div id="consent-box" class="consent-box">
+          <label class="consent-label" for="consent-check">
+            <input type="checkbox" id="consent-check" onchange="updateAnalyzeBtn()">
             <span>
               I confirm that I am a <strong>licensed healthcare professional</strong> and I agree to the
-              <a href="/terms" target="_blank" style="color:var(--accent)">Terms of Service</a> and
-              <a href="/privacy" target="_blank" style="color:var(--accent)">Privacy Policy</a>.
+              <a href="/terms" target="_blank">Terms of Service</a> and
+              <a href="/privacy" target="_blank">Privacy Policy</a>.
               I understand that all AI-generated results are for clinical decision <strong>support only</strong>
               and must be validated by a licensed physician before any prescribing decision.
             </span>
           </label>
         </div>
 
-        <button class="analyze-btn" id="analyze-btn" onclick="analyze()" disabled>
-          <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+        <!-- §4: single primary CTA per screen -->
+        <button class="analyze-btn" id="analyze-btn" onclick="analyze()" disabled type="button"
+          aria-describedby="analyze-disclaimer">
+          <svg width="17" height="17" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
           Run Clinical Analysis
         </button>
+
       </div>
     </div>
 
-    <div class="disclaimer">
-      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+    <div class="disclaimer" id="analyze-disclaimer">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
       <span>For use by qualified healthcare professionals only. All AI-generated recommendations must be validated by a licensed physician and cross-referenced with local antibiogram data and current IDSA/WHO guidelines before prescribing.</span>
     </div>
-  </div>
 
-  <!-- LOADING -->
-  <div id="loading">
-    <div class="loading-ring"></div>
+  </div><!-- /form-section -->
+
+  <!-- LOADING — §3: progress bar; §7: aria-live -->
+  <div id="loading" aria-live="polite" aria-atomic="true" role="status">
+    <div class="loading-progress-track">
+      <div class="loading-progress-bar" id="progress-bar"></div>
+    </div>
     <h3 id="loading-title">Analyzing documents…</h3>
     <p id="loading-sub">This typically takes 15–30 seconds</p>
     <div class="loading-steps" id="loading-steps"></div>
@@ -613,21 +799,33 @@ input[type=file] { display: none; }
 let uploadedFiles = [];
 
 const TYPE_MAP = {
-  'application/pdf': { cat:'pdf',   icon:'📄', badge:'fb-pdf',   label:'PDF'   },
-  'image/jpeg':      { cat:'image', icon:'🖼️',  badge:'fb-image', label:'IMAGE' },
-  'image/png':       { cat:'image', icon:'🖼️',  badge:'fb-image', label:'PNG'   },
-  'text/plain':      { cat:'text',  icon:'📝', badge:'fb-text',  label:'TXT'   },
-  'text/csv':        { cat:'text',  icon:'📊', badge:'fb-text',  label:'CSV'   },
+  'application/pdf': { cat:'pdf',   icon:'pdf',   badge:'fb-pdf',   label:'PDF'   },
+  'image/jpeg':      { cat:'image', icon:'image', badge:'fb-image', label:'IMAGE' },
+  'image/png':       { cat:'image', icon:'image', badge:'fb-image', label:'PNG'   },
+  'text/plain':      { cat:'text',  icon:'text',  badge:'fb-text',  label:'TXT'   },
+  'text/csv':        { cat:'text',  icon:'csv',   badge:'fb-text',  label:'CSV'   },
 };
+
+/* SVG icons for file types — §4: no emoji */
+const FILE_ICONS = {
+  pdf:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+  image: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  text:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+  csv:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>`,
+  other: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`,
+};
+const DZ_UPLOAD_SVG = `<svg id="dz-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>`;
+const DZ_CHECK_SVG  = `<svg id="dz-svg" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
 function detectType(file) {
   const mt = (file.type||'').toLowerCase();
   if (TYPE_MAP[mt]) return TYPE_MAP[mt];
   const ext = file.name.split('.').pop().toLowerCase();
   const extMap = { pdf:'application/pdf', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', txt:'text/plain', csv:'text/csv' };
   if (extMap[ext]) return TYPE_MAP[extMap[ext]];
-  return { cat:'other', icon:'📎', badge:'fb-other', label:(ext.toUpperCase()||'FILE') };
+  return { cat:'other', icon:'other', badge:'fb-other', label:(ext.toUpperCase()||'FILE') };
 }
-function resolvedMime(file, cat) {
+function resolvedMime(file) {
   if (file.type) return file.type;
   const ext = file.name.split('.').pop().toLowerCase();
   return ({ pdf:'application/pdf', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', txt:'text/plain', csv:'text/csv' })[ext] || 'application/octet-stream';
@@ -645,7 +843,7 @@ function addFiles(fileList) {
     if (file.size > 20*1024*1024) { errs.push(file.name + ' exceeds 20 MB.'); return; }
     if (uploadedFiles.find(f => f.name===file.name && f.size===file.size)) return;
     const info = detectType(file);
-    const entry = { file, name:file.name, size:file.size, category:info.cat, icon:info.icon, badgeCls:info.badge, label:info.label, base64:null, mimeType:resolvedMime(file,info.cat) };
+    const entry = { file, name:file.name, size:file.size, category:info.cat, icon:info.icon, badgeCls:info.badge, label:info.label, base64:null, mimeType:resolvedMime(file) };
     uploadedFiles.push(entry);
     const r = new FileReader();
     r.onload = e => { entry.base64 = e.target.result.split(',')[1]; renderFileList(); };
@@ -669,28 +867,36 @@ function renderFileList() {
   const addBtn = document.getElementById('add-more-btn');
   const btn    = document.getElementById('analyze-btn');
   const dz     = document.getElementById('drop-zone');
+  const dzWrap = document.getElementById('dz-icon-wrap');
   if (uploadedFiles.length === 0) {
     listEl.style.display = 'none'; addBtn.style.display = 'none';
     btn.disabled = true; dz.classList.remove('has-files');
-    document.getElementById('dz-icon-wrap').textContent = '📄';
+    dzWrap.innerHTML = DZ_UPLOAD_SVG;
     document.getElementById('dz-text').textContent = 'Click to select files, or drag & drop here';
+    dz.setAttribute('aria-label','Upload files. Click or press Enter to browse, or drag and drop files here.');
     return;
   }
   dz.classList.add('has-files');
-  document.getElementById('dz-icon-wrap').textContent = '✅';
-  document.getElementById('dz-text').textContent = uploadedFiles.length + ' file' + (uploadedFiles.length>1?'s':'') + ' selected';
+  dzWrap.innerHTML = DZ_CHECK_SVG;
+  const label = uploadedFiles.length + ' file' + (uploadedFiles.length>1?'s':'') + ' selected';
+  document.getElementById('dz-text').textContent = label;
+  dz.setAttribute('aria-label', label + '. Press Enter to change selection.');
   listEl.style.display = 'flex'; addBtn.style.display = 'block';
   const consent = document.getElementById('consent-check')?.checked;
   btn.disabled = !(consent && uploadedFiles.every(f => f.base64 !== null));
+  const bgMap = { pdf:'var(--red-bg)', image:'var(--purple-bg)', text:'var(--green-bg)', csv:'var(--green-bg)', other:'var(--bg-2)' };
   listEl.innerHTML = uploadedFiles.map((f,i) => `
     <div class="file-item">
-      <div class="file-icon-box" style="background:${f.category==='pdf'?'#fef2f2':f.category==='image'?'#f5f3ff':f.category==='text'?'#ecfdf5':'#f9fafb'}">${f.icon}</div>
+      <div class="file-icon-box" style="background:${bgMap[f.category]||'var(--bg-2)'}; color:var(--ink-3)">
+        ${FILE_ICONS[f.icon]||FILE_ICONS.other}
+      </div>
       <div class="file-info">
         <div class="file-name">${escHtml(f.name)}</div>
         <div class="file-meta">${fmtSize(f.size)}${f.base64===null?' &nbsp;·&nbsp; <em>loading…</em>':''}</div>
       </div>
       <span class="ftype-badge ${f.badgeCls}">${f.label}</span>
-      <button class="file-remove" onclick="removeFile(${i})" title="Remove file">✕</button>
+      <button class="file-remove" onclick="removeFile(${i})" type="button"
+        aria-label="Remove ${escHtml(f.name)}">&#x2715;</button>
     </div>`).join('');
 }
 
@@ -735,7 +941,6 @@ function buildContentParts() {
       return { type:'document', source:{ type:'base64', media_type:'application/pdf', data:f.base64 }, title:f.name };
     if (f.category === 'image')
       return { type:'image', source:{ type:'base64', media_type:f.mimeType, data:f.base64 } };
-    // text / csv / other — decode and embed
     try {
       const raw = atob(f.base64);
       const txt = new TextDecoder('utf-8').decode(Uint8Array.from(raw, c=>c.charCodeAt(0)));
@@ -852,37 +1057,32 @@ function renderResults(r, p) {
   const abLbl  = { 'first-line':'First Line', 'second-line':'Second Line', 'alternative':'Alternative' };
 
   const initials = p.name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || 'P';
-  const isTranslated = r.detected_languages && !r.detected_languages.toLowerCase().replace(/,.*$/,'').includes('english');
 
-  /* Sources bar */
   const sourcesHtml = `
     <div class="sources-row">
       <strong>Sources:</strong>
-      ${uploadedFiles.map(f=>`<span class="source-chip">${f.icon} ${escHtml(f.name)}</span>`).join('')}
+      ${uploadedFiles.map(f=>`<span class="source-chip">${FILE_ICONS[f.icon]||FILE_ICONS.other} ${escHtml(f.name)}</span>`).join('')}
     </div>`;
 
-  /* Language banner */
   const langHtml = r.detected_languages ? `
-    <div class="info-banner banner-blue">
-      🌐 <strong>Detected language${r.detected_languages.includes(',')?' (multiple)':''}:</strong>&nbsp;
+    <div class="info-banner banner-blue" role="note">
+      <strong>Detected language${r.detected_languages.includes(',')?' (multiple)':''}:</strong>&nbsp;
       ${escHtml(r.detected_languages)} — all values translated to English for analysis.
       ${r.documents_analysed ? `<br><span style="opacity:.8">${escHtml(r.documents_analysed)}</span>` : ''}
     </div>` : '';
 
-  /* Translation note */
   const transHtml = ((r.translated_complaint && r.translated_complaint !== p.complaint) || (r.translated_notes && r.translated_notes !== p.notes)) ? `
-    <div class="info-banner banner-amber">
-      📝 <strong>Auto-translated inputs</strong>
+    <div class="info-banner banner-amber" role="note">
+      <strong>Auto-translated inputs</strong>
       ${r.translated_complaint && r.translated_complaint !== p.complaint ? `<br>Complaint: <em>"${escHtml(r.translated_complaint)}"</em>` : ''}
       ${r.translated_notes && r.translated_notes !== p.notes ? `<br>Notes: <em>"${escHtml(r.translated_notes)}"</em>` : ''}
     </div>` : '';
 
-  /* Findings table */
   const findingsHtml = (r.findings||[]).length ? `
     <table class="findings-table">
       <thead><tr>
-        <th>Marker</th><th>Value</th><th>Status</th><th>Interpretation</th>
-        ${uploadedFiles.length>1 ? '<th>Source</th>' : ''}
+        <th scope="col">Marker</th><th scope="col">Value</th><th scope="col">Status</th><th scope="col">Interpretation</th>
+        ${uploadedFiles.length>1 ? '<th scope="col">Source</th>' : ''}
       </tr></thead>
       <tbody>
         ${(r.findings||[]).map(f=>`
@@ -894,9 +1094,8 @@ function renderResults(r, p) {
             ${uploadedFiles.length>1 ? `<td style="font-size:11px;color:var(--ink-4)">${escHtml(f.source||'')}</td>` : ''}
           </tr>`).join('')}
       </tbody>
-    </table>` : '<p style="color:var(--ink-4);font-size:13px">No specific findings extracted.</p>';
+    </table>` : '<p style="color:var(--ink-4);font-size:14px">No specific findings extracted.</p>';
 
-  /* Antibiotic cards */
   const abHtml = (r.antibiotics||[]).map(a=>`
     <div class="ab-card ${abCls[a.priority]||'ab-first'}">
       <div class="ab-header">
@@ -908,24 +1107,23 @@ function renderResults(r, p) {
       </div>
       <div class="ab-dosage">${escHtml(a.dose)} <span>·</span> ${escHtml(a.duration)}</div>
       <div class="ab-reason">${escHtml(a.reason)}
-        ${a.cautions ? `<div class="ab-caution">⚠ ${escHtml(a.cautions)}</div>` : ''}
-        ${a.tdm ? `<div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--accent);margin-top:6px;background:var(--accent-bg);padding:6px 10px;border-radius:var(--radius-sm);border:1px solid var(--accent-bd)">📊 <strong>TDM required:</strong>&nbsp;${escHtml(a.tdm)}</div>` : ''}
+        ${a.cautions ? `<div class="ab-caution"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${escHtml(a.cautions)}</div>` : ''}
+        ${a.tdm ? `<div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--blue);margin-top:6px;background:var(--blue-bg);padding:6px 10px;border-radius:var(--radius-sm);border:1px solid var(--blue-bd)"><strong>TDM required:</strong>&nbsp;${escHtml(a.tdm)}</div>` : ''}
       </div>
     </div>`).join('');
 
   document.getElementById('results').innerHTML = `
     <div class="result-topbar">
       <h2>Clinical Analysis Report</h2>
-      <button class="new-analysis-btn" onclick="resetForm()">
-        ← New Analysis
+      <button class="new-analysis-btn" onclick="resetForm()" type="button">
+        &#8592; New Analysis
       </button>
     </div>
 
     ${sourcesHtml}${langHtml}${transHtml}
 
-    <!-- Patient card -->
-    <div class="patient-card">
-      <div class="patient-avatar">${escHtml(initials)}</div>
+    <div class="patient-card" role="region" aria-label="Patient summary">
+      <div class="patient-avatar" aria-hidden="true">${escHtml(initials)}</div>
       <div class="patient-info">
         <h3>${escHtml(p.name)}</h3>
         <p>${[p.age&&p.age+' years', p.gender, r.translated_complaint||p.complaint].filter(Boolean).map(escHtml).join(' &nbsp;·&nbsp; ')}</p>
@@ -936,8 +1134,7 @@ function renderResults(r, p) {
       </div>
     </div>
 
-    <!-- Summary -->
-    <div class="result-section">
+    <div class="result-section" role="region" aria-label="Clinical summary">
       <div class="result-section-title">Clinical Summary</div>
       <div class="summary-block">
         ${escHtml(r.summary||'')}
@@ -945,28 +1142,25 @@ function renderResults(r, p) {
       </div>
     </div>
 
-    <!-- Findings -->
-    <div class="result-section">
+    <div class="result-section" role="region" aria-label="Laboratory findings">
       <div class="result-section-title">Laboratory Findings</div>
       ${findingsHtml}
     </div>
 
-    <!-- Antibiotics -->
     ${(r.antibiotics||[]).length ? `
-    <div class="result-section">
+    <div class="result-section" role="region" aria-label="Antibiotic recommendations">
       <div class="result-section-title">Antibiotic Recommendations</div>
       <div class="ab-grid">${abHtml}</div>
     </div>` : ''}
 
-    <!-- Monitoring -->
     ${r.monitoring ? `
-    <div class="result-section">
+    <div class="result-section" role="region" aria-label="Monitoring and follow-up">
       <div class="result-section-title">Monitoring &amp; Follow-up</div>
       <div class="monitoring-card">${escHtml(r.monitoring)}</div>
     </div>` : ''}
 
-    <div class="disclaimer">
-      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+    <div class="disclaimer" role="note">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
       <span>AI-generated analysis. All recommendations must be validated by a licensed clinician and cross-referenced with local antibiogram data and current IDSA/WHO prescribing guidelines before administration.</span>
     </div>
   `;
@@ -984,19 +1178,20 @@ function resetForm() {
   document.getElementById('analyze-btn').disabled = true;
   document.getElementById('file-in').value = '';
   dz.classList.remove('has-files','over');
-  document.getElementById('dz-icon-wrap').textContent = '📄';
+  document.getElementById('dz-icon-wrap').innerHTML = DZ_UPLOAD_SVG;
   document.getElementById('dz-text').textContent = 'Click to select files, or drag & drop here';
+  dz.setAttribute('aria-label','Upload files. Click or press Enter to browse, or drag and drop files here.');
   hideErr(); window.scrollTo(0,0);
 }
 </script>
-  <!-- Legal footer -->
-  <footer style="max-width:860px;margin:0 auto;padding:1.5rem;text-align:center;font-size:12px;color:var(--ink-4);border-top:1px solid var(--border);margin-top:2rem">
-    <p>BloodRx Clinical Analyzer &nbsp;·&nbsp;
-      <a href="/terms" style="color:var(--ink-3);text-decoration:none">Terms of Service</a> &nbsp;·&nbsp;
-      <a href="/privacy" style="color:var(--ink-3);text-decoration:none">Privacy Policy</a> &nbsp;·&nbsp;
-      For licensed clinicians only &nbsp;·&nbsp; Not for emergency use
-    </p>
-    <p style="margin-top:6px">AI-generated results must be validated by a licensed physician before any clinical decision.</p>
-  </footer>
+
+<footer class="site-footer">
+  <p>BloodRx Clinical Analyzer &nbsp;·&nbsp;
+    <a href="/terms">Terms of Service</a> &nbsp;·&nbsp;
+    <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp;
+    For licensed clinicians only &nbsp;·&nbsp; Not for emergency use
+  </p>
+  <p style="margin-top:6px">AI-generated results must be validated by a licensed physician before any clinical decision.</p>
+</footer>
 </body>
 </html>
