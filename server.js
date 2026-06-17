@@ -87,4 +87,77 @@ app.post("/api/analyze", async (req, res) => {
 app.get("/admin", (req, res) => {
   const patients = db.get("patients").value().reverse();
 
-  const rows = patients.map(p
+  const rows = patients.map(p => `
+    <tr>
+      <td>${p.id}</td>
+      <td>${p.name || ""}</td>
+      <td>${p.phone || ""}</td>
+      <td>${p.age || ""}</td>
+      <td>${p.gender || ""}</td>
+      <td>${p.complaint || ""}</td>
+      <td><span class="sev sev-${p.severity}">${p.severity || ""}</span></td>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.summary || ""}</td>
+      <td>${new Date(p.created_at).toLocaleString()}</td>
+    </tr>
+  `).join("");
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>BloodRx Admin</title>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; padding: 2rem; background: #f4f5f7; }
+        h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+        .count { font-size: 13px; color: #666; margin-bottom: 1.5rem; margin-top: 4px; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; }
+        .btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; }
+        .table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; }
+        th { background: #2563eb; color: white; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+        td { padding: 11px 16px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8faff; }
+        .sev { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .sev-mild { background: #ecfdf5; color: #059669; }
+        .sev-moderate { background: #fffbeb; color: #b45309; }
+        .sev-severe, .sev-critical { background: #fef2f2; color: #dc2626; }
+        .empty { text-align: center; color: #999; padding: 3rem; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div>
+          <h1>🧬 BloodRx Patient Records</h1>
+          <p class="count">${patients.length} total record${patients.length !== 1 ? "s" : ""}</p>
+        </div>
+        <a href="/" class="btn">← Back to analyzer</a>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Name</th><th>Phone</th><th>Age</th><th>Gender</th>
+              <th>Complaint</th><th>Severity</th><th>Summary</th><th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || '<tr><td colspan="9" class="empty">No records yet</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.listen(PORT, () => {
+  console.log(`BloodRx server running at http://localhost:${PORT}`);
+});
