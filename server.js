@@ -1,27 +1,16 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const Database = require("better-sqlite3");
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const db = new Database("bloodrx.db");
-db.exec(`
-  CREATE TABLE IF NOT EXISTS patients (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT,
-    phone TEXT,
-    age TEXT,
-    gender TEXT,
-    complaint TEXT,
-    notes TEXT,
-    severity TEXT,
-    summary TEXT,
-    result TEXT,
-    created_at TEXT DEFAULT (datetime('now'))
-  )
-`);
+// Init JSON database
+const adapter = new FileSync("bloodrx.json");
+const db = low(adapter);
+db.defaults({ patients: [] }).write();
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -82,20 +71,21 @@ app.post("/api/analyze", async (req, res) => {
       const complaintMatch = promptText.match(/Chief complaint:\s*(.+)/);
       const notesMatch     = promptText.match(/Clinical notes[^:]*:\s*(.+)/);
 
-      db.prepare(`
-        INSERT INTO patients (name, phone, age, gender, complaint, notes, severity, summary, result)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        nameMatch?.[1]?.trim()      || "Unknown",
-        phoneMatch?.[1]?.trim()     || "",
-        ageMatch?.[1]?.trim()       || "",
-        genderMatch?.[1]?.trim()    || "",
-        complaintMatch?.[1]?.trim() || "",
-        notesMatch?.[1]?.trim()     || "",
-        result.severity             || "",
-        result.summary              || "",
-        JSON.stringify(result)
-      );
+      const record = {
+        id: Date.now(),
+        name:      nameMatch?.[1]?.trim()      || "Unknown",
+        phone:     phoneMatch?.[1]?.trim()     || "",
+        age:       ageMatch?.[1]?.trim()       || "",
+        gender:    genderMatch?.[1]?.trim()    || "",
+        complaint: complaintMatch?.[1]?.trim() || "",
+        notes:     notesMatch?.[1]?.trim()     || "",
+        severity:  result.severity             || "",
+        summary:   result.summary              || "",
+        result:    result,
+        created_at: new Date().toISOString()
+      };
+
+      db.get("patients").push(record).write();
     } catch (e) {
       console.log("Could not save to DB:", e.message);
     }
@@ -107,8 +97,9 @@ app.post("/api/analyze", async (req, res) => {
   }
 });
 
+// Admin page
 app.get("/admin", (req, res) => {
-  const patients = db.prepare("SELECT * FROM patients ORDER BY created_at DESC").all();
+  const patients = db.get("patients").value().reverse();
 
   const rows = patients.map(p => `
     <tr>
@@ -120,7 +111,7 @@ app.get("/admin", (req, res) => {
       <td>${p.complaint || ""}</td>
       <td><span class="sev sev-${p.severity}">${p.severity || ""}</span></td>
       <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.summary || ""}</td>
-      <td>${p.created_at || ""}</td>
+      <td>${new Date(p.created_at).toLocaleString()}</td>
     </tr>
   `).join("");
 
@@ -136,7 +127,7 @@ app.get("/admin", (req, res) => {
         body { font-family: -apple-system, sans-serif; padding: 2rem; background: #f4f5f7; }
         h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
         .count { font-size: 13px; color: #666; margin-bottom: 1.5rem; margin-top: 4px; }
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; }
         .btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; }
         .table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
         table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; }
