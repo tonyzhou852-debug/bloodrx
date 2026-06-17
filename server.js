@@ -1,15 +1,21 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const low = require("lowdb");
-const FileSync = require("lowdb/adapters/FileSync");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-const adapter = new FileSync("bloodrx.json");
-const db = low(adapter);
-db.defaults({ patients: [] }).write();
+// Simple JSON file database
+const DB_FILE = "/tmp/bloodrx.json";
+function loadDB() {
+  try { return JSON.parse(fs.readFileSync(DB_FILE, "utf8")); } 
+  catch { return { patients: [] }; }
+}
+function saveDB(data) {
+  try { fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2)); } 
+  catch(e) { console.log("DB save error:", e.message); }
+}
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -48,7 +54,8 @@ app.post("/api/analyze", async (req, res) => {
       const result = JSON.parse(clean);
 
       const promptText = req.body.messages
-        .map(m => typeof m.content === "string" ? m.content : m.content.filter(p => p.type === "text").map(p => p.text).join(" "))
+        .map(m => typeof m.content === "string" ? m.content : 
+          Array.isArray(m.content) ? m.content.filter(p => p.type === "text").map(p => p.text).join(" ") : "")
         .join(" ");
 
       const nameMatch      = promptText.match(/Name:\s*(.+)/);
@@ -68,11 +75,12 @@ app.post("/api/analyze", async (req, res) => {
         notes:     notesMatch?.[1]?.trim()     || "",
         severity:  result.severity             || "",
         summary:   result.summary              || "",
-        result:    result,
         created_at: new Date().toISOString()
       };
 
-      db.get("patients").push(record).write();
+      const dbData = loadDB();
+      dbData.patients.push(record);
+      saveDB(dbData);
     } catch (e) {
       console.log("Could not save to DB:", e.message);
     }
@@ -85,7 +93,8 @@ app.post("/api/analyze", async (req, res) => {
 });
 
 app.get("/admin", (req, res) => {
-  const patients = db.get("patients").value().reverse();
+  const dbData = loadDB();
+  const patients = [...dbData.patients].reverse();
 
   const rows = patients.map(p => `
     <tr>
@@ -114,7 +123,7 @@ app.get("/admin", (req, res) => {
         h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
         .count { font-size: 13px; color: #666; margin-bottom: 1.5rem; margin-top: 4px; }
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; }
-        .btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; }
+        .btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 13px; text-decoration: none; }
         .table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
         table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; }
         th { background: #2563eb; color: white; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
