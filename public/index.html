@@ -527,12 +527,6 @@ input[type=file] { display: none; }
         </div>
 
         <div class="field-group">
-          <label class="field-label">Phone Number</label>
-          <div class="field-hint">Any country format — include country code e.g. +1, +44, +86, +234, +971</div>
-          <input type="tel" id="p-phone" dir="auto" placeholder="+1 555 000 0000 · +44 7700 900000 · +86 138 0000 0000 · +234 800 000 0000" />
-        </div>
-
-        <div class="field-group">
           <label class="field-label">Chief Complaint / Symptoms</label>
           <div class="field-hint">Write in any language — automatically translated for analysis</div>
           <textarea id="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough · حمى وسعال · Fièvre et toux · 发烧咳嗽 · Fieber und Husten"></textarea>
@@ -573,6 +567,20 @@ input[type=file] { display: none; }
         <div id="err-box" class="error-box" style="display:none">
           <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
           <span id="err-msg"></span>
+        </div>
+
+        <!-- Consent checkbox -->
+        <div id="consent-box" style="background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:var(--radius);padding:1rem 1.25rem;margin-top:0.75rem">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;color:var(--ink-2);line-height:1.6">
+            <input type="checkbox" id="consent-check" onchange="updateAnalyzeBtn()" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer">
+            <span>
+              I confirm that I am a <strong>licensed healthcare professional</strong> and I agree to the
+              <a href="/terms" target="_blank" style="color:var(--accent)">Terms of Service</a> and
+              <a href="/privacy" target="_blank" style="color:var(--accent)">Privacy Policy</a>.
+              I understand that all AI-generated results are for clinical decision <strong>support only</strong>
+              and must be validated by a licensed physician before any prescribing decision.
+            </span>
+          </label>
         </div>
 
         <button class="analyze-btn" id="analyze-btn" onclick="analyze()" disabled>
@@ -650,6 +658,12 @@ function addFiles(fileList) {
 
 function removeFile(i) { uploadedFiles.splice(i,1); renderFileList(); }
 
+function updateAnalyzeBtn() {
+  const consent = document.getElementById('consent-check')?.checked;
+  const hasFiles = uploadedFiles.length > 0 && uploadedFiles.every(f => f.base64 !== null);
+  document.getElementById('analyze-btn').disabled = !(consent && hasFiles);
+}
+
 function renderFileList() {
   const listEl = document.getElementById('file-list');
   const addBtn = document.getElementById('add-more-btn');
@@ -666,7 +680,8 @@ function renderFileList() {
   document.getElementById('dz-icon-wrap').textContent = '✅';
   document.getElementById('dz-text').textContent = uploadedFiles.length + ' file' + (uploadedFiles.length>1?'s':'') + ' selected';
   listEl.style.display = 'flex'; addBtn.style.display = 'block';
-  btn.disabled = !uploadedFiles.every(f => f.base64 !== null);
+  const consent = document.getElementById('consent-check')?.checked;
+  btn.disabled = !(consent && uploadedFiles.every(f => f.base64 !== null));
   listEl.innerHTML = uploadedFiles.map((f,i) => `
     <div class="file-item">
       <div class="file-icon-box" style="background:${f.category==='pdf'?'#fef2f2':f.category==='image'?'#f5f3ff':f.category==='text'?'#ecfdf5':'#f9fafb'}">${f.icon}</div>
@@ -734,7 +749,6 @@ async function analyze() {
   if (!uploadedFiles.length || !uploadedFiles.every(f=>f.base64)) { showErr('Please wait for all files to finish loading.'); return; }
 
   const name      = document.getElementById('p-name').value.trim() || 'Patient';
-  const phone     = document.getElementById('p-phone').value.trim();
   const age       = document.getElementById('p-age').value;
   const gender    = document.getElementById('p-gender').value;
   const complaint = document.getElementById('p-complaint').value.trim();
@@ -761,7 +775,6 @@ Documents provided (${uploadedFiles.length}): ${filesSummary}
 
 Patient context (translate any non-English text before interpreting):
 - Name: ${name}
-- Phone: ${phone||'not provided'}
 - Age: ${age||'unknown'}
 - Gender: ${gender||'unknown'}
 - Chief complaint: ${complaint||'not provided'}
@@ -976,5 +989,14 @@ function resetForm() {
   hideErr(); window.scrollTo(0,0);
 }
 </script>
+  <!-- Legal footer -->
+  <footer style="max-width:860px;margin:0 auto;padding:1.5rem;text-align:center;font-size:12px;color:var(--ink-4);border-top:1px solid var(--border);margin-top:2rem">
+    <p>BloodRx Clinical Analyzer &nbsp;·&nbsp;
+      <a href="/terms" style="color:var(--ink-3);text-decoration:none">Terms of Service</a> &nbsp;·&nbsp;
+      <a href="/privacy" style="color:var(--ink-3);text-decoration:none">Privacy Policy</a> &nbsp;·&nbsp;
+      For licensed clinicians only &nbsp;·&nbsp; Not for emergency use
+    </p>
+    <p style="margin-top:6px">AI-generated results must be validated by a licensed physician before any clinical decision.</p>
+  </footer>
 </body>
 </html>
