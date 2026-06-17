@@ -6,7 +6,6 @@ const Database = require("better-sqlite3");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Init database
 const db = new Database("bloodrx.db");
 db.exec(`
   CREATE TABLE IF NOT EXISTS patients (
@@ -72,7 +71,6 @@ app.post("/api/analyze", async (req, res) => {
 
     const text = data.choices?.[0]?.message?.content || "";
 
-    // Try to parse and save to database
     try {
       const clean = text.replace(/```json|```/g, "").trim();
       const result = JSON.parse(clean);
@@ -109,7 +107,6 @@ app.post("/api/analyze", async (req, res) => {
   }
 });
 
-// Admin page
 app.get("/admin", (req, res) => {
   const patients = db.prepare("SELECT * FROM patients ORDER BY created_at DESC").all();
 
@@ -136,9 +133,11 @@ app.get("/admin", (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; padding: 2rem; background: #f4f5f7; color: #1a1a1a; }
-        h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+        body { font-family: -apple-system, sans-serif; padding: 2rem; background: #f4f5f7; }
+        h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
         .count { font-size: 13px; color: #666; margin-bottom: 1.5rem; margin-top: 4px; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+        .btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; }
         .table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
         table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; }
         th { background: #2563eb; color: white; padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
@@ -146,12 +145,10 @@ app.get("/admin", (req, res) => {
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #f8faff; }
         .sev { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-        .sev-mild     { background: #ecfdf5; color: #059669; }
+        .sev-mild { background: #ecfdf5; color: #059669; }
         .sev-moderate { background: #fffbeb; color: #b45309; }
         .sev-severe, .sev-critical { background: #fef2f2; color: #dc2626; }
         .empty { text-align: center; color: #999; padding: 3rem; }
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 10px; }
-        .btn { padding: 8px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none; }
       </style>
     </head>
     <body>
@@ -166,19 +163,12 @@ app.get("/admin", (req, res) => {
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Age</th>
-              <th>Gender</th>
-              <th>Complaint</th>
-              <th>Severity</th>
-              <th>Summary</th>
-              <th>Date</th>
+              <th>#</th><th>Name</th><th>Phone</th><th>Age</th><th>Gender</th>
+              <th>Complaint</th><th>Severity</th><th>Summary</th><th>Date</th>
             </tr>
           </thead>
           <tbody>
-            ${rows || '<tr><td colspan="9" class="empty">No records yet — run an analysis to see data here</td></tr>'}
+            ${rows || '<tr><td colspan="9" class="empty">No records yet</td></tr>'}
           </tbody>
         </table>
       </div>
