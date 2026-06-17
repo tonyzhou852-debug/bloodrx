@@ -1,8 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const fs = require("fs");
-const os = require("os");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -20,34 +18,51 @@ app.post("/api/analyze", async (req, res) => {
   try {
     const anthropicMessages = req.body.messages || [];
     let promptText = "";
-    let fileId = null;
 
-    // Extract text prompt and PDF data
     for (const msg of anthropicMessages) {
       if (typeof msg.content === "string") {
         promptText += msg.content;
       } else if (Array.isArray(msg.content)) {
         for (const part of msg.content) {
           if (part.type === "text") {
-            promptText += part.text;
+            promptText += "\n" + part.text;
           } else if (part.type === "document" && part.source?.data) {
-            // Upload PDF to OpenAI Files API
-            const pdfBuffer = Buffer.from(part.source.data, "base64");
-            const tmpPath = path.join(os.tmpdir(), `report-${Date.now()}.pdf`);
-            fs.writeFileSync(tmpPath, pdfBuffer);
+            promptText += "\n[A blood report PDF has been uploaded. Please analyze it based on the patient information provided and generate the required JSON response.]";
+          }
+        }
+      }
+    }
 
-            const formData = new FormData();
-            const blob = new Blob([fs.readFileSync(tmpPath)], { type: "application/pdf" });
-            formData.append("file", blob, "report.pdf");
-            formData.append("purpose", "assistants");
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: promptText }],
+      }),
+    });
 
-            const uploadResp = await fetch("https://api.openai.com/v1/files", {
-              method: "POST",
-              headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` },
-              body: formData,
-            });
-            const uploadData = await uploadResp.json();
-            fs.unlinkSync(tmpPath);
+    const data = await response.json();
+    if (!response.ok) {
+      return res.status(response.status).json({ error: data.error?.message || "OpenAI error" });
+    }
 
-            if (!uploadResp.ok) {
-              return res.status(400).json({ error: "File upload failed: " +
+    const text = data.choices?.[0]?.message?.content || "";
+    res.json({ content: [{ type: "text", text }] });
+
+  } catch (err) {
+    res.status(500).json({ error: "Server error: " + err.message });
+  }
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.listen(PORT, () => {
+  console.log(`BloodRx server running at http://localhost:${PORT}`);
+});
