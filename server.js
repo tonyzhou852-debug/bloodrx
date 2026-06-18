@@ -198,7 +198,8 @@ app.get("/admin", adminAuth, async (req, res) => {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
   // Stats
   const total    = patients.length;
