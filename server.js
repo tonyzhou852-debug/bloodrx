@@ -206,8 +206,13 @@ app.get("/admin", adminAuth, async (req, res) => {
   const severe   = patients.filter(p => p.severity === "severe" || p.severity === "critical").length;
   const moderate = patients.filter(p => p.severity === "moderate").length;
 
-  const rows = patients.map(p => `
-    <tr>
+  const rows = patients.map((p, idx) => `
+    <tr data-idx="${idx}">
+      <td style="width:36px;text-align:center">
+        <input type="checkbox" class="row-check" data-idx="${idx}" 
+          style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer" 
+          aria-label="Select record for ${escHtml(p.name)}">
+      </td>
       <td style="color:var(--ink-4);font-size:12px">${escHtml(String(p.id).slice(-6))}</td>
       <td><span class="patient-name">${escHtml(p.name)}</span></td>
       <td style="color:var(--ink-3)">${escHtml(p.phone)}</td>
@@ -443,6 +448,17 @@ tr:hover td { background: #fafafa; }
 .modal-close:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .modal-body { padding: 20px; font-size: 14px; color: var(--ink-2); line-height: 1.75; }
 
+/* Download option buttons */
+.dl-opt-btn {
+  width: 100%; display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; background: var(--surface);
+  border: 1.5px solid var(--border); border-radius: var(--radius);
+  cursor: pointer; font-family: inherit; text-align: left;
+  transition: border-color .15s, background .15s;
+}
+.dl-opt-btn:hover:not(:disabled) { border-color: var(--brand); background: var(--brand-bg); }
+.dl-opt-btn svg { flex-shrink: 0; stroke: var(--brand); }
+
 /* CSV button */
 .csv-btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -514,7 +530,13 @@ tr:hover td { background: #fafafa; }
   <div class="table-card" role="region" aria-label="Patient records table">
     <div class="table-card-head">
       <h2>All Analyses</h2>
-      <span class="record-count">${total} record${total !== 1 ? "s" : ""}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="record-count">${total} record${total !== 1 ? "s" : ""}</span>
+        <button onclick="openDownloadPanel()" class="csv-btn" id="download-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download CSV
+        </button>
+      </div>
     </div>
 
     ${total > 0 ? `
@@ -529,6 +551,12 @@ tr:hover td { background: #fafafa; }
       <table id="records-table" aria-label="Patient analysis records">
         <thead>
           <tr>
+            <th scope="col" style="width:36px;text-align:center">
+              <input type="checkbox" id="select-all-check" 
+                style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer"
+                aria-label="Select all records"
+                onchange="toggleAll(this.checked)">
+            </th>
             <th scope="col">ID</th>
             <th scope="col">Name</th>
             <th scope="col">Phone</th>
@@ -543,7 +571,7 @@ tr:hover td { background: #fafafa; }
         <tbody id="records-body">
           ${rows || `
           <tr>
-            <td colspan="9">
+            <td colspan="10">
               <div class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -580,26 +608,103 @@ tr:hover td { background: #fafafa; }
   </div>
 </div>
 
+<!-- Download panel -->
+<div class="modal-overlay" id="dl-overlay" role="dialog" aria-modal="true" aria-labelledby="dl-title" onclick="if(event.target===this)closeDL()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="dl-title">Download CSV</div>
+        <div class="modal-patient" id="dl-sub">Choose which records to export</div>
+      </div>
+      <button class="modal-close" onclick="closeDL()" aria-label="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;gap:12px">
+      <button class="dl-opt-btn" id="dl-all-btn" onclick="doDownload('all')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        <div>
+          <div style="font-weight:600;font-size:14px">Download All Records</div>
+          <div id="dl-all-count" style="font-size:12px;color:var(--ink-3);margin-top:2px"></div>
+        </div>
+      </button>
+      <button class="dl-opt-btn" id="dl-sel-btn" onclick="doDownload('selected')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <div>
+          <div style="font-weight:600;font-size:14px">Download Selected Only</div>
+          <div id="dl-sel-count" style="font-size:12px;color:var(--ink-3);margin-top:2px"></div>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
-function downloadCSV() {
-  const table = document.getElementById('records-table');
-  if (!table) return;
-  const rows = table.querySelectorAll('tr');
-  const csv = Array.from(rows).map(row => {
-    return Array.from(row.querySelectorAll('th, td')).map(cell => {
+/* ── Select / deselect ── */
+function toggleAll(checked) {
+  document.querySelectorAll('.row-check').forEach(cb => {
+    const row = cb.closest('tr');
+    if (row.style.display !== 'none') cb.checked = checked;
+  });
+  updateSelectionBar();
+}
+
+function updateSelectionBar() {
+  const all = document.querySelectorAll('.row-check');
+  const checked = document.querySelectorAll('.row-check:checked');
+  const selectAllCb = document.getElementById('select-all-check');
+  if (selectAllCb) {
+    selectAllCb.indeterminate = checked.length > 0 && checked.length < all.length;
+    selectAllCb.checked = checked.length === all.length && all.length > 0;
+  }
+}
+
+document.addEventListener('change', e => {
+  if (e.target.classList.contains('row-check')) updateSelectionBar();
+});
+
+/* ── Download panel ── */
+function openDownloadPanel() {
+  const all = document.querySelectorAll('#records-body tr:not([style*="display: none"])');
+  const sel = document.querySelectorAll('.row-check:checked');
+  document.getElementById('dl-all-count').textContent = all.length + ' record' + (all.length !== 1 ? 's' : '');
+  document.getElementById('dl-sel-count').textContent = sel.length + ' record' + (sel.length !== 1 ? 's' : '') + ' selected';
+  const selBtn = document.getElementById('dl-sel-btn');
+  selBtn.disabled = sel.length === 0;
+  selBtn.style.opacity = sel.length === 0 ? '0.45' : '1';
+  selBtn.style.cursor = sel.length === 0 ? 'not-allowed' : 'pointer';
+  document.getElementById('dl-overlay').classList.add('open');
+}
+function closeDL() {
+  document.getElementById('dl-overlay').classList.remove('open');
+}
+
+function doDownload(mode) {
+  const headers = ['ID','Name','Phone','Age','Gender','Complaint','Severity','Summary','Date'];
+  let rows;
+  if (mode === 'all') {
+    rows = document.querySelectorAll('#records-body tr:not([style*="display: none"])');
+  } else {
+    rows = Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.closest('tr'));
+  }
+  const csvRows = [headers.map(h => '"' + h + '"').join(',')];
+  rows.forEach(row => {
+    const cells = Array.from(row.querySelectorAll('td')).slice(1); // skip checkbox cell
+    csvRows.push(cells.map(cell => {
       const text = cell.textContent.replace(/\s+/g, ' ').trim();
       return '"' + text.replace(/"/g, '""') + '"';
-    }).join(',');
-  }).join('\n');
+    }).join(','));
+  });
+  const csv = csvRows.join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'bloodrx-records-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = 'bloodrx-' + mode + '-' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   URL.revokeObjectURL(url);
+  closeDL();
 }
 
+/* ── Filter ── */
 function filterTable(query) {
   const q = query.toLowerCase().trim();
   const rows = document.querySelectorAll('#records-body tr');
@@ -608,6 +713,8 @@ function filterTable(query) {
     row.style.display = (!q || text.includes(q)) ? '' : 'none';
   });
 }
+
+/* ── Summary modal ── */
 function openModal(name, summary) {
   document.getElementById('modal-patient').textContent = name;
   document.getElementById('modal-body').textContent = summary;
@@ -618,7 +725,9 @@ function openModal(name, summary) {
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeDL(); }
+});
 </script>
 </body>
 </html>`);
