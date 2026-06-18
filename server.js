@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const fs = require("fs");
 const crypto = require("crypto");
+const { MongoClient } = require("mongodb");
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -10,16 +10,17 @@ const PORT = process.env.PORT || 3001;
 // ── Admin password (set ADMIN_PASSWORD env var in Render) ──────
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bloodrx-admin-2024";
 
-// ── Simple JSON file database ──────────────────────────────────
-const DB_FILE = "/tmp/bloodrx.json";
-function loadDB() {
-  try { return JSON.parse(fs.readFileSync(DB_FILE, "utf8")); }
-  catch { return { patients: [] }; }
+// ── MongoDB ────────────────────────────────────────────────────
+let _db = null;
+async function getDB() {
+  if (_db) return _db;
+  const client = new MongoClient(process.env.MONGODB_URI);
+  await client.connect();
+  _db = client.db("bloodrx");
+  console.log("Connected to MongoDB");
+  return _db;
 }
-function saveDB(data) {
-  try { fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2)); }
-  catch(e) { console.log("DB save error:", e.message); }
-}
+getDB().catch(e => console.error("MongoDB startup error:", e.message));
 
 // ── Security middleware ────────────────────────────────────────
 app.use(cors({
@@ -174,9 +175,8 @@ app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, 
         created_at: new Date().toISOString()
       };
 
-      const dbData = loadDB();
-      dbData.patients.push(record);
-      saveDB(dbData);
+      const database = await getDB();
+      await database.collection("patients").insertOne(record);
     } catch (e) {
       console.log("Could not save to DB:", e.message);
     }
@@ -190,9 +190,9 @@ app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, 
 });
 
 // ── Admin route (password protected) ──────────────────────────
-app.get("/admin", adminAuth, (req, res) => {
-  const dbData = loadDB();
-  const patients = [...dbData.patients].reverse();
+app.get("/admin", adminAuth, async (req, res) => {
+  const database = await getDB();
+  const patients = await database.collection("patients").find({}).sort({ id: -1 }).toArray();
 
   const escHtml = s => String(s || "")
     .replace(/&/g, "&amp;")
