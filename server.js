@@ -443,6 +443,19 @@ tr:hover td { background: #fafafa; }
 .modal-close:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .modal-body { padding: 20px; font-size: 14px; color: var(--ink-2); line-height: 1.75; }
 
+/* CSV button */
+.csv-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; min-height: 36px;
+  background: var(--brand); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: background .15s;
+  touch-action: manipulation;
+}
+.csv-btn:hover { background: var(--brand-dark, #991b1b); }
+.csv-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
 /* Footer */
 .site-footer {
   text-align: center; font-size: 12px; color: var(--ink-4);
@@ -568,6 +581,25 @@ tr:hover td { background: #fafafa; }
 </div>
 
 <script>
+function downloadCSV() {
+  const table = document.getElementById('records-table');
+  if (!table) return;
+  const rows = table.querySelectorAll('tr');
+  const csv = Array.from(rows).map(row => {
+    return Array.from(row.querySelectorAll('th, td')).map(cell => {
+      const text = cell.textContent.replace(/\s+/g, ' ').trim();
+      return '"' + text.replace(/"/g, '""') + '"';
+    }).join(',');
+  }).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bloodrx-records-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function filterTable(query) {
   const q = query.toLowerCase().trim();
   const rows = document.querySelectorAll('#records-body tr');
