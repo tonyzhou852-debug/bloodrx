@@ -215,7 +215,10 @@ app.get("/admin", adminAuth, (req, res) => {
       <td style="color:var(--ink-3)">${escHtml(p.gender)}</td>
       <td style="color:var(--ink-2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.complaint)}">${escHtml(p.complaint)}</td>
       <td><span class="sev sev-${escHtml(p.severity)}">${escHtml(p.severity) || "—"}</span></td>
-      <td style="color:var(--ink-3);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px" title="${escHtml(p.summary)}">${escHtml(p.summary)}</td>
+      <td>${p.summary ? `<button class="summary-btn" onclick="openModal('${escHtml(p.name)}', this.dataset.summary)" data-summary="${escHtml(p.summary)}" aria-label="View full summary">
+          <span class="summary-preview">${escHtml(p.summary)}</span>
+          <svg class="expand-ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>` : '<span style="color:var(--ink-4)">—</span>'}</td>
       <td style="color:var(--ink-4);font-size:12px;white-space:nowrap">${escHtml(new Date(p.created_at).toLocaleString("en-GB", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }))}</td>
     </tr>
   `).join("");
@@ -392,6 +395,54 @@ tr:hover td { background: #fafafa; }
 }
 .search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(185,28,28,.1); }
 
+/* Summary button */
+.summary-btn {
+  display: flex; align-items: flex-start; gap: 6px;
+  background: none; border: none; cursor: pointer; padding: 0;
+  font-family: inherit; text-align: left; color: var(--ink-2);
+  font-size: 12px; line-height: 1.5; max-width: 240px;
+  transition: color .15s;
+}
+.summary-btn:hover { color: var(--brand); }
+.summary-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 2px; }
+.summary-preview {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; flex: 1;
+}
+.expand-ico { flex-shrink: 0; margin-top: 2px; opacity: .5; }
+.summary-btn:hover .expand-ico { opacity: 1; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 200;
+  align-items: center; justify-content: center; padding: 24px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  width: 100%; max-width: 540px;
+  animation: modalIn .2s ease-out;
+}
+@keyframes modalIn { from { opacity:0; transform:scale(.96) translateY(8px) } to { opacity:1; transform:scale(1) translateY(0) } }
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.modal-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+.modal-patient { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 6px;
+  background: none; border: 1px solid var(--border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--ink-3); transition: border-color .15s, color .15s;
+  font-size: 16px; flex-shrink: 0;
+}
+.modal-close:hover { border-color: var(--brand); color: var(--brand); }
+.modal-close:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.modal-body { padding: 20px; font-size: 14px; color: var(--ink-2); line-height: 1.75; }
+
 /* Footer */
 .site-footer {
   text-align: center; font-size: 12px; color: var(--ink-4);
@@ -502,6 +553,20 @@ tr:hover td { background: #fafafa; }
 
 </main>
 
+<!-- Summary modal -->
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="modal-title">Clinical Summary</div>
+        <div class="modal-patient" id="modal-patient"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
 <script>
 function filterTable(query) {
   const q = query.toLowerCase().trim();
@@ -511,6 +576,17 @@ function filterTable(query) {
     row.style.display = (!q || text.includes(q)) ? '' : 'none';
   });
 }
+function openModal(name, summary) {
+  document.getElementById('modal-patient').textContent = name;
+  document.getElementById('modal-body').textContent = summary;
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.add('open');
+  overlay.querySelector('.modal-close').focus();
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 </script>
 </body>
 </html>`);
