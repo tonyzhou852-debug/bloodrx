@@ -220,10 +220,7 @@ app.get("/admin", adminAuth, async (req, res) => {
       <td style="color:var(--ink-3)">${escHtml(p.gender)}</td>
       <td style="color:var(--ink-2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escHtml(p.complaint)}">${escHtml(p.complaint)}</td>
       <td><span class="sev sev-${escHtml(p.severity)}">${escHtml(p.severity) || "—"}</span></td>
-      <td>${p.summary ? `<button class="summary-btn" onclick="openModal('${escHtml(p.name)}', this.dataset.summary)" data-summary="${escHtml(p.summary)}" aria-label="View full summary">
-          <span class="summary-preview">${escHtml(p.summary)}</span>
-          <svg class="expand-ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-        </button>` : '<span style="color:var(--ink-4)">—</span>'}</td>
+      <td>${p.summary ? '<button class="summary-btn" onclick="openModal(this)" data-name="' + escHtml(p.name) + '" data-summary="' + escHtml(p.summary) + '" aria-label="View full summary"><span class="summary-preview">' + escHtml(p.summary) + '</span><svg class="expand-ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></button>' : '<span style="color:var(--ink-4)">—</span>'}</td>
       <td style="color:var(--ink-4);font-size:12px;white-space:nowrap">${escHtml(new Date(p.created_at).toLocaleString("en-GB", { day:"numeric", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }))}</td>
     </tr>
   `).join("");
@@ -696,7 +693,9 @@ function filterTable(query) {
 }
 
 /* ── Summary modal ── */
-function openModal(name, summary) {
+function openModal(btn) {
+  const name = btn.dataset.name || '';
+  const summary = btn.dataset.summary || '';
   document.getElementById('modal-patient').textContent = name;
   document.getElementById('modal-body').textContent = summary;
   const overlay = document.getElementById('modal-overlay');
