@@ -666,11 +666,17 @@ input[type=file] { display: none; }
           </select>
         </div>
 
-        <div class="field-group">
-          <!-- §8: visible label with for= (not placeholder-only) -->
-          <label class="field-label" for="p-name">Patient name</label>
-          <div class="field-hint">Any script accepted — Arabic, Chinese, Cyrillic, Devanagari, Latin…</div>
-          <input type="text" id="p-name" name="p-name" dir="auto" placeholder="Full name" autocomplete="off" />
+        <div class="grid-2 field-group">
+          <div>
+            <label class="field-label" for="p-name">Patient name</label>
+            <div class="field-hint">Any script accepted</div>
+            <input type="text" id="p-name" name="p-name" dir="auto" placeholder="Full name" autocomplete="off" />
+          </div>
+          <div>
+            <label class="field-label" for="p-phone">Phone number</label>
+            <div class="field-hint">Optional — for follow-up</div>
+            <input type="tel" id="p-phone" name="p-phone" placeholder="e.g. +1 555 000 0000" autocomplete="tel" />
+          </div>
         </div>
 
         <div class="grid-2 field-group">
@@ -954,6 +960,7 @@ async function analyze() {
   if (!uploadedFiles.length || !uploadedFiles.every(f=>f.base64)) { showErr('Please wait for all files to finish loading.'); return; }
 
   const name      = document.getElementById('p-name').value.trim() || 'Patient';
+  const phone     = document.getElementById('p-phone').value.trim();
   const age       = document.getElementById('p-age').value;
   const gender    = document.getElementById('p-gender').value;
   const complaint = document.getElementById('p-complaint').value.trim();
@@ -980,6 +987,7 @@ Documents provided (${uploadedFiles.length}): ${filesSummary}
 
 Patient context (translate any non-English text before interpreting):
 - Name: ${name}
+- Phone: ${phone||'not provided'}
 - Age: ${age||'unknown'}
 - Gender: ${gender||'unknown'}
 - Chief complaint: ${complaint||'not provided'}
