@@ -544,6 +544,27 @@ input[type=file] { display: none; }
 .site-footer a { color: var(--ink-3); text-decoration: none; }
 .site-footer a:hover { color: var(--brand); }
 
+
+/* VHS Score badge */
+.vhs-score-badge { border:2px solid; border-radius:12px; padding:8px 14px; text-align:center; min-width:80px; }
+.vhs-score-num { font-size:28px; font-weight:700; letter-spacing:-.03em; line-height:1; }
+.vhs-score-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin-top:2px; }
+
+/* Risk profile */
+.risk-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+.risk-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow-sm); }
+.risk-label { font-size:12px; font-weight:600; color:var(--ink-2); margin-bottom:8px; text-transform:capitalize; }
+.risk-bar-wrap { height:6px; background:var(--bg-2); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+.risk-bar { height:6px; border-radius:3px; transition:width .4s ease; }
+.risk-score-row { margin-bottom:6px; }
+.risk-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
+.risk-note { font-size:12px; color:var(--ink-3); line-height:1.5; }
+
+/* Recommendations */
+.rec-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.25rem; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:10px; }
+.rec-item { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:var(--ink-2); line-height:1.6; }
+.rec-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+
 /* §5: responsive */
 @media (max-width: 600px) {
   .topbar-right { display: none; }
@@ -583,8 +604,8 @@ input[type=file] { display: none; }
     For licensed clinicians only
     <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
   </div>
-  <h1>Blood Report Analysis &amp;<br><em>Antibiotic Recommendations</em></h1>
-  <p class="hero-sub">Submit patient documents in any format or language to receive a structured clinical analysis in seconds.</p>
+  <h1>VANDL Health Score &amp;<br><em>Wellness Assessment Platform</em></h1>
+  <p class="hero-sub">Submit health documents in any format or language to receive a comprehensive wellness assessment and VHS Health Score.</p>
   <div class="capability-chips" role="list" aria-label="Supported capabilities">
     <span class="chip" role="listitem">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 3h6v1H5V8zm0 3h4v1H5v-1z"/></svg>
@@ -613,8 +634,8 @@ input[type=file] { display: none; }
 
   <!-- Page heading -->
   <div class="page-heading" id="form-heading">
-    <h1>Blood Report Analyzer</h1>
-    <p>Submit patient documents in any format or language to receive a structured clinical analysis and antibiotic recommendations.</p>
+    <h1>VHS Wellness Assessment</h1>
+    <p>Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.</p>
   </div>
 
   <!-- FORM SECTION -->
@@ -773,7 +794,7 @@ input[type=file] { display: none; }
         <button class="analyze-btn" id="analyze-btn" onclick="analyze()" disabled type="button"
           aria-describedby="analyze-disclaimer">
           <svg width="17" height="17" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
-          Run Clinical Analysis
+          Generate Health Assessment
         </button>
 
       </div>
@@ -781,7 +802,7 @@ input[type=file] { display: none; }
 
     <div class="disclaimer" id="analyze-disclaimer">
       <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-      <span>For use by qualified healthcare professionals only. All AI-generated recommendations must be validated by a licensed physician and cross-referenced with local antibiogram data and current IDSA/WHO guidelines before prescribing.</span>
+      <span>This report is intended for health education and wellness management purposes only. It does not constitute medical diagnosis, treatment recommendation, or prescription. Users should consult a licensed physician for medical decisions.</span>
     </div>
 
   </div><!-- /form-section -->
@@ -920,8 +941,8 @@ const STEPS = [
   'Reading and parsing documents',
   'Detecting language — translating markers',
   'Extracting and normalising lab values',
-  'Cross-referencing clinical data',
-  'Generating antibiotic recommendations',
+  'Calculating VHS Health Score',
+  'Generating wellness recommendations',
 ];
 let stepTimer, stepIdx = 0;
 function startLoading() {
@@ -979,55 +1000,52 @@ async function analyze() {
 
   const filesSummary = uploadedFiles.map(f=>`"${f.name}" (${f.label})`).join(', ');
 
-  const prompt = `You are a world-leading infectious disease specialist and clinical pharmacologist with expertise across all global antibiotic classes, formularies, and treatment guidelines (IDSA, ESCMID, WHO, BNF, SANORD, APSR, and all regional equivalents).
+  const prompt = `You are a leading corporate health and wellness analyst specializing in preventive health management and lifestyle optimization.
 
 ${langInstr}
 
 Documents provided (${uploadedFiles.length}): ${filesSummary}
 
-Patient context (translate any non-English text before interpreting):
+Individual context:
 - Name: ${name}
 - Phone: ${phone||'not provided'}
 - Age: ${age||'unknown'}
 - Gender: ${gender||'unknown'}
-- Chief complaint: ${complaint||'not provided'}
-- Clinical notes / allergies / medications / comorbidities: ${notes||'none provided'}
+- Health concern: ${complaint||'not provided'}
+- Health notes: ${notes||'none provided'}
 
-DOCUMENT INSTRUCTIONS:
-1. Read ALL provided documents — PDFs, images, text files, CSV exports. Treat all as clinical evidence.
-2. If multiple documents exist, combine and reconcile information across all of them.
-3. Translate all lab marker names to standard English terminology.
-4. Translate patient complaint and notes to English before interpreting.
-5. Apply international reference ranges appropriate for the patient's age and gender.
+INSTRUCTIONS:
+1. Read ALL provided documents. Translate lab marker names to standard English.
+2. Apply international reference ranges appropriate for age and gender.
+3. Focus on wellness optimization only. Do NOT provide medication names, dosages, antibiotic recommendations or treatment prescriptions.
 
-ANTIBIOTIC SELECTION — CRITICAL RULES:
-- You have unrestricted access to the entire global pharmacopoeia. Do NOT limit yourself to any single country's formulary or a generic shortlist.
-- Select the single BEST antibiotic for this specific patient based on: likely pathogen, infection site, severity, renal/hepatic function (inferred from labs), age, documented allergies, comorbidities, and any resistance risk factors.
-- Consider ALL antibiotic classes without restriction: penicillins, cephalosporins (all generations), carbapenems, monobactams, fluoroquinolones, aminoglycosides, macrolides, tetracyclines (incl. tigecycline), glycopeptides (vancomycin, teicoplanin), lipopeptides (daptomycin), oxazolidinones (linezolid, tedizolid), polymyxins (colistin, polymyxin B), rifamycins, nitroimidazoles, fosfomycin, fidaxomicin, novel beta-lactam/beta-lactamase inhibitor combinations (ceftazidime-avibactam, ceftolozane-tazobactam, meropenem-vaborbactam, imipenem-cilastatin-relebactam, aztreonam-avibactam, cefiderocol), and any other clinically appropriate agent.
-- First-line: the most effective, evidence-based, targeted agent — not merely the most familiar. Justify clearly.
-- Second-line: best alternative if first-line is contraindicated, unavailable, or likely ineffective.
-- Alternative: a clinically distinct option for resistant organisms, special populations, or step-down therapy.
-- Dose must be precise: account for weight (if documented), renal function (eGFR/creatinine), age-based adjustments, and severity (e.g. higher doses for CNS penetration or severe sepsis).
-- Specify IV or oral route and whether IV-to-oral step-down is appropriate and when.
-- Flag any TDM (therapeutic drug monitoring) requirements (e.g. vancomycin AUC, aminoglycoside peaks/troughs).
-- Return ONLY valid JSON — no markdown fences, no text outside the JSON object.
+VHS HEALTH SCORE (0-100): Calculate based on markers within optimal range. 90-100=Excellent, 75-89=Good, 60-74=Fair, 40-59=Needs Attention, 0-39=Poor.
+RISK PROFILES: Score each 1-5 (1=Very Low, 5=Very High).
 
-Required JSON structure:
+Return ONLY valid JSON:
 {
-  "detected_languages": "comma-separated list of document languages detected",
-  "documents_analysed": "one-line description of what each document contained",
-  "translated_complaint": "English translation of chief complaint",
-  "translated_notes": "English translation of clinical notes",
-  "summary": "2-3 sentence clinical summary and most likely diagnosis",
-  "severity": "mild | moderate | severe | critical",
-  "differential": "top 2-3 differential diagnoses, comma-separated",
+  "detected_languages": "languages detected",
+  "documents_analysed": "brief description",
+  "translated_complaint": "English translation",
+  "translated_notes": "English translation",
+  "vhs_score": 85,
+  "vhs_label": "Good",
+  "health_assessment": "2-3 sentence wellness summary",
+  "key_health_concerns": "top 2-3 health areas, comma-separated",
+  "risk_profile": {
+    "cardiovascular": { "score": 2, "label": "Low", "note": "one sentence" },
+    "metabolic": { "score": 3, "label": "Moderate", "note": "one sentence" },
+    "liver": { "score": 1, "label": "Very Low", "note": "one sentence" },
+    "kidney": { "score": 2, "label": "Low", "note": "one sentence" },
+    "inflammation": { "score": 2, "label": "Low", "note": "one sentence" }
+  },
   "findings": [
-    { "marker":"standard English name", "original_name":"as in document or empty string", "value":"value with unit", "status":"normal|high|low|critical", "interpretation":"one sentence clinical significance", "source":"filename if multiple docs, else empty string" }
+    { "marker":"name", "original_name":"", "value":"value with unit", "status":"normal|high|low|critical", "interpretation":"wellness significance", "source":"" }
   ],
-  "antibiotics": [
-    { "priority":"first-line|second-line|alternative", "name":"full antibiotic name", "class":"antibiotic class e.g. 3rd-gen cephalosporin", "dose":"exact dose route and frequency e.g. Ceftriaxone 2g IV once daily", "duration":"evidence-based duration e.g. 14 days", "reason":"detailed rationale — why this specific agent is optimal for this patient", "cautions":"contraindications monitoring requirements interactions dose adjustments — empty string if none", "tdm":"therapeutic drug monitoring required — empty string if none" }
-  ],
-  "monitoring": "specific follow-up labs, cultures, imaging, and clinical reassessment timeline"
+  "nutrition_recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
+  "lifestyle_recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
+  "nutritional_support": ["supplement 1", "supplement 2", "supplement 3"],
+  "monitoring_plan": "follow-up tests and timeline"
 }`;
 
   const parts = buildContentParts();
@@ -1057,13 +1075,6 @@ Required JSON structure:
 
 /* ── Render results ── */
 function renderResults(r, p) {
-  const sevCls = { mild:'sev-mild', moderate:'sev-moderate', severe:'sev-severe', critical:'sev-critical' };
-  const valCls = { normal:'val-normal', high:'val-high', low:'val-low', critical:'val-critical' };
-  const valIco = { normal:'↔', high:'↑', low:'↓', critical:'⚠' };
-  const abCls  = { 'first-line':'ab-first', 'second-line':'ab-second', 'alternative':'ab-alt' };
-  const abPri  = { 'first-line':'ab-pri-first', 'second-line':'ab-pri-second', 'alternative':'ab-pri-alt' };
-  const abLbl  = { 'first-line':'First Line', 'second-line':'Second Line', 'alternative':'Alternative' };
-
   const initials = p.name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || 'P';
 
   const sourcesHtml = `
@@ -1079,17 +1090,27 @@ function renderResults(r, p) {
       ${r.documents_analysed ? `<br><span style="opacity:.8">${escHtml(r.documents_analysed)}</span>` : ''}
     </div>` : '';
 
-  const transHtml = ((r.translated_complaint && r.translated_complaint !== p.complaint) || (r.translated_notes && r.translated_notes !== p.notes)) ? `
-    <div class="info-banner banner-amber" role="note">
-      <strong>Auto-translated inputs</strong>
-      ${r.translated_complaint && r.translated_complaint !== p.complaint ? `<br>Complaint: <em>"${escHtml(r.translated_complaint)}"</em>` : ''}
-      ${r.translated_notes && r.translated_notes !== p.notes ? `<br>Notes: <em>"${escHtml(r.translated_notes)}"</em>` : ''}
-    </div>` : '';
+  const valCls = { normal:'val-normal', high:'val-high', low:'val-low', critical:'val-critical' };
+  const valIco = { normal:'↔', high:'↑', low:'↓', critical:'⚠' };
+
+  // VHS Score colour
+  const score = r.vhs_score || 0;
+  const scoreColor = score >= 90 ? '#059669' : score >= 75 ? '#2563eb' : score >= 60 ? '#b45309' : score >= 40 ? '#dc2626' : '#7f1d1d';
+
+  // Risk profile
+  const riskColors = ['#059669','#65a30d','#b45309','#dc2626','#7f1d1d'];
+  const riskHtml = r.risk_profile ? Object.entries(r.risk_profile).map(([key, val]) => `
+    <div class="risk-card">
+      <div class="risk-label">${key.charAt(0).toUpperCase()+key.slice(1)} Risk</div>
+      <div class="risk-bar-wrap"><div class="risk-bar" style="width:${(val.score/5)*100}%;background:${riskColors[(val.score||1)-1]}"></div></div>
+      <div class="risk-score-row"><span class="risk-badge" style="background:${riskColors[(val.score||1)-1]}20;color:${riskColors[(val.score||1)-1]};border:1px solid ${riskColors[(val.score||1)-1]}40">${escHtml(val.label||'')}</span></div>
+      <div class="risk-note">${escHtml(val.note||'')}</div>
+    </div>`).join('') : '';
 
   const findingsHtml = (r.findings||[]).length ? `
     <table class="findings-table">
       <thead><tr>
-        <th scope="col">Marker</th><th scope="col">Value</th><th scope="col">Status</th><th scope="col">Interpretation</th>
+        <th scope="col">Marker</th><th scope="col">Value</th><th scope="col">Status</th><th scope="col">Wellness Significance</th>
         ${uploadedFiles.length>1 ? '<th scope="col">Source</th>' : ''}
       </tr></thead>
       <tbody>
@@ -1104,72 +1125,77 @@ function renderResults(r, p) {
       </tbody>
     </table>` : '<p style="color:var(--ink-4);font-size:14px">No specific findings extracted.</p>';
 
-  const abHtml = (r.antibiotics||[]).map(a=>`
-    <div class="ab-card ${abCls[a.priority]||'ab-first'}">
-      <div class="ab-header">
-        <div>
-          <span class="ab-name">${escHtml(a.name)}</span>
-          ${a.class ? `<span style="display:inline-block;margin-left:8px;font-size:11px;font-weight:500;color:var(--ink-3);background:var(--bg-2);border:1px solid var(--border);border-radius:4px;padding:1px 7px">${escHtml(a.class)}</span>` : ''}
-        </div>
-        <span class="ab-pri ${abPri[a.priority]||'ab-pri-first'}">${abLbl[a.priority]||a.priority}</span>
-      </div>
-      <div class="ab-dosage">${escHtml(a.dose)} <span>·</span> ${escHtml(a.duration)}</div>
-      <div class="ab-reason">${escHtml(a.reason)}
-        ${a.cautions ? `<div class="ab-caution"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${escHtml(a.cautions)}</div>` : ''}
-        ${a.tdm ? `<div style="display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--blue);margin-top:6px;background:var(--blue-bg);padding:6px 10px;border-radius:var(--radius-sm);border:1px solid var(--blue-bd)"><strong>TDM required:</strong>&nbsp;${escHtml(a.tdm)}</div>` : ''}
-      </div>
-    </div>`).join('');
+  const listHtml = (items, icon) => (items||[]).map(i=>`<div class="rec-item"><span class="rec-icon">${icon}</span><span>${escHtml(i)}</span></div>`).join('');
 
   document.getElementById('results').innerHTML = `
     <div class="result-topbar">
-      <h2>Clinical Analysis Report</h2>
-      <button class="new-analysis-btn" onclick="resetForm()" type="button">
-        &#8592; New Analysis
-      </button>
+      <h2>VHS Wellness Report</h2>
+      <button class="new-analysis-btn" onclick="resetForm()" type="button">&#8592; New Assessment</button>
     </div>
 
-    ${sourcesHtml}${langHtml}${transHtml}
+    ${sourcesHtml}${langHtml}
 
-    <div class="patient-card" role="region" aria-label="Patient summary">
+    <div class="patient-card" role="region" aria-label="Individual summary">
       <div class="patient-avatar" aria-hidden="true">${escHtml(initials)}</div>
       <div class="patient-info">
         <h3>${escHtml(p.name)}</h3>
-        <p>${[p.age&&p.age+' years', p.gender, r.translated_complaint||p.complaint].filter(Boolean).map(escHtml).join(' &nbsp;·&nbsp; ')}</p>
+        <p>${[p.age&&p.age+' years', p.gender].filter(Boolean).map(escHtml).join(' &nbsp;·&nbsp; ')}</p>
       </div>
       <div class="patient-right">
-        <span class="sev-badge ${sevCls[r.severity]||'sev-moderate'}">${r.severity||'unknown'} severity</span>
+        <div class="vhs-score-badge" style="border-color:${scoreColor}">
+          <div class="vhs-score-num" style="color:${scoreColor}">${score}</div>
+          <div class="vhs-score-label">VHS Score</div>
+        </div>
         <span style="font-size:11px;color:var(--ink-4)">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</span>
       </div>
     </div>
 
-    <div class="result-section" role="region" aria-label="Clinical summary">
-      <div class="result-section-title">Clinical Summary</div>
+    <div class="result-section" role="region" aria-label="Health assessment">
+      <div class="result-section-title">Health Assessment Summary</div>
       <div class="summary-block">
-        ${escHtml(r.summary||'')}
-        ${r.differential ? `<div class="differential"><strong>Differential diagnoses:</strong> ${escHtml(r.differential)}</div>` : ''}
+        ${escHtml(r.health_assessment||'')}
+        ${r.key_health_concerns ? `<div class="differential"><strong>Key Health Concerns:</strong> ${escHtml(r.key_health_concerns)}</div>` : ''}
       </div>
     </div>
+
+    ${riskHtml ? `
+    <div class="result-section" role="region" aria-label="Risk profile">
+      <div class="result-section-title">Risk Profile</div>
+      <div class="risk-grid">${riskHtml}</div>
+    </div>` : ''}
 
     <div class="result-section" role="region" aria-label="Laboratory findings">
       <div class="result-section-title">Laboratory Findings</div>
       ${findingsHtml}
     </div>
 
-    ${(r.antibiotics||[]).length ? `
-    <div class="result-section" role="region" aria-label="Antibiotic recommendations">
-      <div class="result-section-title">Antibiotic Recommendations</div>
-      <div class="ab-grid">${abHtml}</div>
+    ${(r.nutrition_recommendations||[]).length ? `
+    <div class="result-section" role="region" aria-label="Nutrition recommendations">
+      <div class="result-section-title">Nutrition Recommendations</div>
+      <div class="rec-card">${listHtml(r.nutrition_recommendations,'🥗')}</div>
     </div>` : ''}
 
-    ${r.monitoring ? `
-    <div class="result-section" role="region" aria-label="Monitoring and follow-up">
-      <div class="result-section-title">Monitoring &amp; Follow-up</div>
-      <div class="monitoring-card">${escHtml(r.monitoring)}</div>
+    ${(r.lifestyle_recommendations||[]).length ? `
+    <div class="result-section" role="region" aria-label="Lifestyle recommendations">
+      <div class="result-section-title">Lifestyle Recommendations</div>
+      <div class="rec-card">${listHtml(r.lifestyle_recommendations,'🏃')}</div>
+    </div>` : ''}
+
+    ${(r.nutritional_support||[]).length ? `
+    <div class="result-section" role="region" aria-label="Nutritional support">
+      <div class="result-section-title">Suggested Nutritional Support</div>
+      <div class="rec-card">${listHtml(r.nutritional_support,'💊')}</div>
+    </div>` : ''}
+
+    ${r.monitoring_plan ? `
+    <div class="result-section" role="region" aria-label="Monitoring plan">
+      <div class="result-section-title">Monitoring Plan</div>
+      <div class="monitoring-card">${escHtml(r.monitoring_plan)}</div>
     </div>` : ''}
 
     <div class="disclaimer" role="note">
       <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-      <span>AI-generated analysis. All recommendations must be validated by a licensed clinician and cross-referenced with local antibiogram data and current IDSA/WHO prescribing guidelines before administration.</span>
+      <span>This report is intended for health education and wellness management purposes only. It does not constitute medical diagnosis, treatment recommendation, or prescription. Users should consult a licensed physician for medical decisions.</span>
     </div>
   `;
 
@@ -1199,7 +1225,7 @@ function resetForm() {
     <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp;
     For licensed clinicians only &nbsp;·&nbsp; Not for emergency use
   </p>
-  <p style="margin-top:6px">AI-generated results must be validated by a licensed physician before any clinical decision.</p>
+  <p style="margin-top:6px">This report is for health education and wellness management only. Not a medical diagnosis or prescription.</p>
 </footer>
 </body>
 </html>
