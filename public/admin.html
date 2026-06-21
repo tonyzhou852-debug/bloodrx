@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin — BloodRx</title>
+<title>Admin — VHS Wellness Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -136,15 +136,15 @@ tbody tr:hover td{background:#fafafa}
 
 <main class="page">
   <div class="page-header">
-    <h1>Patient Records</h1>
-    <p>All analyses submitted through BloodRx — most recent first</p>
+    <h1>Health Assessment Records</h1>
+    <p>All VHS wellness assessments — most recent first</p>
   </div>
 
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">Total Records</div><div class="stat-value" id="st-total">—</div></div>
     <div class="stat-card brand"><div class="stat-label">Today</div><div class="stat-value" id="st-today">—</div></div>
-    <div class="stat-card amber"><div class="stat-label">Moderate</div><div class="stat-value" id="st-moderate">—</div></div>
-    <div class="stat-card red"><div class="stat-label">Severe / Critical</div><div class="stat-value" id="st-severe">—</div></div>
+    <div class="stat-card amber"><div class="stat-label">Avg VHS Score</div><div class="stat-value" id="st-moderate">—</div></div>
+    <div class="stat-card red"><div class="stat-label">Needs Attention</div><div class="stat-value" id="st-severe">—</div></div>
   </div>
 
   <div class="table-card">
@@ -169,7 +169,7 @@ tbody tr:hover td{background:#fafafa}
               <input type="checkbox" id="select-all-check" style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer" onchange="toggleAll(this.checked)">
             </th>
             <th>ID</th><th>Name</th><th>Phone</th><th>Age</th><th>Gender</th>
-            <th>Complaint</th><th>Severity</th><th>Summary</th><th>Date</th>
+            <th>Complaint</th><th>VHS Score</th><th>Summary</th><th>Date</th>
           </tr>
         </thead>
         <tbody id="records-body">
@@ -180,7 +180,7 @@ tbody tr:hover td{background:#fafafa}
   </div>
 
   <footer class="site-footer">
-    <p>BloodRx Admin &nbsp;·&nbsp; For authorized use only &nbsp;·&nbsp; All data is patient-confidential</p>
+    <p>VHS Wellness Platform Admin &nbsp;·&nbsp; For authorized use only &nbsp;·&nbsp; All data is confidential</p>
   </footer>
 </main>
 
@@ -238,13 +238,14 @@ async function loadPatients() {
 function renderAll() {
   const total = allPatients.length;
   const today = allPatients.filter(p => new Date(p.created_at).toDateString() === new Date().toDateString()).length;
-  const moderate = allPatients.filter(p => p.severity === 'moderate').length;
-  const severe = allPatients.filter(p => p.severity === 'severe' || p.severity === 'critical').length;
+  const scores = allPatients.filter(p => p.vhs_score > 0).map(p => p.vhs_score);
+  const avgScore = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+  const needsAttention = allPatients.filter(p => p.vhs_score > 0 && p.vhs_score < 60).length;
 
   document.getElementById('st-total').textContent = total;
   document.getElementById('st-today').textContent = today;
-  document.getElementById('st-moderate').textContent = moderate;
-  document.getElementById('st-severe').textContent = severe;
+  document.getElementById('st-moderate').textContent = avgScore || '—';
+  document.getElementById('st-severe').textContent = needsAttention;
   document.getElementById('record-count').textContent = total + ' record' + (total !== 1 ? 's' : '');
 
   const tbody = document.getElementById('records-body');
@@ -302,12 +303,12 @@ function renderAll() {
       tr.appendChild(td);
     });
 
-    // Severity
+    // VHS Score
     const tdSev = document.createElement('td');
-    const sevSpan = document.createElement('span');
-    sevSpan.className = 'sev sev-' + (p.severity||'');
-    sevSpan.textContent = p.severity || '—';
-    tdSev.appendChild(sevSpan);
+    const score = p.vhs_score || 0;
+    const scoreColor = score >= 90 ? '#059669' : score >= 75 ? '#2563eb' : score >= 60 ? '#b45309' : score >= 40 ? '#dc2626' : '#7f1d1d';
+    const scoreLabel = p.vhs_label || (score >= 90 ? 'Excellent' : score >= 75 ? 'Good' : score >= 60 ? 'Fair' : score >= 40 ? 'Needs Attention' : score > 0 ? 'Poor' : '—');
+    tdSev.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><strong style=\'font-size:15px;color:' + scoreColor + '\'>' + (score||'—') + '</strong><span style=\'font-size:11px;color:' + scoreColor + ';font-weight:600\'>' + scoreLabel + '</span></span>';
     tr.appendChild(tdSev);
 
     // Summary — use DOM, never HTML string with patient data
