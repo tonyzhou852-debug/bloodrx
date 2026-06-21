@@ -131,7 +131,7 @@ app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, 
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 8096,
-        system: "You are a clinical analysis assistant. Return ONLY a valid JSON object. Be concise — keep findings to the 10 most important markers only, antibiotics to maximum 3 recommendations, and keep all text fields under 200 characters each. Never truncate the JSON — always close all brackets properly.",
+        system: "You are a corporate health and wellness analyst. Return ONLY a valid JSON object. Be concise — keep findings to the 10 most important markers only, keep all text fields under 200 characters each. Never truncate the JSON — always close all brackets properly. Do NOT include any medication names, antibiotic recommendations, or prescriptions.",
         messages: req.body.messages,
       }),
     });
@@ -162,17 +162,18 @@ app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, 
       const sanitize = (str) => (str || "").replace(/<[^>]*>/g, "").trim().slice(0, 500);
 
       const record = {
-        id:        Date.now(),
-        name:      sanitize(nameMatch?.[1])      || "Unknown",
-        phone:     sanitize(phoneMatch?.[1])     || "",
-        age:       sanitize(ageMatch?.[1])       || "",
-        gender:    sanitize(genderMatch?.[1])    || "",
-        complaint: sanitize(complaintMatch?.[1]) || "",
-        notes:     sanitize(notesMatch?.[1])     || "",
-        severity:  sanitize(result.severity)     || "",
-        summary:   sanitize(result.summary)      || "",
-        ip:        req.ip || "",
-        created_at: new Date().toISOString()
+        id:          Date.now(),
+        name:        sanitize(nameMatch?.[1])      || "Unknown",
+        phone:       sanitize(phoneMatch?.[1])     || "",
+        age:         sanitize(ageMatch?.[1])       || "",
+        gender:      sanitize(genderMatch?.[1])    || "",
+        complaint:   sanitize(complaintMatch?.[1]) || "",
+        notes:       sanitize(notesMatch?.[1])     || "",
+        vhs_score:   result.vhs_score              || 0,
+        vhs_label:   sanitize(result.vhs_label)    || "",
+        summary:     sanitize(result.health_assessment) || "",
+        ip:          req.ip || "",
+        created_at:  new Date().toISOString()
       };
 
       const database = await getDB();
