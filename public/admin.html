@@ -292,8 +292,29 @@ function renderAll() {
     };
     const makeWrapTd = (val, maxW) => {
       const td = document.createElement('td');
-      td.style.cssText = 'max-width:' + maxW + 'px;white-space:normal;font-size:12px;color:var(--ink-3);line-height:1.4';
-      td.textContent = val || '—';
+      td.style.cssText = 'max-width:' + maxW + 'px;vertical-align:middle';
+      if (!val || val === '—') {
+        td.textContent = '—';
+        td.style.color = 'var(--ink-4)';
+        return td;
+      }
+      // Show truncated text + expand button
+      const LIMIT = 60;
+      const preview = val.length > LIMIT ? val.slice(0, LIMIT) + '…' : val;
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:flex-start;gap:4px';
+      const span = document.createElement('span');
+      span.style.cssText = 'font-size:12px;color:var(--ink-3);line-height:1.4';
+      span.textContent = preview;
+      wrap.appendChild(span);
+      if (val.length > LIMIT) {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--brand);font-size:10px;padding:0;margin-top:1px;white-space:nowrap';
+        btn.textContent = '展开';
+        btn.addEventListener('click', () => openModal('详情', val));
+        wrap.appendChild(btn);
+      }
+      td.appendChild(wrap);
       return td;
     };
 
@@ -309,8 +330,8 @@ function renderAll() {
     tr.appendChild(makeTd(p.age||'', 'color:var(--ink-3)'));
     tr.appendChild(makeTd(p.gender||'', 'color:var(--ink-3)'));
     tr.appendChild(makeTd(p.detected_languages||'', 'color:var(--ink-3);font-size:12px'));
-    tr.appendChild(makeWrapTd(p.complaint, 160));
-    tr.appendChild(makeWrapTd(p.notes, 160));
+    tr.appendChild(makeWrapTd(p.complaint, 140));
+    tr.appendChild(makeWrapTd(p.notes, 140));
 
     // VHS Score
     const vScore = p.vhs_score || 0;
@@ -326,10 +347,10 @@ function renderAll() {
       tr.appendChild(makeTdHtml(s ? '<span style="color:' + riskColor(s) + ';font-weight:600">' + s + ' <span style=\'font-size:10px\'>' + riskLabel(s) + '</span></span>' : '—'));
     });
 
-    tr.appendChild(makeWrapTd(p.nutrition, 180));
-    tr.appendChild(makeWrapTd(p.lifestyle, 180));
-    tr.appendChild(makeWrapTd(p.supplements, 180));
-    tr.appendChild(makeWrapTd(p.monitoring_plan, 180));
+    tr.appendChild(makeWrapTd(p.nutrition, 150));
+    tr.appendChild(makeWrapTd(p.lifestyle, 150));
+    tr.appendChild(makeWrapTd(p.supplements, 150));
+    tr.appendChild(makeWrapTd(p.monitoring_plan, 150));
 
     // Summary — use DOM, never HTML string with patient data
     const tdSum = document.createElement('td');
@@ -398,7 +419,9 @@ function updateSelectionBar() {
 function openModal(name, summary) {
   document.getElementById('modal-patient').textContent = name;
   document.getElementById('modal-body').textContent = summary;
-  document.getElementById('modal-overlay').classList.add('open');
+  const overlay = document.getElementById('modal-overlay');
+  overlay.classList.add('open');
+  overlay.querySelector('.modal-close').focus();
 }
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 
