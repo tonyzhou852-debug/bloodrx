@@ -573,6 +573,134 @@ input[type=file] { display: none; }
   .section-body, .section-header { padding: 1.1rem; }
 }
 </style>
+
+<script>
+// ── Auto language detection ────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    pageTitle: 'VHS Wellness Assessment',
+    heroTitle: 'VANDL Health Score &amp;<br><em>Wellness Assessment Platform</em>',
+    heroSub: 'Submit health documents in any format or language to receive a comprehensive wellness assessment and VHS Health Score.',
+    formHeading: 'VHS Wellness Assessment',
+    formSub: 'Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.',
+    patientName: 'Patient name',
+    phone: 'Phone number',
+    age: 'Age',
+    gender: 'Gender',
+    genderSelect: 'Select',
+    genderM: 'Male', genderF: 'Female', genderO: 'Other / prefer not to say',
+    complaint: 'Chief Complaint / Symptoms',
+    complaintHint: 'Write in any language — automatically translated for analysis',
+    notes: 'Clinical Notes',
+    notesHint: 'Allergies, current medications, comorbidities — any language. Include known drug allergies; this directly influences antibiotic selection.',
+    docLang: 'Document language',
+    uploadTitle: 'Click to select files, or drag &amp; drop here',
+    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; Multiple files &nbsp;·&nbsp; Max 20 MB each',
+    consent: 'I confirm that I am a <strong>licensed healthcare professional</strong> and I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>. I understand that all AI-generated results are for clinical decision <strong>support only</strong> and must be validated by a licensed physician before any prescribing decision.',
+    analyze: 'Generate Health Assessment',
+    disclaimer: 'This report is intended for health education and wellness management purposes only. It does not constitute medical diagnosis, treatment recommendation, or prescription. Users should consult a licensed physician for medical decisions.',
+  },
+  'zh-CN': {
+    pageTitle: 'VHS健康评估',
+    heroTitle: 'VANDL健康评分 &amp;<br><em>企业健康管理平台</em>',
+    heroSub: '上传任意格式或语言的健康文档，获取全面的VHS健康评分和wellness建议。',
+    formHeading: 'VHS健康评估',
+    formSub: '上传任意格式或语言的健康文档，获取全面的VANDL健康评分和wellness建议。',
+    patientName: '姓名',
+    phone: '电话号码',
+    age: '年龄',
+    gender: '性别',
+    genderSelect: '请选择',
+    genderM: '男', genderF: '女', genderO: '其他 / 不愿透露',
+    complaint: '主诉 / 症状',
+    complaintHint: '可用任何语言填写 — 系统将自动翻译进行分析',
+    notes: '健康备注',
+    notesHint: '过敏史、当前用药、合并症等 — 可用任何语言填写',
+    docLang: '文件语言',
+    uploadTitle: '点击选择文件，或拖拽至此处',
+    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; 支持多文件 &nbsp;·&nbsp; 每个最大20MB',
+    consent: '本人确认为<strong>持牌医疗专业人员</strong>，同意<a href="/terms">服务条款</a>及<a href="/privacy">隐私政策</a>。本人理解所有AI生成结果仅供临床决策<strong>参考</strong>，任何处方决定前须经持牌医师验证。',
+    analyze: '生成健康评估报告',
+    disclaimer: '本报告仅供健康教育和健康管理目的，不构成医疗诊断、治疗建议或处方。用户在作出医疗决策前应咨询持牌医生。',
+  },
+  'zh-TW': {
+    pageTitle: 'VHS健康評估',
+    heroTitle: 'VANDL健康評分 &amp;<br><em>企業健康管理平台</em>',
+    heroSub: '上傳任意格式或語言的健康文件，獲取全面的VHS健康評分和wellness建議。',
+    formHeading: 'VHS健康評估',
+    formSub: '上傳任意格式或語言的健康文件，獲取全面的VANDL健康評分和wellness建議。',
+    patientName: '姓名',
+    phone: '電話號碼',
+    age: '年齡',
+    gender: '性別',
+    genderSelect: '請選擇',
+    genderM: '男', genderF: '女', genderO: '其他 / 不願透露',
+    complaint: '主訴 / 症狀',
+    complaintHint: '可用任何語言填寫 — 系統將自動翻譯進行分析',
+    notes: '健康備註',
+    notesHint: '過敏史、當前用藥、合併症等 — 可用任何語言填寫',
+    docLang: '文件語言',
+    uploadTitle: '點擊選擇文件，或拖曳至此處',
+    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; 支援多文件 &nbsp;·&nbsp; 每個最大20MB',
+    consent: '本人確認為<strong>持牌醫療專業人員</strong>，同意<a href="/terms">服務條款</a>及<a href="/privacy">隱私政策</a>。本人理解所有AI生成結果僅供臨床決策<strong>參考</strong>，任何處方決定前須經持牌醫師驗證。',
+    analyze: '生成健康評估報告',
+    disclaimer: '本報告僅供健康教育和健康管理目的，不構成醫療診斷、治療建議或處方。用戶在作出醫療決策前應諮詢持牌醫生。',
+  }
+};
+
+let currentLang = 'en';
+
+function applyLang(lang) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  currentLang = lang;
+  document.documentElement.lang = lang === 'zh-CN' ? 'zh-Hans' : lang === 'zh-TW' ? 'zh-Hant' : 'en';
+
+  // Labels
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setPlaceholder = (id, val) => { const el = document.getElementById(id); if(el) el.placeholder = val; };
+
+  set('hero-title', t.heroTitle);
+  set('hero-sub', t.heroSub);
+  setText('form-heading-h1', t.formHeading);
+  set('form-heading-p', t.formSub);
+  setText('label-name', t.patientName);
+  setText('label-phone', t.phone);
+  setText('label-age', t.age);
+  setText('label-gender', t.gender);
+  setText('label-complaint', t.complaint);
+  set('hint-complaint', t.complaintHint);
+  setText('label-notes', t.notes);
+  set('hint-notes', t.notesHint);
+  setText('label-doclang', t.docLang);
+  set('dz-text', t.uploadTitle);
+  document.querySelectorAll('.dz-sub').forEach(el => el.innerHTML = t.uploadSub);
+  set('consent-text', t.consent);
+  setText('analyze-label', t.analyze);
+  document.querySelectorAll('.disclaimer span').forEach(el => el.textContent = t.disclaimer);
+
+  // Gender options
+  const gSel = document.getElementById('p-gender');
+  if (gSel) {
+    gSel.options[0].text = t.genderSelect;
+    if(gSel.options[1]) gSel.options[1].text = t.genderM;
+    if(gSel.options[2]) gSel.options[2].text = t.genderF;
+    if(gSel.options[3]) gSel.options[3].text = t.genderO;
+  }
+}
+
+async function detectLang() {
+  try {
+    const res = await fetch('/api/lang');
+    const data = await res.json();
+    applyLang(data.lang || 'en');
+  } catch(e) {
+    applyLang('en');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', detectLang);
+</script>
 </head>
 <body>
 
@@ -604,8 +732,8 @@ input[type=file] { display: none; }
     For licensed clinicians only
     <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
   </div>
-  <h1>VANDL Health Score &amp;<br><em>Wellness Assessment Platform</em></h1>
-  <p class="hero-sub">Submit health documents in any format or language to receive a comprehensive wellness assessment and VHS Health Score.</p>
+  <h1 id="hero-title">VANDL Health Score &amp;<br><em>Wellness Assessment Platform</em></h1>
+  <p class="hero-sub" id="hero-sub">Submit health documents in any format or language to receive a comprehensive wellness assessment and VHS Health Score.</p>
   <div class="capability-chips" role="list" aria-label="Supported capabilities">
     <span class="chip" role="listitem">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 3h6v1H5V8zm0 3h4v1H5v-1z"/></svg>
@@ -634,8 +762,8 @@ input[type=file] { display: none; }
 
   <!-- Page heading -->
   <div class="page-heading" id="form-heading">
-    <h1>VHS Wellness Assessment</h1>
-    <p>Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.</p>
+    <h1 id="form-heading-h1">VHS Wellness Assessment</h1>
+    <p id="form-heading-p">Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.</p>
   </div>
 
   <!-- FORM SECTION -->
@@ -656,7 +784,7 @@ input[type=file] { display: none; }
 
         <div class="lang-row">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          <label for="report-lang">Document language</label>
+          <label for="report-lang" id="label-doclang">Document language</label>
           <select id="report-lang" name="report-lang">
             <option value="auto">Auto-detect (recommended)</option>
             <option value="English">English</option>
@@ -689,12 +817,12 @@ input[type=file] { display: none; }
 
         <div class="grid-2 field-group">
           <div>
-            <label class="field-label" for="p-name">Patient name</label>
+            <label class="field-label" for="p-name" id="label-name">Patient name</label>
             <div class="field-hint">Any script accepted</div>
             <input type="text" id="p-name" name="p-name" dir="auto" placeholder="Full name" autocomplete="off" />
           </div>
           <div>
-            <label class="field-label" for="p-phone">Phone number</label>
+            <label class="field-label" for="p-phone" id="label-phone">Phone number</label>
             <div class="field-hint">Optional — for follow-up</div>
             <input type="tel" id="p-phone" name="p-phone" placeholder="e.g. +1 555 000 0000" autocomplete="tel" />
           </div>
@@ -702,11 +830,11 @@ input[type=file] { display: none; }
 
         <div class="grid-2 field-group">
           <div>
-            <label class="field-label" for="p-age">Age</label>
+            <label class="field-label" for="p-age" id="label-age">Age</label>
             <input type="number" id="p-age" name="p-age" placeholder="Years" min="0" max="120" />
           </div>
           <div>
-            <label class="field-label" for="p-gender">Gender</label>
+            <label class="field-label" for="p-gender" id="label-gender">Gender</label>
             <select id="p-gender" name="p-gender">
               <option value="">Select</option>
               <option value="male">Male</option>
@@ -717,13 +845,13 @@ input[type=file] { display: none; }
         </div>
 
         <div class="field-group">
-          <label class="field-label" for="p-complaint">Chief Complaint / Symptoms</label>
+          <label class="field-label" for="p-complaint" id="label-complaint">Chief Complaint / Symptoms</label>
           <div class="field-hint">Write in any language — automatically translated for analysis</div>
           <textarea id="p-complaint" name="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough · حمى وسعال · Fièvre et toux · 发烧咳嗽 · Fieber und Husten"></textarea>
         </div>
 
         <div class="field-group">
-          <label class="field-label" for="p-notes">Clinical Notes</label>
+          <label class="field-label" for="p-notes" id="label-notes">Clinical Notes</label>
           <!-- §8: helper text — explains what to include, especially drug allergies -->
           <div class="field-hint">Allergies, current medications, comorbidities — any language. Include known drug allergies; this directly influences antibiotic selection.</div>
           <textarea id="p-notes" name="p-notes" rows="3" dir="auto" placeholder="e.g. Penicillin allergy, Type 2 diabetes, on Metformin · حساسية للبنسلين · Allergie à la pénicilline · 青霉素过敏"></textarea>
@@ -780,13 +908,7 @@ input[type=file] { display: none; }
         <div id="consent-box" class="consent-box">
           <label class="consent-label" for="consent-check">
             <input type="checkbox" id="consent-check" onchange="updateAnalyzeBtn()">
-            <span>
-              I confirm that I am a <strong>licensed healthcare professional</strong> and I agree to the
-              <a href="/terms" target="_blank">Terms of Service</a> and
-              <a href="/privacy" target="_blank">Privacy Policy</a>.
-              I understand that all AI-generated results are for clinical decision <strong>support only</strong>
-              and must be validated by a licensed physician before any prescribing decision.
-            </span>
+            <span id="consent-text">I confirm that I am a <strong>licensed healthcare professional</strong> and I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand that all AI-generated results are for clinical decision <strong>support only</strong> and must be validated by a licensed physician before any prescribing decision.</span>
           </label>
         </div>
 
