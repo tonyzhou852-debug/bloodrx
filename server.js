@@ -22,6 +22,26 @@ async function getDB() {
 }
 getDB().catch(e => console.error("MongoDB startup error:", e.message));
 
+// ── IP Geolocation / Language detection ───────────────────────
+// CN = Simplified Chinese, HK/TW/MO = Traditional Chinese, else = English
+const LANG_MAP = {
+  CN: 'zh-CN',
+  HK: 'zh-TW', TW: 'zh-TW', MO: 'zh-TW',
+};
+
+app.get("/api/lang", (req, res) => {
+  // Try to get real IP from headers (Render uses proxies)
+  const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+  // We use ip-api.com free tier (no key needed, 45 req/min)
+  fetch(`http://ip-api.com/json/${ip}?fields=countryCode`)
+    .then(r => r.json())
+    .then(data => {
+      const lang = LANG_MAP[data.countryCode] || 'en';
+      res.json({ lang, country: data.countryCode });
+    })
+    .catch(() => res.json({ lang: 'en', country: null }));
+});
+
 // ── Security middleware ────────────────────────────────────────
 app.use(cors({
   origin: process.env.ALLOWED_ORIGIN || true,
@@ -162,18 +182,29 @@ app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, 
       const sanitize = (str) => (str || "").replace(/<[^>]*>/g, "").trim().slice(0, 500);
 
       const record = {
-        id:          Date.now(),
-        name:        sanitize(nameMatch?.[1])      || "Unknown",
-        phone:       sanitize(phoneMatch?.[1])     || "",
-        age:         sanitize(ageMatch?.[1])       || "",
-        gender:      sanitize(genderMatch?.[1])    || "",
-        complaint:   sanitize(complaintMatch?.[1]) || "",
-        notes:       sanitize(notesMatch?.[1])     || "",
-        vhs_score:   result.vhs_score              || 0,
-        vhs_label:   sanitize(result.vhs_label)    || "",
-        summary:     sanitize(result.health_assessment) || "",
-        ip:          req.ip || "",
-        created_at:  new Date().toISOString()
+        id:                    Date.now(),
+        name:                  sanitize(nameMatch?.[1])      || "Unknown",
+        phone:                 sanitize(phoneMatch?.[1])     || "",
+        age:                   sanitize(ageMatch?.[1])       || "",
+        gender:                sanitize(genderMatch?.[1])    || "",
+        complaint:             sanitize(complaintMatch?.[1]) || "",
+        notes:                 sanitize(notesMatch?.[1])     || "",
+        vhs_score:             result.vhs_score              || 0,
+        vhs_label:             sanitize(result.vhs_label)    || "",
+        summary:               sanitize(result.health_assessment) || "",
+        key_health_concerns:   sanitize(result.key_health_concerns) || "",
+        detected_languages:    sanitize(result.detected_languages) || "",
+        risk_cardiovascular:   result.risk_profile?.cardiovascular?.score || 0,
+        risk_metabolic:        result.risk_profile?.metabolic?.score || 0,
+        risk_liver:            result.risk_profile?.liver?.score || 0,
+        risk_kidney:           result.risk_profile?.kidney?.score || 0,
+        risk_inflammation:     result.risk_profile?.inflammation?.score || 0,
+        nutrition:             (result.nutrition_recommendations||[]).join(' | ').slice(0,500),
+        lifestyle:             (result.lifestyle_recommendations||[]).join(' | ').slice(0,500),
+        supplements:           (result.nutritional_support||[]).join(' | ').slice(0,500),
+        monitoring_plan:       sanitize(result.monitoring_plan) || "",
+        ip:                    req.ip || "",
+        created_at:            new Date().toISOString()
       };
 
       const database = await getDB();
