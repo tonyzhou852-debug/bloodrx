@@ -112,7 +112,7 @@ function validateAnalysisRequest(req, res, next) {
 function adminAuth(req, res, next) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith("Basic ")) {
-    res.setHeader("WWW-Authenticate", 'Basic realm="BloodRx Admin"');
+    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
     return res.status(401).send("Authentication required.");
   }
   const credentials = Buffer.from(auth.slice(6), "base64").toString("utf8");
@@ -123,7 +123,7 @@ function adminAuth(req, res, next) {
     Buffer.from(ADMIN_PASSWORD)
   );
   if (!validUser || !validPass) {
-    res.setHeader("WWW-Authenticate", 'Basic realm="BloodRx Admin"');
+    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
     return res.status(401).send("Invalid credentials.");
   }
   next();
@@ -265,5 +265,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`BloodRx server running on port ${PORT}`);
+  console.log(`VHS platform running on port ${PORT}`);
 });
