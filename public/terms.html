@@ -7,194 +7,489 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap&font-display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --ink: #111827; --ink-2: #374151; --ink-3: #6b7280; --ink-4: #9ca3af;
-  --border: #e5e7eb; --surface: #ffffff; --bg: #f7f8f9;
-  --brand: #b91c1c; --brand-bg: #fff1f1; --brand-bd: #fecaca;
-  --radius: 10px; --radius-lg: 14px;
-}
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#111827;--ink-2:#374151;--ink-3:#6b7280;--ink-4:#9ca3af;--border:#e5e7eb;--surface:#fff;--bg:#f7f8f9;--brand:#b91c1c;--brand-bg:#fff1f1;--brand-bd:#fecaca;--blue:#2563eb;--blue-bg:#eff6ff;--blue-bd:#bfdbfe;--green:#059669;--green-bg:#ecfdf5;--green-bd:#a7f3d0;--radius:10px;--radius-lg:14px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.skip-link{position:absolute;top:-100px;left:12px;background:var(--brand);color:#fff;padding:8px 16px;border-radius:6px;font-size:14px;font-weight:500;z-index:9999;text-decoration:none}
+.skip-link:focus{top:12px}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:var(--ink);text-decoration:none}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:var(--brand);display:flex;align-items:center;justify-content:center}
+.logo-icon svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.logo em{color:var(--brand);font-style:normal}
+.back{margin-left:auto;font-size:13px;color:var(--ink-3);text-decoration:none;display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;transition:color .15s,border-color .15s;min-height:36px}
+.back:hover{color:var(--brand);border-color:var(--brand-bd)}
+.back:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.page{max-width:760px;margin:0 auto;padding:3rem 1.5rem 5rem}
+h1{font-size:28px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px}
+.meta{font-size:13px;color:var(--ink-3);margin-bottom:2.5rem}
+h2{font-size:17px;font-weight:600;margin:2.25rem 0 .75rem;color:var(--ink);display:flex;align-items:center;gap:8px}
+h2::before{content:'';width:3px;height:18px;border-radius:2px;background:var(--brand);flex-shrink:0}
+p{color:var(--ink-2);margin-bottom:1rem;line-height:1.75}
+ul{color:var(--ink-2);margin:.5rem 0 1rem 1.5rem}
+ul li{margin-bottom:6px;line-height:1.65}
+.warn-box{background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-lg);padding:1.1rem 1.25rem;margin:1.5rem 0;color:#7f1d1d;font-size:14px;display:flex;gap:10px;align-items:flex-start;line-height:1.6}
+.warn-box svg{flex-shrink:0;margin-top:2px}
+.warn-box strong{display:block;margin-bottom:4px;font-size:15px;color:#7f1d1d}
+.info-box{background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin:1.5rem 0;color:#1e3a8a;font-size:14px;display:flex;gap:10px;align-items:flex-start;line-height:1.6}
+.info-box svg{flex-shrink:0;margin-top:1px}
+.green-box{background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin:1.5rem 0;color:#065f46;font-size:14px;display:flex;gap:10px;align-items:flex-start;line-height:1.6}
+.green-box svg{flex-shrink:0;margin-top:1px}
 
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'Inter', -apple-system, sans-serif;
-  background: var(--bg); color: var(--ink);
-  font-size: 16px; line-height: 1.7;
-  -webkit-font-smoothing: antialiased;
+/* Language switcher */
+.lang-wrap { position: relative; display: inline-block; margin-bottom: 1.5rem; }
+.lang-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; color: var(--ink-2);
+  font-family: inherit; cursor: pointer; transition: all .15s;
+  white-space: nowrap;
 }
+.lang-toggle:hover { border-color: var(--brand); color: var(--brand); }
+.lang-toggle svg { transition: transform .2s; }
+.lang-toggle.open svg { transform: rotate(180deg); }
 
-.skip-link {
-  position: absolute; top: -100px; left: 12px;
-  background: var(--brand); color: #fff;
-  padding: 8px 16px; border-radius: 6px; font-size: 14px;
-  font-weight: 500; z-index: 9999; text-decoration: none;
+.lang-dropdown {
+  display: none; position: absolute; top: calc(100% + 6px); left: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 100; min-width: 200px;
+  max-height: 340px; overflow-y: auto;
+  animation: dropIn .15s ease-out;
 }
-.skip-link:focus { top: 12px; }
+.lang-dropdown.open { display: block; }
+@keyframes dropIn { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:translateY(0) } }
 
-.topbar {
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 0 2rem; height: 60px;
-  display: flex; align-items: center; gap: 12px;
-  position: sticky; top: 0; z-index: 10;
-  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+.lang-option {
+  display: block; width: 100%; padding: 10px 16px;
+  text-align: left; background: none; border: none;
+  font-size: 13px; font-family: inherit; color: var(--ink-2);
+  cursor: pointer; transition: background .1s;
+  white-space: nowrap;
 }
-.logo {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 16px; font-weight: 700; color: var(--ink); text-decoration: none;
-}
-.logo-icon {
-  width: 32px; height: 32px; border-radius: 8px;
-  background: var(--brand);
-  display: flex; align-items: center; justify-content: center;
-}
-.logo-icon svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.logo em { color: var(--brand); font-style: normal; }
-.back {
-  margin-left: auto; font-size: 13px; color: var(--ink-3);
-  text-decoration: none; display: flex; align-items: center; gap: 6px;
-  padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
-  transition: color .15s, border-color .15s; min-height: 36px;
-}
-.back:hover { color: var(--brand); border-color: var(--brand-bd); }
-.back:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.lang-option:hover { background: var(--bg-2); color: var(--brand); }
+.lang-option.active { background: var(--brand-bg); color: var(--brand); font-weight: 600; }
+.lang-option:first-child { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.lang-option:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.lang-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.notranslate { font-family: inherit; }
 
-.page { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
 
-h1 { font-size: 28px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 8px; }
-.meta { font-size: 13px; color: var(--ink-3); margin-bottom: 2.5rem; }
+/* Accordion */
+.accordion { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin: 1rem 0; }
+.accordion + .accordion { margin-top: 8px; }
+.acc-trigger {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--surface); border: none;
+  font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink);
+  cursor: pointer; text-align: left; transition: background .15s; gap: 12px;
+}
+.acc-trigger:hover { background: var(--bg-2); }
+.acc-trigger.open { background: var(--brand-bg); color: var(--brand); border-bottom: 1px solid var(--brand-bd); }
+.acc-trigger-left { display: flex; align-items: center; gap: 10px; }
+.acc-flag { font-size: 18px; flex-shrink: 0; }
+.acc-arrow { flex-shrink: 0; transition: transform .2s; color: var(--ink-4); }
+.acc-trigger.open .acc-arrow { transform: rotate(180deg); color: var(--brand); }
+.acc-body { display: none; padding: 16px 18px; background: var(--surface); border-top: 1px solid var(--border); font-size: 14px; color: var(--ink-2); line-height: 1.7; }
+.acc-body.open { display: block; }
+.acc-body ul { margin: .5rem 0 .5rem 1.25rem; }
+.acc-body ul li { margin-bottom: 5px; line-height: 1.6; }
+.acc-body p { margin-bottom: .75rem; }
+.acc-body p:last-child { margin-bottom: 0; }
+.acc-group-label { font-size: 11px; font-weight: 600; color: var(--ink-4); text-transform: uppercase; letter-spacing: .06em; margin: 1.5rem 0 .5rem; }
 
-h2 {
-  font-size: 17px; font-weight: 600;
-  margin: 2.25rem 0 0.75rem; color: var(--ink);
-  display: flex; align-items: center; gap: 8px;
-}
-h2::before {
-  content: '';
-  width: 3px; height: 18px; border-radius: 2px;
-  background: var(--brand); flex-shrink: 0;
-}
-p { color: var(--ink-2); margin-bottom: 1rem; line-height: 1.75; }
-ul { color: var(--ink-2); margin: 0.5rem 0 1rem 1.5rem; }
-ul li { margin-bottom: 6px; line-height: 1.65; }
-
-.warn-box {
-  background: var(--brand-bg); border: 1px solid var(--brand-bd);
-  border-radius: var(--radius-lg); padding: 1.1rem 1.25rem;
-  margin: 1.5rem 0; color: #7f1d1d; font-size: 14px;
-  display: flex; gap: 10px; align-items: flex-start; line-height: 1.6;
-}
-.warn-box svg { flex-shrink: 0; margin-top: 2px; }
-.warn-box strong { display: block; margin-bottom: 4px; font-size: 15px; color: #7f1d1d; }
-
-.site-footer {
-  text-align: center; font-size: 12px; color: var(--ink-4);
-  margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
-}
-.site-footer a { color: var(--ink-3); text-decoration: none; }
-.site-footer a:hover { color: var(--brand); }
-
-@media (max-width: 600px) {
-  .page { padding: 2rem 1rem 4rem; }
-  h1 { font-size: 22px; }
-}
+.site-footer{text-align:center;font-size:12px;color:var(--ink-4);margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+.site-footer a{color:var(--ink-3);text-decoration:none}
+.site-footer a:hover{color:var(--brand)}
+@media(max-width:600px){.page{padding:2rem 1rem 4rem}h1{font-size:22px}}
 </style>
 </head>
 <body>
-
 <a href="#main-content" class="skip-link">Skip to main content</a>
-
 <nav class="topbar" aria-label="Site navigation">
   <a href="/" class="logo" aria-label="VANDL VHS home">
-    <div class="logo-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg>
-    </div>
+    <div class="logo-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg></div>
     VANDL<em>VHS</em>
   </a>
-  <a href="/" class="back" aria-label="Back to analyzer">&#8592; Back to Analyzer</a>
+  <a href="/" class="back">&#8592; Back</a>
 </nav>
-
 <main class="page" id="main-content">
   <h1>Terms of Service</h1>
-  <p class="meta">Last updated: June 17, 2026 &nbsp;·&nbsp; Effective immediately</p>
+  <p class="meta">Last updated: June 23, 2026 &nbsp;·&nbsp; Effective immediately &nbsp;·&nbsp; Applies globally</p>
+
+  <!-- Language Switcher -->
+  <div class="lang-wrap notranslate" id="lang-wrap">
+    <button class="lang-toggle" id="lang-toggle" onclick="toggleLangMenu()" aria-haspopup="listbox" aria-expanded="false">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <span id="lang-current">English</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="lang-dropdown" id="lang-dropdown" role="listbox" aria-label="Select language">
+      <button class="lang-option active notranslate" onclick="switchLang('en','English')" role="option">🇬🇧 English</button>
+      <div class="lang-divider"></div>
+      <button class="lang-option notranslate" onclick="switchLang('zh-CN','简体中文')" role="option">🇨🇳 简体中文</button>
+      <button class="lang-option notranslate" onclick="switchLang('zh-TW','繁體中文')" role="option">🇹🇼 繁體中文</button>
+      <div class="lang-divider"></div>
+      <button class="lang-option notranslate" onclick="switchLang('es','Español')" role="option">🇪🇸 Español</button>
+      <button class="lang-option notranslate" onclick="switchLang('fr','Français')" role="option">🇫🇷 Français</button>
+      <button class="lang-option notranslate" onclick="switchLang('de','Deutsch')" role="option">🇩🇪 Deutsch</button>
+      <button class="lang-option notranslate" onclick="switchLang('it','Italiano')" role="option">🇮🇹 Italiano</button>
+      <button class="lang-option notranslate" onclick="switchLang('pt','Português')" role="option">🇵🇹 Português</button>
+      <button class="lang-option notranslate" onclick="switchLang('nl','Nederlands')" role="option">🇳🇱 Nederlands</button>
+      <button class="lang-option notranslate" onclick="switchLang('pl','Polski')" role="option">🇵🇱 Polski</button>
+      <button class="lang-option notranslate" onclick="switchLang('ru','Русский')" role="option">🇷🇺 Русский</button>
+      <button class="lang-option notranslate" onclick="switchLang('tr','Türkçe')" role="option">🇹🇷 Türkçe</button>
+      <div class="lang-divider"></div>
+      <button class="lang-option notranslate" onclick="switchLang('ar','العربية')" role="option">🇸🇦 العربية</button>
+      <button class="lang-option notranslate" onclick="switchLang('hi','हिन्दी')" role="option">🇮🇳 हिन्दी</button>
+      <button class="lang-option notranslate" onclick="switchLang('ja','日本語')" role="option">🇯🇵 日本語</button>
+      <button class="lang-option notranslate" onclick="switchLang('ko','한국어')" role="option">🇰🇷 한국어</button>
+      <button class="lang-option notranslate" onclick="switchLang('ms','Bahasa Melayu')" role="option">🇲🇾 Bahasa Melayu</button>
+      <button class="lang-option notranslate" onclick="switchLang('id','Bahasa Indonesia')" role="option">🇮🇩 Bahasa Indonesia</button>
+      <button class="lang-option notranslate" onclick="switchLang('th','ภาษาไทย')" role="option">🇹🇭 ภาษาไทย</button>
+      <button class="lang-option notranslate" onclick="switchLang('vi','Tiếng Việt')" role="option">🇻🇳 Tiếng Việt</button>
+    </div>
+  </div>
 
   <div class="warn-box" role="note">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     <div>
-      <strong>Important Medical Disclaimer</strong>
-      VANDL Health Score (VHS) is an AI-assisted wellness assessment platform intended exclusively for use by licensed, qualified healthcare professionals. It is NOT a substitute for professional medical judgment, diagnosis, or treatment.
+      <strong>Wellness Platform Only — Not a Medical Device</strong>
+      VANDL Health Score (VHS) is an AI-assisted wellness education platform. It is NOT a medical device, does not provide medical diagnoses or prescriptions, and is not regulated as a medical product in any jurisdiction. All AI-generated content is for educational and wellness management purposes only.
     </div>
   </div>
 
   <h2>1. Acceptance of Terms</h2>
-  <p>By accessing or using VANDL Health Score (VHS) ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service.</p>
+  <p>By accessing or using VANDL Health Score (VHS) ("the Service"), you confirm that you have read, understood, and agree to be bound by these Terms of Service and our Privacy Policy. These Terms apply globally to all users regardless of location. If you do not agree, do not use the Service.</p>
 
-  <h2>2. Eligibility — Licensed Professionals Only</h2>
-  <p>The Service is intended exclusively for use by:</p>
+  <h2>2. Age Requirement — 18+ Only, Globally</h2>
+  <div class="warn-box" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div>
+      <strong>You must be at least 18 years old to use this Service in any country.</strong>
+      This age requirement applies globally regardless of local age of majority or digital consent age. By using the Service you represent and warrant you are at least 18 years old. If you are under 18, you must not use the Service.
+    </div>
+  </div>
+  <p>We apply a global minimum age of 18 for the following reasons:</p>
   <ul>
-    <li>Licensed physicians and medical doctors</li>
-    <li>Registered nurses and nurse practitioners</li>
-    <li>Licensed pharmacists and clinical pharmacologists</li>
-    <li>Other duly licensed healthcare professionals</li>
+    <li><strong>USA (COPPA):</strong> We do not collect data from under-13s under any circumstances</li>
+    <li><strong>EU/EEA (GDPR):</strong> Digital consent age varies by member state (13-16); we apply 18 globally for consistency</li>
+    <li><strong>China (PIPL):</strong> Minors under 14 require parental consent; we apply 18 globally</li>
+    <li><strong>All other jurisdictions:</strong> 18+ provides the highest level of protection globally</li>
   </ul>
-  <p>By using this Service, you represent and warrant that you are a licensed healthcare professional in good standing in your jurisdiction. Use by unlicensed individuals is strictly prohibited.</p>
+  <p>Discovery that a user is under 18 will result in immediate access termination and deletion of all associated data within 48 hours.</p>
 
   <h2>3. Nature of the Service</h2>
-  <p>VANDL Health Score (VHS) uses artificial intelligence to assist in analyzing health documents and generating wellness assessments. You acknowledge and agree that:</p>
+  <p>VANDL Health Score (VHS) uses artificial intelligence to analyze health documents and generate wellness assessments. You acknowledge:</p>
   <ul>
-    <li>All outputs are AI-generated and for informational and decision-support purposes only</li>
-    <li>Results have NOT been reviewed or approved by any regulatory authority including the FDA, EMA, or equivalent</li>
-    <li>The Service does not provide medical diagnoses or prescriptions</li>
+    <li>All outputs are <strong>AI-generated</strong> and disclosed as such in compliance with EU AI Act Article 50</li>
+    <li>Results are for <strong>health education and wellness management only</strong> — not medical diagnosis, treatment, or prescription</li>
+    <li>The Service is <strong>not a regulated medical device</strong> in any jurisdiction (EU MDR, US FDA, China NMPA, or equivalent)</li>
     <li>AI analysis may contain errors, omissions, or inaccuracies</li>
-    <li>All recommendations must be independently verified by a licensed clinician before implementation</li>
-    <li>The Service is not suitable for emergency medical situations</li>
+    <li>All wellness suggestions should be reviewed with a qualified healthcare provider</li>
+    <li>The Service is <strong>not suitable for emergency medical situations</strong> — call emergency services immediately in a medical emergency</li>
+    <li>No medication names, dosages, diagnoses, or prescriptions are provided or should be inferred</li>
   </ul>
 
-  <h2>4. Limitation of Liability</h2>
-  <p>To the maximum extent permitted by applicable law, VANDL Health Score (VHS) and its operators shall not be liable for any direct, indirect, incidental, special, consequential, or punitive damages arising from:</p>
+  <h2>4. AI Transparency (EU AI Act Compliance)</h2>
+  <div class="info-box" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <span>In compliance with EU AI Act Article 50 (effective August 2, 2026): All wellness reports generated by this Service are produced by artificial intelligence. The Help Assistant is an AI chatbot, not a human. AI-generated content is clearly labelled on all output pages. VANDL VHS is classified as a limited-risk AI system and is not a high-risk AI system under EU AI Act Annex III.</span>
+  </div>
+
+  <h2>5. Global Data Protection Compliance</h2>
+  <p>We comply with applicable data protection laws in all jurisdictions. Click each region to see details:</p>
+
+  <p class="acc-group-label">Americas</p>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇺🇸</span> USA — COPPA &amp; FTC Act</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <ul>
+        <li><strong>COPPA:</strong> No data from children under 13. Our 18+ age gate exceeds this requirement globally.</li>
+        <li><strong>FTC Act:</strong> We do not engage in unfair or deceptive data practices.</li>
+        <li><strong>HIPAA:</strong> Not a covered entity — see Section 6 for full HIPAA notice.</li>
+        <li><strong>CCPA/CPRA (California):</strong> We do not sell personal data. California residents have the right to know, delete, and correct their data.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇧🇷</span> Brazil — LGPD</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>Lei Geral de Proteção de Dados (LGPD — Law 13.709/2018). Health data is sensitive data under LGPD requiring explicit consent. All LGPD rights are honored. Supervisory authority: ANPD.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇨🇦</span> Canada — PIPEDA</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>Personal Information Protection and Electronic Documents Act (PIPEDA). Health data requires meaningful consent. Rights to access and correction. Supervisory authority: Office of the Privacy Commissioner (OPC).</p>
+    </div>
+  </div>
+
+  <p class="acc-group-label">Europe</p>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇪🇺</span> EU / EEA — GDPR + EU AI Act</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <ul>
+        <li><strong>GDPR Art. 9:</strong> Health data is special category data processed only with explicit consent</li>
+        <li><strong>EU AI Act Article 50:</strong> All AI-generated content is labelled; chatbot discloses it is AI</li>
+        <li>Full rights: access, rectification, erasure, portability, objection, restriction</li>
+        <li>Cross-border transfers to Anthropic (US) under Standard Contractual Clauses</li>
+        <li>72-hour breach notification to relevant supervisory authority</li>
+        <li>VANDL VHS is a limited-risk AI system — not classified as high-risk under EU AI Act Annex III</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇬🇧</span> United Kingdom — UK GDPR + DPA 2018</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>UK GDPR and Data Protection Act 2018 apply. All GDPR-equivalent rights honored. Supervisory authority: Information Commissioner's Office (ICO — ico.org.uk).</p>
+    </div>
+  </div>
+
+  <p class="acc-group-label">Asia Pacific</p>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇨🇳</span> China — PIPL ⚠️</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p><strong>Cross-border transfer notice:</strong> PIPL requires health data to be stored on domestic servers. VANDL VHS stores data outside mainland China and transmits to Anthropic (US). By using the Service, mainland China users explicitly consent to this cross-border transfer under PIPL Article 38. Users requiring full PIPL data localization should not use this Service. See Privacy Policy Section 12 for full details.</p>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇭🇰🇹🇼</span> Hong Kong &amp; Taiwan</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <ul>
+        <li><strong>Hong Kong PDPO:</strong> Cap. 486 compliance. Data access/correction within 40 days. Supervisory: PCPD.</li>
+        <li><strong>Taiwan PDPA:</strong> Explicit consent for health data. Rights to access, correct, delete, and object. Supervisory: PDPC.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇯🇵🇰🇷</span> Japan &amp; South Korea</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <ul>
+        <li><strong>Japan APPI:</strong> Health data is "special care-required personal information" requiring prior consent. Supervisory: PPC.</li>
+        <li><strong>South Korea PIPA:</strong> Health data is sensitive information requiring separate explicit consent. Breach notification to PIPC required. Supervisory: PIPC.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇸🇬🇮🇳🇮🇩</span> Singapore, India &amp; Indonesia</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <ul>
+        <li><strong>Singapore PDPA:</strong> Consent-based collection. Rights to access and correction. Supervisory: PDPC.</li>
+        <li><strong>India DPDP 2023:</strong> Consent-based processing. Data Fiduciary obligations observed. Children under 18 require parental consent — our 18+ gate addresses this.</li>
+        <li><strong>Indonesia PDPL:</strong> Health data is specific personal data requiring explicit consent. Rights to access, correction, deletion.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇦🇺</span> Australia — Privacy Act</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>Privacy Act 1988 and Australian Privacy Principles (APPs). Health information is sensitive requiring consent. Notifiable Data Breaches scheme applies. Supervisory: OAIC.</p>
+    </div>
+  </div>
+
+  <p class="acc-group-label">Africa &amp; Middle East</p>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇿🇦🇦🇪🇸🇦</span> South Africa, UAE &amp; Saudi Arabia</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <ul>
+        <li><strong>South Africa POPIA:</strong> Health data is special personal information requiring consent. Supervisory: Information Regulator.</li>
+        <li><strong>UAE:</strong> DIFC Data Protection Law and Federal Decree-Law No. 45/2021 on Personal Data Protection.</li>
+        <li><strong>Saudi Arabia:</strong> Personal Data Protection Law (PDPL). Health data treated as sensitive requiring consent.</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>Users are responsible for obtaining appropriate consent from any individual whose health data they submit to the Service, in accordance with applicable local law.</p>
+
+  <h2>6. HIPAA Notice (United States)</h2>
+  <div class="warn-box" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>VANDL Health Score (VHS) is NOT a HIPAA-covered entity and does not execute Business Associate Agreements. US healthcare providers must not submit Protected Health Information (PHI) as defined under HIPAA (45 CFR §160.103) through this Service. Use of this Service with PHI is solely at the user's own legal risk and liability.</span>
+  </div>
+
+  <h2>7. Third-Party AI Processing</h2>
+  <p>This Service uses Anthropic's Claude AI. By using the Service, you acknowledge that submitted data is transmitted to Anthropic's servers for AI processing under Anthropic's own Privacy Policy (anthropic.com/privacy). Users in China should review the cross-border transfer notice in our Privacy Policy before submitting health data.</p>
+
+  <h2>8. User Responsibilities</h2>
+  <p>By using this Service, you agree to:</p>
   <ul>
-    <li>Your use or reliance on any AI-generated analysis or recommendation</li>
-    <li>Any medical decision, prescription, or treatment based on Service outputs</li>
-    <li>Any patient harm, adverse outcome, or medical error</li>
-    <li>Inaccurate, incomplete, or misleading analysis results</li>
-    <li>Service interruptions or data loss</li>
+    <li>Be at least 18 years old</li>
+    <li>Provide accurate information and not impersonate any person</li>
+    <li>Obtain valid, informed consent from any individual whose health data you submit</li>
+    <li>Ensure your use complies with all applicable laws in your jurisdiction</li>
+    <li>Not submit data of individuals under 18 under any circumstances</li>
+    <li>Not attempt to reverse-engineer, hack, disrupt, or abuse the Service</li>
+    <li>Not use the Service for emergency medical situations</li>
+    <li>Not rely solely on AI-generated results for any health or medical decision</li>
+    <li>Not submit false, misleading, or fabricated health information</li>
   </ul>
-  <p>Your use of the Service is entirely at your own professional risk. You, as the licensed clinician, bear full responsibility for all clinical decisions.</p>
 
-  <h2>5. No Doctor-Patient Relationship</h2>
-  <p>Use of this Service does not create any doctor-patient relationship between VANDL Health Score (VHS), its operators, or the AI system and any patient whose data is entered into the Service.</p>
-
-  <h2>6. Data Accuracy</h2>
-  <p>You are responsible for ensuring that all data entered into the Service is accurate and complete. VANDL Health Score (VHS) is not responsible for analysis based on incorrect or incomplete input data.</p>
-
-  <h2>7. Prohibited Uses</h2>
-  <p>You may not use the Service to:</p>
+  <h2>9. Prohibited Uses</h2>
+  <p>The Service must not be used for:</p>
   <ul>
-    <li>Self-diagnose or self-treat without professional medical supervision</li>
-    <li>Provide medical advice directly to patients without clinical review</li>
-    <li>Attempt to reverse-engineer, hack, or disrupt the Service</li>
-    <li>Enter false, misleading, or another person's data without authorization</li>
-    <li>Violate any applicable laws or regulations</li>
+    <li>Any purpose that violates applicable law in any jurisdiction</li>
+    <li>Submitting data of minors under 18</li>
+    <li>Providing direct medical advice to patients or individuals without clinical review</li>
+    <li>Replacing professional medical consultation, diagnosis, or treatment</li>
+    <li>Emergency medical situations requiring immediate professional intervention</li>
+    <li>Any use that could reasonably be expected to cause harm to individuals</li>
+    <li>Automated or bulk data processing without express written permission</li>
   </ul>
 
-  <h2>8. Intellectual Property</h2>
-  <p>All content, software, and technology comprising the Service is the property of VANDL Health Score (VHS) and its licensors. You may not copy, reproduce, or distribute any part of the Service without express written permission.</p>
+  <h2>10. Limitation of Liability</h2>
+  <p>To the maximum extent permitted by applicable law in each jurisdiction, VANDL Health Score (VHS) and its operators shall not be liable for any damages arising from use of the Service, including health decisions made based on AI outputs. Mandatory consumer protection rights under applicable law (including EU consumer law, Australian Consumer Law, and equivalent laws) are not affected by this limitation.</p>
 
-  <h2>9. Changes to Terms</h2>
-  <p>We reserve the right to modify these Terms at any time. Continued use of the Service after changes constitutes acceptance of the new Terms.</p>
+  <h2>11. No Medical Relationship</h2>
+  <p>Use of this Service does not create any doctor-patient, therapist-patient, or other healthcare professional relationship between VANDL Health Score (VHS), its operators, the AI system, and any user or individual whose data is entered. This applies in all jurisdictions.</p>
 
-  <h2>10. Governing Law</h2>
-  <p>These Terms shall be governed by and construed in accordance with applicable laws. Any disputes shall be resolved through binding arbitration.</p>
+  <h2>12. Intellectual Property</h2>
+  <p>All content, software, and technology comprising the Service is proprietary. You may not copy, reproduce, or distribute any part of the Service without express written permission. AI-generated wellness reports produced for your submitted data may be used by you for personal wellness management purposes.</p>
 
-  <h2>11. Contact</h2>
-  <p>For questions about these Terms, please contact us through the Service at bloodrx.onrender.com.</p>
+  <h2>13. Termination</h2>
+  <p>We reserve the right to suspend or terminate access for any violation of these Terms, including but not limited to: use by persons under 18, submission of fraudulent data, attempted security breaches, or violations of applicable law. Data associated with terminated accounts will be deleted within 30 days unless retention is required by law.</p>
+
+  <h2>14. Governing Law and Dispute Resolution</h2>
+  <p>These Terms are governed by applicable law. For EU consumers, mandatory consumer protection laws of your country of residence apply and cannot be excluded. For users in other jurisdictions, local mandatory laws apply where they cannot be excluded by contract. We will attempt to resolve disputes amicably before any formal proceeding.</p>
+
+  <h2>15. Changes to Terms</h2>
+  <p>We may modify these Terms at any time. Significant changes will be communicated by updating the date above. For material changes that affect user rights, we will provide additional notice where required by law. Continued use after changes constitutes acceptance.</p>
+
+  <h2>16. Contact</h2>
+  <p>For questions about these Terms, data requests, or to report violations, contact us through the Service at bloodrx.onrender.com. We respond within 30 days.</p>
+
+  <div class="green-box" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    <span><strong>Legal Disclaimer:</strong> These Terms represent our good-faith effort to comply with applicable global laws. This platform is operated by a small team and has not been reviewed by legal counsel in every jurisdiction. We strongly recommend consulting a qualified lawyer in your jurisdiction before using this Service to process health data commercially or professionally, particularly in the EU, China, USA, South Korea, and Australia.</span>
+  </div>
 
   <footer class="site-footer">
-    <p>VANDL Health Score (VHS) &nbsp;·&nbsp;
-      <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp;
-      <a href="/">Back to Analyzer</a>
-    </p>
+    <p>VANDL Health Score (VHS) &nbsp;·&nbsp; <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp; <a href="/">Back to Platform</a></p>
   </footer>
 </main>
+
+<!-- Google Translate -->
+<div id="google_translate_element" style="display:none"></div>
+<script>
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'google_translate_element');
+}
+
+function toggleLangMenu() {
+  const toggle = document.getElementById('lang-toggle');
+  const dropdown = document.getElementById('lang-dropdown');
+  const isOpen = dropdown.classList.toggle('open');
+  toggle.classList.toggle('open', isOpen);
+  toggle.setAttribute('aria-expanded', isOpen);
+}
+
+function switchLang(lang, label) {
+  // Update display
+  document.getElementById('lang-current').textContent = label || 'English';
+  document.querySelectorAll('.lang-option').forEach(b => b.classList.remove('active'));
+  // Close dropdown
+  document.getElementById('lang-dropdown').classList.remove('open');
+  document.getElementById('lang-toggle').classList.remove('open');
+  document.getElementById('lang-toggle').setAttribute('aria-expanded', 'false');
+
+  if (lang === 'en') {
+    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + location.hostname;
+    window.location.reload();
+    return;
+  }
+  const select = document.querySelector('select.goog-te-combo');
+  if (select) {
+    select.value = lang;
+    select.dispatchEvent(new Event('change'));
+  } else {
+    document.cookie = 'googtrans=/en/' + lang + '; path=/';
+    document.cookie = 'googtrans=/en/' + lang + '; path=/; domain=.' + location.hostname;
+    window.location.reload();
+  }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  if (!document.getElementById('lang-wrap').contains(e.target)) {
+    document.getElementById('lang-dropdown').classList.remove('open');
+    document.getElementById('lang-toggle').classList.remove('open');
+    document.getElementById('lang-toggle').setAttribute('aria-expanded', 'false');
+  }
+});
+
+// Close on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('lang-dropdown').classList.remove('open');
+    document.getElementById('lang-toggle').classList.remove('open');
+  }
+});
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" defer></script>
+<style>
+/* Hide Google Translate toolbar */
+.goog-te-banner-frame, .skiptranslate { display: none !important; }
+body { top: 0 !important; }
+.goog-te-gadget { display: none !important; }
+</style>
+
+
+<script>
+function toggleAcc(trigger) {
+  const body = trigger.nextElementSibling;
+  const isOpen = body.classList.toggle('open');
+  trigger.classList.toggle('open', isOpen);
+  trigger.setAttribute('aria-expanded', isOpen);
+}
+</script>
+
 </body>
 </html>
