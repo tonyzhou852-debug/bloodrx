@@ -7,14 +7,22 @@ const { MongoClient } = require("mongodb");
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ── Admin password (set ADMIN_PASSWORD env var in Render) ──────
+// ── Environment validation on startup ─────────────────────────
+const REQUIRED_ENV = ["ANTHROPIC_API_KEY", "MONGODB_URI", "ADMIN_PASSWORD"];
+REQUIRED_ENV.forEach(key => {
+  if (!process.env[key]) console.warn(`WARNING: ${key} not set in environment`);
+});
+
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bloodrx-admin-2024";
 
 // ── MongoDB ────────────────────────────────────────────────────
 let _db = null;
 async function getDB() {
   if (_db) return _db;
-  const client = new MongoClient(process.env.MONGODB_URI);
+  const client = new MongoClient(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    maxPoolSize: 10,
+  });
   await client.connect();
   _db = client.db("bloodrx");
   console.log("Connected to MongoDB");
@@ -23,86 +31,169 @@ async function getDB() {
 getDB().catch(e => console.error("MongoDB startup error:", e.message));
 
 // ── IP Geolocation / Language detection ───────────────────────
-// CN = Simplified Chinese, HK/TW/MO = Traditional Chinese, else = English
-const LANG_MAP = {
-  CN: 'zh-CN',
-  HK: 'zh-TW', TW: 'zh-TW', MO: 'zh-TW',
-};
+const LANG_MAP = { CN: "zh-CN", HK: "zh-TW", TW: "zh-TW", MO: "zh-TW" };
 
 app.get("/api/lang", (req, res) => {
-  // Try to get real IP from headers (Render uses proxies)
-  const ip = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
-  // We use ip-api.com free tier (no key needed, 45 req/min)
+  const ip = (req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
   fetch(`http://ip-api.com/json/${ip}?fields=countryCode`)
     .then(r => r.json())
-    .then(data => {
-      const lang = LANG_MAP[data.countryCode] || 'en';
-      res.json({ lang, country: data.countryCode });
-    })
-    .catch(() => res.json({ lang: 'en', country: null }));
+    .then(data => { res.json({ lang: LANG_MAP[data.countryCode] || "en", country: data.countryCode }); })
+    .catch(() => res.json({ lang: "en", country: null }));
 });
 
-// ── Security middleware ────────────────────────────────────────
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGIN || true,
-  credentials: true
-}));
+// ── Trust Render proxy ─────────────────────────────────────────
+app.set("trust proxy", 1);
 
+// ── Security headers (comprehensive) ──────────────────────────
 app.disable("x-powered-by");
-
 app.use((req, res, next) => {
-  res.setHeader("X-Content-Type-Options", "nosniff");
+  // Prevent clickjacking
   res.setHeader("X-Frame-Options", "DENY");
+  // Prevent MIME sniffing
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  // XSS protection (legacy browsers)
   res.setHeader("X-XSS-Protection", "1; mode=block");
+  // Referrer policy
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Content Security Policy
+  res.setHeader("Content-Security-Policy",
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "img-src 'self' data:; " +
+    "connect-src 'self'; " +
+    "frame-ancestors 'none';"
+  );
+  // Permissions policy — disable unnecessary browser features
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  // HSTS — force HTTPS (only effective over HTTPS)
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  // Prevent caching of sensitive pages
+  if (req.path.startsWith("/api/") || req.path.startsWith("/admin")) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+  }
   next();
 });
 
-// ── Rate limiting ──────────────────────────────────────────────
-const requestCounts = new Map();
-const RATE_LIMIT = 20;
-const RATE_WINDOW = 60000;
+// ── CORS — only allow same origin ─────────────────────────────
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || null;
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (same-origin, curl for dev)
+    if (!origin) return callback(null, true);
+    // In production lock to specific domain
+    if (ALLOWED_ORIGIN && origin !== ALLOWED_ORIGIN) {
+      return callback(new Error("CORS policy violation"), false);
+    }
+    callback(null, true);
+  },
+  credentials: true,
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
-function rateLimit(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress || "unknown";
+// ── Rate limiting (persistent per-IP sliding window) ──────────
+const rateLimits = new Map();
+
+function makeRateLimiter(limit, windowMs, message) {
+  return (req, res, next) => {
+    const ip = req.ip || "unknown";
+    const now = Date.now();
+    const key = ip;
+    let record = rateLimits.get(key) || { timestamps: [] };
+    // Remove timestamps outside window
+    record.timestamps = record.timestamps.filter(t => now - t < windowMs);
+    if (record.timestamps.length >= limit) {
+      const retryAfter = Math.ceil((record.timestamps[0] + windowMs - now) / 1000);
+      res.setHeader("Retry-After", retryAfter);
+      res.setHeader("X-RateLimit-Limit", limit);
+      res.setHeader("X-RateLimit-Remaining", 0);
+      return res.status(429).json({ error: message });
+    }
+    record.timestamps.push(now);
+    rateLimits.set(key, record);
+    res.setHeader("X-RateLimit-Limit", limit);
+    res.setHeader("X-RateLimit-Remaining", limit - record.timestamps.length);
+    next();
+  };
+}
+
+// Clean up old rate limit entries every 5 minutes
+setInterval(() => {
   const now = Date.now();
-  const record = requestCounts.get(ip) || { count: 0, start: now };
-  if (now - record.start > RATE_WINDOW) { record.count = 1; record.start = now; }
-  else { record.count++; }
-  requestCounts.set(ip, record);
-  if (record.count > RATE_LIMIT) {
-    return res.status(429).json({ error: "Too many requests. Please wait a minute and try again." });
+  for (const [key, record] of rateLimits.entries()) {
+    record.timestamps = record.timestamps.filter(t => now - t < 3600000);
+    if (record.timestamps.length === 0) rateLimits.delete(key);
   }
+}, 300000);
+
+const globalLimit   = makeRateLimiter(30,  60000,  "Too many requests. Please wait and try again.");
+const analysisLimit = makeRateLimiter(5,   60000,  "Analysis rate limit reached. Please wait a minute.");
+const adminLimit    = makeRateLimiter(20,  60000,  "Too many admin requests.");
+
+// ── Admin brute-force lockout ──────────────────────────────────
+const adminFailures = new Map();
+const MAX_ADMIN_FAILURES = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+
+function adminBruteForceProtection(req, res, next) {
+  const ip = req.ip || "unknown";
+  const now = Date.now();
+  const record = adminFailures.get(ip) || { count: 0, lockedUntil: 0, lastAttempt: 0 };
+
+  if (now < record.lockedUntil) {
+    const remaining = Math.ceil((record.lockedUntil - now) / 60000);
+    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
+    return res.status(429).send(`Too many failed attempts. Try again in ${remaining} minutes.`);
+  }
+
+  req._adminIp = ip;
   next();
 }
 
-const analysisCounts = new Map();
-const ANALYSIS_LIMIT = 5;
-
-function analysisRateLimit(req, res, next) {
-  const ip = req.ip || req.connection.remoteAddress || "unknown";
+function recordAdminFailure(ip) {
   const now = Date.now();
-  const record = analysisCounts.get(ip) || { count: 0, start: now };
-  if (now - record.start > RATE_WINDOW) { record.count = 1; record.start = now; }
-  else { record.count++; }
-  analysisCounts.set(ip, record);
-  if (record.count > ANALYSIS_LIMIT) {
-    return res.status(429).json({ error: "Analysis rate limit reached. Please wait a minute." });
+  const record = adminFailures.get(ip) || { count: 0, lockedUntil: 0 };
+  record.count++;
+  record.lastAttempt = now;
+  if (record.count >= MAX_ADMIN_FAILURES) {
+    record.lockedUntil = now + LOCKOUT_DURATION;
+    record.count = 0;
+    console.warn(`Admin lockout triggered for IP: ${ip}`);
   }
-  next();
+  adminFailures.set(ip, record);
+}
+
+function clearAdminFailure(ip) {
+  adminFailures.delete(ip);
 }
 
 // ── Input validation ───────────────────────────────────────────
 function validateAnalysisRequest(req, res, next) {
   const body = req.body;
-  if (!body || !body.messages || !Array.isArray(body.messages)) {
+  if (!body || typeof body !== "object") {
+    return res.status(400).json({ error: "Invalid request." });
+  }
+  if (!body.messages || !Array.isArray(body.messages)) {
     return res.status(400).json({ error: "Invalid request format." });
   }
   if (body.messages.length === 0 || body.messages.length > 10) {
     return res.status(400).json({ error: "Invalid number of messages." });
   }
-  const bodyStr = JSON.stringify(body);
-  if (bodyStr.length > 52428800) {
+  // Validate each message structure
+  for (const msg of body.messages) {
+    if (!msg.role || !["user", "assistant"].includes(msg.role)) {
+      return res.status(400).json({ error: "Invalid message role." });
+    }
+    if (!msg.content) {
+      return res.status(400).json({ error: "Invalid message content." });
+    }
+  }
+  // Strict size limit
+  const bodySize = JSON.stringify(body).length;
+  if (bodySize > 52428800) {
     return res.status(413).json({ error: "Request too large." });
   }
   next();
@@ -115,26 +206,84 @@ function adminAuth(req, res, next) {
     res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
     return res.status(401).send("Authentication required.");
   }
-  const credentials = Buffer.from(auth.slice(6), "base64").toString("utf8");
-  const [username, password] = credentials.split(":");
-  const validUser = username === "admin";
-  const validPass = crypto.timingSafeEqual(
-    Buffer.from(password || ""),
-    Buffer.from(ADMIN_PASSWORD)
-  );
-  if (!validUser || !validPass) {
+
+  let credentials;
+  try {
+    credentials = Buffer.from(auth.slice(6), "base64").toString("utf8");
+  } catch {
     res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
     return res.status(401).send("Invalid credentials.");
   }
+
+  const colonIdx = credentials.indexOf(":");
+  if (colonIdx === -1) {
+    recordAdminFailure(req._adminIp || req.ip);
+    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
+    return res.status(401).send("Invalid credentials.");
+  }
+
+  const username = credentials.slice(0, colonIdx);
+  const password = credentials.slice(colonIdx + 1);
+
+  // Constant-time comparison for both username and password
+  const validUser = username.length === "admin".length &&
+    crypto.timingSafeEqual(Buffer.from(username.padEnd(32)), Buffer.from("admin".padEnd(32)));
+
+  const storedPass = Buffer.from(ADMIN_PASSWORD);
+  const providedPass = Buffer.from(password || "");
+  const passBuffer = Buffer.alloc(storedPass.length);
+  providedPass.copy(passBuffer, 0, 0, Math.min(providedPass.length, storedPass.length));
+
+  let validPass = false;
+  try {
+    validPass = providedPass.length === storedPass.length &&
+      crypto.timingSafeEqual(passBuffer, storedPass);
+  } catch { validPass = false; }
+
+  if (!validUser || !validPass) {
+    recordAdminFailure(req._adminIp || req.ip);
+    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
+    return res.status(401).send("Invalid credentials.");
+  }
+
+  clearAdminFailure(req._adminIp || req.ip);
   next();
 }
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: false, limit: "50mb" }));
-app.use(express.static(path.join(__dirname, "public")));
+// ── Body parsers ───────────────────────────────────────────────
+app.use(express.json({ limit: "50mb", strict: true }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
+
+// ── Static files ───────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, "public"), {
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith(".html")) {
+      res.setHeader("Cache-Control", "no-store");
+    }
+  }
+}));
+
+// ── Block common attack paths ──────────────────────────────────
+const BLOCKED_PATHS = [
+  ".env", ".git", "wp-admin", "phpinfo", "config.php",
+  "wp-login", "phpmyadmin", "admin.php", ".htaccess",
+  "xmlrpc.php", "shell.php", "eval", "base64_decode",
+  "/.well-known/acme", "/cgi-bin", "/proc/", "/etc/passwd"
+];
+
+app.use((req, res, next) => {
+  const lowerPath = req.path.toLowerCase();
+  if (BLOCKED_PATHS.some(b => lowerPath.includes(b))) {
+    console.warn(`Blocked request: ${req.ip} -> ${req.path}`);
+    return res.status(404).send("Not found.");
+  }
+  next();
+});
 
 // ── Analysis route ─────────────────────────────────────────────
-app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, async (req, res) => {
+app.post("/api/analyze", globalLimit, analysisLimit, validateAnalysisRequest, async (req, res) => {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: "Server configuration error." });
@@ -176,10 +325,14 @@ app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, 
       const phoneMatch     = promptText.match(/Phone:\s*(.+)/);
       const ageMatch       = promptText.match(/Age:\s*(.+)/);
       const genderMatch    = promptText.match(/Gender:\s*(.+)/);
-      const complaintMatch = promptText.match(/Chief complaint:\s*(.+)/);
-      const notesMatch     = promptText.match(/Clinical notes[^:]*:\s*(.+)/);
+      const complaintMatch = promptText.match(/Health concern:\s*(.+)/);
+      const notesMatch     = promptText.match(/Health notes:\s*(.+)/);
 
-      const sanitize = (str) => (str || "").replace(/<[^>]*>/g, "").trim().slice(0, 500);
+      const sanitize = (str) => (str || "")
+        .replace(/<[^>]*>/g, "")   // strip HTML
+        .replace(/[^\x20-\x7E\u00C0-\u024F\u4E00-\u9FFF\u3400-\u4DBF\uAC00-\uD7AF]/g, "") // allow ASCII + CJK + Latin ext
+        .trim()
+        .slice(0, 500);
 
       const record = {
         id:                    Date.now(),
@@ -189,19 +342,19 @@ app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, 
         gender:                sanitize(genderMatch?.[1])    || "",
         complaint:             sanitize(complaintMatch?.[1]) || "",
         notes:                 sanitize(notesMatch?.[1])     || "",
-        vhs_score:             result.vhs_score              || 0,
+        vhs_score:             Number(result.vhs_score)      || 0,
         vhs_label:             sanitize(result.vhs_label)    || "",
         summary:               sanitize(result.health_assessment) || "",
         key_health_concerns:   sanitize(result.key_health_concerns) || "",
         detected_languages:    sanitize(result.detected_languages) || "",
-        risk_cardiovascular:   result.risk_profile?.cardiovascular?.score || 0,
-        risk_metabolic:        result.risk_profile?.metabolic?.score || 0,
-        risk_liver:            result.risk_profile?.liver?.score || 0,
-        risk_kidney:           result.risk_profile?.kidney?.score || 0,
-        risk_inflammation:     result.risk_profile?.inflammation?.score || 0,
-        nutrition:             (result.nutrition_recommendations||[]).join(' | ').slice(0,500),
-        lifestyle:             (result.lifestyle_recommendations||[]).join(' | ').slice(0,500),
-        supplements:           (result.nutritional_support||[]).join(' | ').slice(0,500),
+        risk_cardiovascular:   Number(result.risk_profile?.cardiovascular?.score) || 0,
+        risk_metabolic:        Number(result.risk_profile?.metabolic?.score) || 0,
+        risk_liver:            Number(result.risk_profile?.liver?.score) || 0,
+        risk_kidney:           Number(result.risk_profile?.kidney?.score) || 0,
+        risk_inflammation:     Number(result.risk_profile?.inflammation?.score) || 0,
+        nutrition:             (result.nutrition_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
+        lifestyle:             (result.lifestyle_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
+        supplements:           (result.nutritional_support||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
         monitoring_plan:       sanitize(result.monitoring_plan) || "",
         ip:                    req.ip || "",
         created_at:            new Date().toISOString()
@@ -221,49 +374,46 @@ app.post("/api/analyze", rateLimit, analysisRateLimit, validateAnalysisRequest, 
   }
 });
 
-// ── Admin route (password protected) ──────────────────────────
-app.get("/admin", adminAuth, (req, res) => {
+// ── Admin routes (protected) ───────────────────────────────────
+app.get("/admin", adminBruteForceProtection, adminLimit, adminAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
-// ── Admin data API ─────────────────────────────────────────────
-app.get("/api/admin/patients", adminAuth, async (req, res) => {
+app.get("/api/admin/patients", adminBruteForceProtection, adminLimit, adminAuth, async (req, res) => {
   try {
     const database = await getDB();
-    const patients = await database.collection("patients").find({}).sort({ id: -1 }).toArray();
+    // Never expose internal MongoDB _id or IP to frontend
+    const patients = await database.collection("patients")
+      .find({}, { projection: { _id: 0, ip: 0 } })
+      .sort({ id: -1 })
+      .limit(1000) // safety cap
+      .toArray();
     res.json(patients);
   } catch(e) {
-    res.status(500).json({ error: "Failed to load patients" });
+    res.status(500).json({ error: "Failed to load records." });
   }
 });
-// Block common attack paths
-app.use((req, res, next) => {
-  const blocked = [".env", ".git", "wp-admin", "phpinfo", "config.php"];
-  if (blocked.some(b => req.path.includes(b))) {
-    return res.status(404).send("Not found.");
-  }
-  next();
-});
 
-// Legal pages
-app.get("/terms", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "terms.html"));
-});
+// ── Legal pages ────────────────────────────────────────────────
+app.get("/terms",   (req, res) => res.sendFile(path.join(__dirname, "public", "terms.html")));
+app.get("/privacy", (req, res) => res.sendFile(path.join(__dirname, "public", "privacy.html")));
 
-app.get("/privacy", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "privacy.html"));
-});
-
+// ── Catch-all ──────────────────────────────────────────────────
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// Global error handler
+// ── Global error handler ───────────────────────────────────────
 app.use((err, req, res, next) => {
+  // Never leak stack traces or internal error details
   console.error("Unhandled error:", err.message);
+  if (err.message && err.message.includes("CORS")) {
+    return res.status(403).json({ error: "Forbidden." });
+  }
   res.status(500).json({ error: "An error occurred. Please try again." });
 });
 
+// ── Start ──────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`VHS platform running on port ${PORT}`);
 });
