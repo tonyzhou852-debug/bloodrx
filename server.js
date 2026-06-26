@@ -485,18 +485,24 @@ app.post("/api/translate", globalLimit, translateLimit, async (req, res) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 2000,
-        system: "You are a professional medical translator. Translate the provided JSON field values to the requested language. Return ONLY a valid JSON object with the same keys. Keep medical marker names (like HbA1c, LDL, HDL, WBC) in English. Translate all descriptive text accurately. Never add explanations or markdown.",
+        max_tokens: 4000,
+        system: "You are a professional medical translator. Translate the provided JSON field values to the requested language. Return ONLY a valid JSON object with the same keys. Keep medical marker names (like HbA1c, LDL, HDL, WBC) in English. Translate all descriptive text accurately. Never add explanations or markdown. Never truncate the JSON.",
         messages: [{
           role: "user",
-          content: "Translate all values in this JSON to " + targetLang + ". Return only valid JSON with the same keys: " + JSON.stringify(safeFields)
+          content: "Translate all values in this JSON to " + targetLang + ". Return only valid JSON with the same keys:\n" + JSON.stringify(safeFields)
         }]
       }),
     });
     const data = await response.json();
     if (!response.ok) return res.status(500).json({ error: "Translation failed." });
     const text = data.content.map(b => b.text || "").join("").replace(/```json|```/g,"").trim();
-    const translated = JSON.parse(text);
+    let translated;
+    try {
+      translated = JSON.parse(text);
+    } catch(parseErr) {
+      console.error("Translation JSON parse error:", parseErr.message, "Raw:", text.slice(0, 200));
+      return res.status(500).json({ error: "Translation parse failed." });
+    }
     res.json({ translated });
   } catch(e) {
     console.error("Translation error:", e.message);
