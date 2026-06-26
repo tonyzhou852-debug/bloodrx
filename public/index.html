@@ -1992,9 +1992,9 @@ async function switchResultLang(lang, label) {
     document.getElementById('result-lang-current').textContent = label;
 
   } catch(e) {
-    console.warn('Translation error:', e);
+    console.error('Translation error:', e);
     renderResults(_rawResult, _rawPatient);
-    document.getElementById('result-lang-current').textContent = label + ' (failed)';
+    document.getElementById('result-lang-current').textContent = 'Language';
   }
 }
 
