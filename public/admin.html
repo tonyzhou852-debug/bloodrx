@@ -156,6 +156,10 @@ tbody tr:hover td{background:#fafafa}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Download CSV
         </button>
+        <button class="del-btn" id="del-btn" onclick="openDeleteConfirm()" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          Delete Selected
+        </button>
       </div>
     </div>
     <div class="search-wrap">
@@ -218,6 +222,23 @@ tbody tr:hover td{background:#fafafa}
   </div>
 </div>
 
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="del-overlay" onclick="if(event.target===this)closeDeleteConfirm()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <div><div class="modal-title" style="color:var(--brand)">Delete Records</div><div class="modal-sub">This action cannot be undone</div></div>
+      <button class="modal-close" onclick="closeDeleteConfirm()">&#x2715;</button>
+    </div>
+    <div class="del-confirm-box">
+      <div class="del-confirm-msg" id="del-confirm-msg"></div>
+      <div class="del-confirm-btns">
+        <button class="del-confirm-cancel" onclick="closeDeleteConfirm()">Cancel</button>
+        <button class="del-confirm-go" onclick="doDelete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 // All patient data stored in JS — never interpolated into HTML strings
 let allPatients = [];
@@ -262,6 +283,7 @@ function renderAll() {
   allPatients.forEach((p, idx) => {
     const tr = document.createElement('tr');
     tr.dataset.idx = idx;
+    tr.dataset.id = String(p.id || '');
 
     // Checkbox
     const tdCheck = document.createElement('td');
@@ -413,6 +435,9 @@ function updateSelectionBar() {
   const cb = document.getElementById('select-all-check');
   cb.indeterminate = checked.length > 0 && checked.length < all.length;
   cb.checked = all.length > 0 && checked.length === all.length;
+  // Enable/disable delete button
+  const delBtn = document.getElementById('del-btn');
+  if (delBtn) delBtn.disabled = checked.length === 0;
 }
 
 // Summary modal
@@ -460,7 +485,49 @@ function doDownload(mode) {
   closeDL();
 }
 
-document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDL();} });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDL();closeDeleteConfirm();} });
+
+// ── Delete records ──
+function openDeleteConfirm() {
+  const checked = document.querySelectorAll('.row-check:checked');
+  if (checked.length === 0) return;
+  document.getElementById('del-confirm-msg').textContent =
+    'Are you sure you want to permanently delete ' + checked.length + ' record' + (checked.length !== 1 ? 's' : '') + '? This cannot be undone.';
+  document.getElementById('del-overlay').classList.add('open');
+}
+function closeDeleteConfirm() {
+  document.getElementById('del-overlay').classList.remove('open');
+}
+
+async function doDelete() {
+  closeDeleteConfirm();
+  const checked = Array.from(document.querySelectorAll('.row-check:checked'));
+  // Get record IDs from the row data
+  const ids = checked.map(cb => {
+    const row = cb.closest('tr');
+    return row ? row.dataset.id : null;
+  }).filter(Boolean);
+
+  if (ids.length === 0) return;
+
+  try {
+    const resp = await fetch('/api/admin/patients/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Delete failed');
+    // Remove deleted rows from table
+    checked.forEach(cb => cb.closest('tr').remove());
+    // Update stats
+    const remaining = document.querySelectorAll('#records-body tr').length;
+    document.getElementById('record-count').textContent = remaining + ' record' + (remaining !== 1 ? 's' : '');
+    updateSelectionBar();
+  } catch(e) {
+    alert('Delete failed: ' + e.message);
+  }
+}
 
 // Load on page ready
 loadPatients();
