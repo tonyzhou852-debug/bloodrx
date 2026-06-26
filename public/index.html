@@ -1879,21 +1879,26 @@ async function switchResultLang(lang, label) {
     }
 
     // Otherwise translate to English via /api/translate
-    const toTranslate = {
-      health_assessment: _rawResult.health_assessment || '',
-      key_health_concerns: _rawResult.key_health_concerns || '',
-      vhs_label: _rawResult.vhs_label || '',
-      monitoring_plan: _rawResult.monitoring_plan || '',
-      nutrition: (_rawResult.nutrition_recommendations || []).join(' || '),
-      lifestyle: (_rawResult.lifestyle_recommendations || []).join(' || '),
-      supplements: (_rawResult.nutritional_support || []).join(' || '),
-      cv_note: _rawResult.risk_profile?.cardiovascular?.note || '',
-      met_note: _rawResult.risk_profile?.metabolic?.note || '',
-      liv_note: _rawResult.risk_profile?.liver?.note || '',
-      kid_note: _rawResult.risk_profile?.kidney?.note || '',
-      inf_note: _rawResult.risk_profile?.inflammation?.note || '',
-      findings: (_rawResult.findings || []).map(f => f.interpretation || '').join(' || ')
-    };
+    // Only include non-empty fields to keep payload small and translation fast
+  const addIf = (obj, key, val) => { if (val && val.trim && val.trim()) obj[key] = val; else if (val && !val.trim) obj[key] = val; };
+  const toTranslate = {};
+  addIf(toTranslate, 'health_assessment', _rawResult.health_assessment);
+  addIf(toTranslate, 'key_health_concerns', _rawResult.key_health_concerns);
+  addIf(toTranslate, 'vhs_label', _rawResult.vhs_label);
+  addIf(toTranslate, 'monitoring_plan', _rawResult.monitoring_plan);
+  const nutr = (_rawResult.nutrition_recommendations||[]).join(' || ');
+  const life = (_rawResult.lifestyle_recommendations||[]).join(' || ');
+  const supp = (_rawResult.nutritional_support||[]).join(' || ');
+  const find = (_rawResult.findings||[]).map(f=>f.interpretation||'').filter(Boolean).join(' || ');
+  if (nutr) toTranslate.nutrition = nutr;
+  if (life) toTranslate.lifestyle = life;
+  if (supp) toTranslate.supplements = supp;
+  if (_rawResult.risk_profile?.cardiovascular?.note) toTranslate.cv_note = _rawResult.risk_profile.cardiovascular.note;
+  if (_rawResult.risk_profile?.metabolic?.note) toTranslate.met_note = _rawResult.risk_profile.metabolic.note;
+  if (_rawResult.risk_profile?.liver?.note) toTranslate.liv_note = _rawResult.risk_profile.liver.note;
+  if (_rawResult.risk_profile?.kidney?.note) toTranslate.kid_note = _rawResult.risk_profile.kidney.note;
+  if (_rawResult.risk_profile?.inflammation?.note) toTranslate.inf_note = _rawResult.risk_profile.inflammation.note;
+  if (find) toTranslate.findings = find;
     try {
       const resp = await fetch('/api/translate', {
         method: 'POST',
