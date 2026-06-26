@@ -843,6 +843,9 @@ const TRANSLATIONS = {
 };
 
 let currentLang = 'en';
+let _rawResult = null;      // current result (may be translated)
+let _rawPatient = null;     // patient info
+let _originalResult = null; // always the first result as received from Claude
 
 function applyLang(lang) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -1396,6 +1399,7 @@ Return ONLY valid JSON:
     const txt = data.content.map(b=>b.text||'').join('');
     const result = JSON.parse(txt.replace(/```json|```/g,'').trim());
     document.getElementById('loading').style.display = 'none';
+    _originalResult = null; // reset for new analysis
     renderResults(result, { name, age, gender, complaint, notes });
   } catch(err) {
     stopLoading();
@@ -1436,6 +1440,7 @@ function renderResults(r, p) {
   // Store raw data for language switching
   _rawResult = r;
   _rawPatient = p;
+  if (!_originalResult) _originalResult = JSON.parse(JSON.stringify(r)); // save original once
 
   const initials = p.name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || 'P';
 
@@ -1837,10 +1842,6 @@ async function getBotReply() {
 
 <!-- Results page language switcher — re-renders from stored raw result JSON -->
 <script>
-// Store raw result data so we can re-render in any language
-let _rawResult = null;
-let _rawPatient = null;
-
 function toggleResultLang() {
   const toggle = document.getElementById('result-lang-toggle');
   const dropdown = document.getElementById('result-lang-dropdown');
@@ -1860,10 +1861,11 @@ async function switchResultLang(lang, label) {
 
   const currentLabel = document.getElementById('result-lang-current');
 
-  // English — re-render with original data
+  // English — re-render with the original result as received from Claude
   if (lang === 'en') {
     currentLang = 'en';
-    renderResults(_rawResult, _rawPatient);
+    _originalResult = _originalResult || _rawResult;
+    renderResults(_originalResult, _rawPatient);
     document.getElementById('result-lang-current').textContent = 'English';
     return;
   }
