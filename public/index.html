@@ -1861,11 +1861,69 @@ async function switchResultLang(lang, label) {
 
   const currentLabel = document.getElementById('result-lang-current');
 
-  // English — re-render with the original result as received from Claude
+  // English — if original was in English, just re-render; otherwise translate to English
   if (lang === 'en') {
+    currentLabel.textContent = '...';
     currentLang = 'en';
-    _originalResult = _originalResult || _rawResult;
-    renderResults(_originalResult, _rawPatient);
+
+    // If original language was already English, just re-render original
+    if (!_rawResult.detected_languages ||
+        _rawResult.detected_languages.toLowerCase().includes('english') ||
+        currentLang === 'en') {
+      _originalResult = _originalResult || _rawResult;
+      renderResults(_originalResult, _rawPatient);
+      document.getElementById('result-lang-current').textContent = 'English';
+      return;
+    }
+
+    // Otherwise translate to English via /api/translate
+    const toTranslate = {
+      health_assessment: _rawResult.health_assessment || '',
+      key_health_concerns: _rawResult.key_health_concerns || '',
+      vhs_label: _rawResult.vhs_label || '',
+      monitoring_plan: _rawResult.monitoring_plan || '',
+      nutrition: (_rawResult.nutrition_recommendations || []).join(' || '),
+      lifestyle: (_rawResult.lifestyle_recommendations || []).join(' || '),
+      supplements: (_rawResult.nutritional_support || []).join(' || '),
+      cv_note: _rawResult.risk_profile?.cardiovascular?.note || '',
+      met_note: _rawResult.risk_profile?.metabolic?.note || '',
+      liv_note: _rawResult.risk_profile?.liver?.note || '',
+      kid_note: _rawResult.risk_profile?.kidney?.note || '',
+      inf_note: _rawResult.risk_profile?.inflammation?.note || '',
+      findings: (_rawResult.findings || []).map(f => f.interpretation || '').join(' || ')
+    };
+    try {
+      const resp = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: toTranslate, targetLang: 'English' })
+      });
+      const data = await resp.json();
+      if (!data.translated) throw new Error('No translation');
+      const t = data.translated;
+      const tr = JSON.parse(JSON.stringify(_rawResult));
+      if (t.health_assessment) tr.health_assessment = t.health_assessment;
+      if (t.key_health_concerns) tr.key_health_concerns = t.key_health_concerns;
+      if (t.vhs_label) tr.vhs_label = t.vhs_label;
+      if (t.monitoring_plan) tr.monitoring_plan = t.monitoring_plan;
+      if (t.nutrition) tr.nutrition_recommendations = t.nutrition.split(' || ').map(s=>s.trim()).filter(Boolean);
+      if (t.lifestyle) tr.lifestyle_recommendations = t.lifestyle.split(' || ').map(s=>s.trim()).filter(Boolean);
+      if (t.supplements) tr.nutritional_support = t.supplements.split(' || ').map(s=>s.trim()).filter(Boolean);
+      if (tr.risk_profile) {
+        if (t.cv_note && tr.risk_profile.cardiovascular) tr.risk_profile.cardiovascular.note = t.cv_note;
+        if (t.met_note && tr.risk_profile.metabolic) tr.risk_profile.metabolic.note = t.met_note;
+        if (t.liv_note && tr.risk_profile.liver) tr.risk_profile.liver.note = t.liv_note;
+        if (t.kid_note && tr.risk_profile.kidney) tr.risk_profile.kidney.note = t.kid_note;
+        if (t.inf_note && tr.risk_profile.inflammation) tr.risk_profile.inflammation.note = t.inf_note;
+      }
+      if (t.findings && tr.findings) {
+        const parts = t.findings.split(' || ');
+        tr.findings.forEach((f, i) => { if (parts[i]) f.interpretation = parts[i].trim(); });
+      }
+      renderResults(tr, _rawPatient);
+    } catch(e) {
+      renderResults(_rawResult, _rawPatient);
+    }
     document.getElementById('result-lang-current').textContent = 'English';
     return;
   }
