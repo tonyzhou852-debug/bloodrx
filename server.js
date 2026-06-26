@@ -419,13 +419,14 @@ app.post("/api/bot", globalLimit, botLimit, async (req, res) => {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "Configuration error." });
 
-  const { messages } = req.body;
+  const { messages, translate } = req.body;
   if (!messages || !Array.isArray(messages) || messages.length === 0 || messages.length > 12) {
     return res.status(400).json({ error: "Invalid request." });
   }
-  // Validate messages
+  // Validate messages — translation requests get higher content limit
+  const contentLimit = translate ? 8000 : 1000;
   for (const m of messages) {
-    if (!["user","assistant"].includes(m.role) || typeof m.content !== "string" || m.content.length > 1000) {
+    if (!["user","assistant"].includes(m.role) || typeof m.content !== "string" || m.content.length > contentLimit) {
       return res.status(400).json({ error: "Invalid message." });
     }
   }
@@ -440,8 +441,8 @@ app.post("/api/bot", globalLimit, botLimit, async (req, res) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 300,
-        system: BOT_SYSTEM,
+        max_tokens: translate ? 2000 : 300,
+        system: translate ? "You are a professional medical translator. Translate the provided JSON fields accurately. Return ONLY valid JSON with the same keys. Never add explanations or markdown." : BOT_SYSTEM,
         messages: messages.slice(-6),
       }),
     });
