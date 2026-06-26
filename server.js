@@ -455,6 +455,55 @@ app.post("/api/bot", globalLimit, botLimit, async (req, res) => {
   }
 });
 
+// ── Translation endpoint ──────────────────────────────────────
+const translateLimit = makeRateLimiter(10, 60000, "Translation rate limit reached.");
+
+app.post("/api/translate", globalLimit, translateLimit, async (req, res) => {
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "Configuration error." });
+
+  const { fields, targetLang } = req.body;
+  if (!fields || typeof fields !== "object" || !targetLang || typeof targetLang !== "string") {
+    return res.status(400).json({ error: "Invalid request." });
+  }
+  if (targetLang.length > 50) return res.status(400).json({ error: "Invalid language." });
+
+  const sanitize = s => String(s || "").slice(0, 2000);
+  const safeFields = {};
+  const allowed = ["health_assessment","key_health_concerns","vhs_label","monitoring_plan","nutrition","lifestyle","supplements","cv_note","met_note","liv_note","kid_note","inf_note","findings"];
+  for (const k of allowed) {
+    if (fields[k]) safeFields[k] = sanitize(fields[k]);
+  }
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 2000,
+        system: "You are a professional medical translator. Translate the provided JSON field values to the requested language. Return ONLY a valid JSON object with the same keys. Keep medical marker names (like HbA1c, LDL, HDL, WBC) in English. Translate all descriptive text accurately. Never add explanations or markdown.",
+        messages: [{
+          role: "user",
+          content: "Translate all values in this JSON to " + targetLang + ". Return only valid JSON with the same keys: " + JSON.stringify(safeFields)
+        }]
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) return res.status(500).json({ error: "Translation failed." });
+    const text = data.content.map(b => b.text || "").join("").replace(/```json|```/g,"").trim();
+    const translated = JSON.parse(text);
+    res.json({ translated });
+  } catch(e) {
+    console.error("Translation error:", e.message);
+    res.status(500).json({ error: "Translation failed." });
+  }
+});
+
 // ── Legal pages ────────────────────────────────────────────────
 app.get("/terms",   (req, res) => res.sendFile(path.join(__dirname, "public", "terms.html")));
 app.get("/privacy", (req, res) => res.sendFile(path.join(__dirname, "public", "privacy.html")));
