@@ -485,7 +485,7 @@ app.post("/api/admin/patients/delete", adminBruteForceProtection, adminLimit, ad
 });
 
 // ── Translation endpoint ──────────────────────────────────────
-const translateLimit = makeRateLimiter(10, 60000, "Translation rate limit reached.");
+const translateLimit = makeRateLimiter(30, 60000, "Translation rate limit reached.");
 
 app.post("/api/translate", globalLimit, translateLimit, async (req, res) => {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
