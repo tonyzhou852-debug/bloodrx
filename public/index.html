@@ -1606,6 +1606,21 @@ function renderResults(r, p) {
 
   document.getElementById('results').style.display = 'block';
   window.scrollTo(0,0);
+
+  // Update language button label to show current language
+  const langLabelEl = document.getElementById('result-lang-current');
+  if (langLabelEl) {
+    const langDisplayMap = {
+      'en': 'English', 'zh-CN': '简体中文', 'zh-TW': '繁體中文',
+      'es': 'Español', 'fr': 'Français', 'de': 'Deutsch',
+      'it': 'Italiano', 'pt': 'Português', 'ru': 'Русский',
+      'nl': 'Nederlands', 'pl': 'Polski', 'tr': 'Türkçe',
+      'ar': 'العربية', 'hi': 'हिन्दी', 'ja': '日本語',
+      'ko': '한국어', 'ms': 'Bahasa Melayu', 'id': 'Bahasa Indonesia',
+      'th': 'ภาษาไทย', 'vi': 'Tiếng Việt'
+    };
+    langLabelEl.textContent = langDisplayMap[currentLang] || 'Language';
+  }
 }
 
 function resetForm() {
@@ -1865,13 +1880,81 @@ async function switchResultLang(lang, label) {
   // Always translate FROM the original result (prevents re-translating already-translated text)
   const source = _originalResult;
 
-  // For English, just re-render the original directly
+  // For English: if original was English, restore it directly. Otherwise translate.
   if (lang === 'en') {
-    currentLang = 'en';
-    // Temporarily prevent _originalResult from being overwritten
-    const saved = _originalResult;
-    renderResults(source, _rawPatient);
-    _originalResult = saved;
+    // Detect if original report is in English by checking if health_assessment is ASCII-dominant
+    const sampleText = source.health_assessment || source.key_health_concerns || '';
+    const nonAscii = sampleText.split('').filter(c => c.charCodeAt(0) > 127).length;
+    const isOriginalEnglish = sampleText.length === 0 || nonAscii / sampleText.length < 0.1;
+
+    if (isOriginalEnglish) {
+      // Original is English — restore directly
+      currentLang = 'en';
+      const saved = _originalResult;
+      renderResults(source, _rawPatient);
+      _originalResult = saved;
+      document.getElementById('result-lang-current').textContent = 'English';
+      return;
+    }
+
+    // Original is not English — translate to English via API
+    const fields = {};
+    if (source.health_assessment) fields.health_assessment = source.health_assessment;
+    if (source.key_health_concerns) fields.key_health_concerns = source.key_health_concerns;
+    if (source.vhs_label) fields.vhs_label = source.vhs_label;
+    if (source.monitoring_plan) fields.monitoring_plan = source.monitoring_plan;
+    const n2 = (source.nutrition_recommendations||[]).join(' || ');
+    const l2 = (source.lifestyle_recommendations||[]).join(' || ');
+    const s2 = (source.nutritional_support||[]).join(' || ');
+    const f2 = (source.findings||[]).map(f=>f.interpretation||'').filter(Boolean).join(' || ');
+    if (n2) fields.nutrition = n2;
+    if (l2) fields.lifestyle = l2;
+    if (s2) fields.supplements = s2;
+    if (source.risk_profile?.cardiovascular?.note) fields.cv_note = source.risk_profile.cardiovascular.note;
+    if (source.risk_profile?.metabolic?.note) fields.met_note = source.risk_profile.metabolic.note;
+    if (source.risk_profile?.liver?.note) fields.liv_note = source.risk_profile.liver.note;
+    if (source.risk_profile?.kidney?.note) fields.kid_note = source.risk_profile.kidney.note;
+    if (source.risk_profile?.inflammation?.note) fields.inf_note = source.risk_profile.inflammation.note;
+    if (f2) fields.findings = f2;
+
+    try {
+      const resp = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields, targetLang: 'English' })
+      });
+      const data = await resp.json();
+      if (!data.translated) throw new Error('fail');
+      const t = data.translated;
+      const tr = JSON.parse(JSON.stringify(source));
+      if (t.health_assessment) tr.health_assessment = t.health_assessment;
+      if (t.key_health_concerns) tr.key_health_concerns = t.key_health_concerns;
+      if (t.vhs_label) tr.vhs_label = t.vhs_label;
+      if (t.monitoring_plan) tr.monitoring_plan = t.monitoring_plan;
+      if (t.nutrition) tr.nutrition_recommendations = t.nutrition.split(' || ').map(s=>s.trim()).filter(Boolean);
+      if (t.lifestyle) tr.lifestyle_recommendations = t.lifestyle.split(' || ').map(s=>s.trim()).filter(Boolean);
+      if (t.supplements) tr.nutritional_support = t.supplements.split(' || ').map(s=>s.trim()).filter(Boolean);
+      if (tr.risk_profile) {
+        if (t.cv_note && tr.risk_profile.cardiovascular) tr.risk_profile.cardiovascular.note = t.cv_note;
+        if (t.met_note && tr.risk_profile.metabolic) tr.risk_profile.metabolic.note = t.met_note;
+        if (t.liv_note && tr.risk_profile.liver) tr.risk_profile.liver.note = t.liv_note;
+        if (t.kid_note && tr.risk_profile.kidney) tr.risk_profile.kidney.note = t.kid_note;
+        if (t.inf_note && tr.risk_profile.inflammation) tr.risk_profile.inflammation.note = t.inf_note;
+      }
+      if (t.findings && tr.findings) {
+        const parts = t.findings.split(' || ');
+        tr.findings.forEach((f, i) => { if (parts[i]) f.interpretation = parts[i].trim(); });
+      }
+      currentLang = 'en';
+      const saved2 = _originalResult;
+      renderResults(tr, _rawPatient);
+      _originalResult = saved2;
+    } catch(e) {
+      currentLang = 'en';
+      const saved2 = _originalResult;
+      renderResults(source, _rawPatient);
+      _originalResult = saved2;
+    }
     document.getElementById('result-lang-current').textContent = 'English';
     return;
   }
