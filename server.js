@@ -32,13 +32,22 @@ getDB().catch(e => console.error("MongoDB startup error:", e.message));
 
 // ── IP Geolocation / Language detection ───────────────────────
 const LANG_MAP = { CN: "zh-CN", HK: "zh-TW", TW: "zh-TW", MO: "zh-TW" };
+const ipLangCache = new Map();
 
-app.get("/api/lang", (req, res) => {
+app.get("/api/lang", async (req, res) => {
+  res.setHeader("Cache-Control", "private, max-age=86400");
   const ip = (req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
-  fetch(`http://ip-api.com/json/${ip}?fields=countryCode`)
-    .then(r => r.json())
-    .then(data => { res.json({ lang: LANG_MAP[data.countryCode] || "en", country: data.countryCode }); })
-    .catch(() => res.json({ lang: "en", country: null }));
+  if (ipLangCache.has(ip)) return res.json(ipLangCache.get(ip));
+  try {
+    const r = await fetch("http://ip-api.com/json/" + ip + "?fields=countryCode");
+    const data = await r.json();
+    const result = { lang: LANG_MAP[data.countryCode] || "en", country: data.countryCode };
+    ipLangCache.set(ip, result);
+    setTimeout(() => ipLangCache.delete(ip), 86400000);
+    res.json(result);
+  } catch(e) {
+    res.json({ lang: "en", country: null });
+  }
 });
 
 // ── Trust Render proxy ─────────────────────────────────────────
@@ -484,8 +493,8 @@ app.post("/api/translate", globalLimit, translateLimit, async (req, res) => {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 4000,
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 3000,
         system: "You are a professional medical translator. Translate the provided JSON field values to the requested language. Return ONLY a valid JSON object with the same keys. Keep medical marker names (like HbA1c, LDL, HDL, WBC) in English. Translate all descriptive text accurately. Never add explanations or markdown. Never truncate the JSON.",
         messages: [{
           role: "user",
