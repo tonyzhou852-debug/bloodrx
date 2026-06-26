@@ -725,6 +725,21 @@ input[type=file] { display: none; }
 
 
 /* Results page language switcher */
+.translate-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(255,255,255,0.85); z-index: 500;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 14px;
+}
+.translate-overlay.show { display: flex; }
+.translate-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+.translate-overlay p { font-size: 14px; color: var(--ink-3); font-weight: 500; }
 .result-lang-wrap { position: relative; display: inline-block; }
 .result-lang-toggle {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1400,6 +1415,7 @@ Return ONLY valid JSON:
     const result = JSON.parse(txt.replace(/```json|```/g,'').trim());
     document.getElementById('loading').style.display = 'none';
     _originalResult = null; // reset for new analysis
+    Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
     renderResults(result, { name, age, gender, complaint, notes });
   } catch(err) {
     stopLoading();
@@ -1440,7 +1456,10 @@ function renderResults(r, p) {
   // Store raw data for language switching
   _rawResult = r;
   _rawPatient = p;
-  if (!_originalResult) _originalResult = JSON.parse(JSON.stringify(r)); // save original once
+  if (!_originalResult) {
+    _originalResult = JSON.parse(JSON.stringify(r)); // save original once
+    _translationCache[currentLang] = _originalResult; // cache original under its lang
+  }
 
   const initials = p.name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || 'P';
 
@@ -1857,6 +1876,18 @@ async function getBotReply() {
 
 <!-- Results page language switcher -->
 <script>
+const _translationCache = {}; // cache translated results by lang code
+
+function showTranslateOverlay(msg) {
+  const el = document.getElementById('translate-overlay');
+  document.getElementById('translate-overlay-msg').textContent = msg || 'Translating report...';
+  if (el) el.classList.add('show');
+}
+function hideTranslateOverlay() {
+  const el = document.getElementById('translate-overlay');
+  if (el) el.classList.remove('show');
+}
+
 function toggleResultLang() {
   const toggle = document.getElementById('result-lang-toggle');
   const dropdown = document.getElementById('result-lang-dropdown');
@@ -1871,97 +1902,44 @@ async function switchResultLang(lang, label) {
   document.getElementById('result-lang-toggle').classList.remove('open');
   document.getElementById('result-lang-toggle').setAttribute('aria-expanded', 'false');
 
-  // Need both stored values
   if (!_originalResult || !_rawPatient) return;
 
-  const currentLabel = document.getElementById('result-lang-current');
-  currentLabel.textContent = '...';
-
-  // Always translate FROM the original result (prevents re-translating already-translated text)
-  const source = _originalResult;
-
-  // For English: if original was English, restore it directly. Otherwise translate.
-  if (lang === 'en') {
-    // Detect if original report is in English by checking if health_assessment is ASCII-dominant
-    const sampleText = source.health_assessment || source.key_health_concerns || '';
-    const nonAscii = sampleText.split('').filter(c => c.charCodeAt(0) > 127).length;
-    const isOriginalEnglish = sampleText.length === 0 || nonAscii / sampleText.length < 0.1;
-
-    if (isOriginalEnglish) {
-      // Original is English — restore directly
-      currentLang = 'en';
-      const saved = _originalResult;
-      renderResults(source, _rawPatient);
-      _originalResult = saved;
-      document.getElementById('result-lang-current').textContent = 'English';
-      return;
-    }
-
-    // Original is not English — translate to English via API
-    const fields = {};
-    if (source.health_assessment) fields.health_assessment = source.health_assessment;
-    if (source.key_health_concerns) fields.key_health_concerns = source.key_health_concerns;
-    if (source.vhs_label) fields.vhs_label = source.vhs_label;
-    if (source.monitoring_plan) fields.monitoring_plan = source.monitoring_plan;
-    const n2 = (source.nutrition_recommendations||[]).join(' || ');
-    const l2 = (source.lifestyle_recommendations||[]).join(' || ');
-    const s2 = (source.nutritional_support||[]).join(' || ');
-    const f2 = (source.findings||[]).map(f=>f.interpretation||'').filter(Boolean).join(' || ');
-    if (n2) fields.nutrition = n2;
-    if (l2) fields.lifestyle = l2;
-    if (s2) fields.supplements = s2;
-    if (source.risk_profile?.cardiovascular?.note) fields.cv_note = source.risk_profile.cardiovascular.note;
-    if (source.risk_profile?.metabolic?.note) fields.met_note = source.risk_profile.metabolic.note;
-    if (source.risk_profile?.liver?.note) fields.liv_note = source.risk_profile.liver.note;
-    if (source.risk_profile?.kidney?.note) fields.kid_note = source.risk_profile.kidney.note;
-    if (source.risk_profile?.inflammation?.note) fields.inf_note = source.risk_profile.inflammation.note;
-    if (f2) fields.findings = f2;
-
-    try {
-      const resp = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields, targetLang: 'English' })
-      });
-      const data = await resp.json();
-      if (!data.translated) throw new Error('fail');
-      const t = data.translated;
-      const tr = JSON.parse(JSON.stringify(source));
-      if (t.health_assessment) tr.health_assessment = t.health_assessment;
-      if (t.key_health_concerns) tr.key_health_concerns = t.key_health_concerns;
-      if (t.vhs_label) tr.vhs_label = t.vhs_label;
-      if (t.monitoring_plan) tr.monitoring_plan = t.monitoring_plan;
-      if (t.nutrition) tr.nutrition_recommendations = t.nutrition.split(' || ').map(s=>s.trim()).filter(Boolean);
-      if (t.lifestyle) tr.lifestyle_recommendations = t.lifestyle.split(' || ').map(s=>s.trim()).filter(Boolean);
-      if (t.supplements) tr.nutritional_support = t.supplements.split(' || ').map(s=>s.trim()).filter(Boolean);
-      if (tr.risk_profile) {
-        if (t.cv_note && tr.risk_profile.cardiovascular) tr.risk_profile.cardiovascular.note = t.cv_note;
-        if (t.met_note && tr.risk_profile.metabolic) tr.risk_profile.metabolic.note = t.met_note;
-        if (t.liv_note && tr.risk_profile.liver) tr.risk_profile.liver.note = t.liv_note;
-        if (t.kid_note && tr.risk_profile.kidney) tr.risk_profile.kidney.note = t.kid_note;
-        if (t.inf_note && tr.risk_profile.inflammation) tr.risk_profile.inflammation.note = t.inf_note;
-      }
-      if (t.findings && tr.findings) {
-        const parts = t.findings.split(' || ');
-        tr.findings.forEach((f, i) => { if (parts[i]) f.interpretation = parts[i].trim(); });
-      }
-      currentLang = 'en';
-      const saved2 = _originalResult;
-      renderResults(tr, _rawPatient);
-      _originalResult = saved2;
-    } catch(e) {
-      currentLang = 'en';
-      const saved2 = _originalResult;
-      renderResults(source, _rawPatient);
-      _originalResult = saved2;
-    }
-    document.getElementById('result-lang-current').textContent = 'English';
+  // If we have a cached translation, use it instantly
+  if (_translationCache[lang]) {
+    currentLang = lang;
+    const saved = _originalResult;
+    renderResults(_translationCache[lang], _rawPatient);
+    _originalResult = saved;
+    document.getElementById('result-lang-current').textContent = label;
     return;
   }
 
-  // Build translation payload from original source
+  // Show loading overlay
+  showTranslateOverlay('Translating to ' + label + '...');
+
+  // Build fields to translate from original
+  const src = _originalResult;
+  const fields = {};
+  if (src.health_assessment) fields.health_assessment = src.health_assessment;
+  if (src.key_health_concerns) fields.key_health_concerns = src.key_health_concerns;
+  if (src.vhs_label) fields.vhs_label = src.vhs_label;
+  if (src.monitoring_plan) fields.monitoring_plan = src.monitoring_plan;
+  const nutr = (src.nutrition_recommendations||[]).join(' || ');
+  const life = (src.lifestyle_recommendations||[]).join(' || ');
+  const supp = (src.nutritional_support||[]).join(' || ');
+  const find = (src.findings||[]).map(f=>f.interpretation||'').filter(Boolean).join(' || ');
+  if (nutr) fields.nutrition = nutr;
+  if (life) fields.lifestyle = life;
+  if (supp) fields.supplements = supp;
+  if (src.risk_profile?.cardiovascular?.note) fields.cv_note = src.risk_profile.cardiovascular.note;
+  if (src.risk_profile?.metabolic?.note) fields.met_note = src.risk_profile.metabolic.note;
+  if (src.risk_profile?.liver?.note) fields.liv_note = src.risk_profile.liver.note;
+  if (src.risk_profile?.kidney?.note) fields.kid_note = src.risk_profile.kidney.note;
+  if (src.risk_profile?.inflammation?.note) fields.inf_note = src.risk_profile.inflammation.note;
+  if (find) fields.findings = find;
+
   const langNames = {
-    'zh-CN':'Simplified Chinese','zh-TW':'Traditional Chinese',
+    'en':'English','zh-CN':'Simplified Chinese','zh-TW':'Traditional Chinese',
     'es':'Spanish','fr':'French','de':'German','it':'Italian',
     'pt':'Portuguese','ru':'Russian','nl':'Dutch','pl':'Polish',
     'tr':'Turkish','ar':'Arabic','hi':'Hindi','ja':'Japanese',
@@ -1969,37 +1947,19 @@ async function switchResultLang(lang, label) {
   };
   const targetLang = langNames[lang] || lang;
 
-  const fields = {};
-  if (source.health_assessment) fields.health_assessment = source.health_assessment;
-  if (source.key_health_concerns) fields.key_health_concerns = source.key_health_concerns;
-  if (source.vhs_label) fields.vhs_label = source.vhs_label;
-  if (source.monitoring_plan) fields.monitoring_plan = source.monitoring_plan;
-  const nutr = (source.nutrition_recommendations||[]).join(' || ');
-  const life = (source.lifestyle_recommendations||[]).join(' || ');
-  const supp = (source.nutritional_support||[]).join(' || ');
-  const find = (source.findings||[]).map(f=>f.interpretation||'').filter(Boolean).join(' || ');
-  if (nutr) fields.nutrition = nutr;
-  if (life) fields.lifestyle = life;
-  if (supp) fields.supplements = supp;
-  if (source.risk_profile?.cardiovascular?.note) fields.cv_note = source.risk_profile.cardiovascular.note;
-  if (source.risk_profile?.metabolic?.note) fields.met_note = source.risk_profile.metabolic.note;
-  if (source.risk_profile?.liver?.note) fields.liv_note = source.risk_profile.liver.note;
-  if (source.risk_profile?.kidney?.note) fields.kid_note = source.risk_profile.kidney.note;
-  if (source.risk_profile?.inflammation?.note) fields.inf_note = source.risk_profile.inflammation.note;
-  if (find) fields.findings = find;
-
   try {
     const resp = await fetch('/api/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fields, targetLang })
     });
+    if (!resp.ok) throw new Error('Server error ' + resp.status);
     const data = await resp.json();
-    if (!data.translated) throw new Error('No translation returned');
+    if (!data.translated) throw new Error('No translation in response');
     const t = data.translated;
 
-    // Deep copy original and apply translations
-    const tr = JSON.parse(JSON.stringify(source));
+    // Build translated result from original
+    const tr = JSON.parse(JSON.stringify(src));
     if (t.health_assessment) tr.health_assessment = t.health_assessment;
     if (t.key_health_concerns) tr.key_health_concerns = t.key_health_concerns;
     if (t.vhs_label) tr.vhs_label = t.vhs_label;
@@ -2019,20 +1979,21 @@ async function switchResultLang(lang, label) {
       tr.findings.forEach((f, i) => { if (parts[i]) f.interpretation = parts[i].trim(); });
     }
 
-    // Render translated result but preserve _originalResult
-    const saved = _originalResult;
+    // Cache and render
+    _translationCache[lang] = tr;
     currentLang = lang;
+    const saved = _originalResult;
     renderResults(tr, _rawPatient);
-    _originalResult = saved; // restore after renderResults overwrites it
+    _originalResult = saved;
     document.getElementById('result-lang-current').textContent = label;
 
   } catch(e) {
-    console.error('Translation error:', e);
-    const saved = _originalResult;
-    renderResults(source, _rawPatient);
-    _originalResult = saved;
-    document.getElementById('result-lang-current').textContent = label + ' ✗';
-    alert('Translation failed: ' + (e.message || 'Unknown error') + '. Please try again in a moment.');
+    console.error('Translation failed:', e.message);
+    // Restore original label
+    document.getElementById('result-lang-current').textContent =
+      _translationCache['_currentLabel'] || 'Language';
+  } finally {
+    hideTranslateOverlay();
   }
 }
 
@@ -2048,5 +2009,9 @@ document.addEventListener('click', e => {
 });
 </script>
 
+<div class="translate-overlay" id="translate-overlay">
+  <div class="translate-spinner"></div>
+  <p id="translate-overlay-msg">Translating report...</p>
+</div>
 </body>
 </html>
