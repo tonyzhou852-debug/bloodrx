@@ -1815,21 +1815,19 @@ function toggleResultLang() {
 
 async function switchResultLang(lang, label) {
   // Close dropdown
-  document.getElementById('result-lang-current').textContent = label;
   document.querySelectorAll('.result-lang-opt').forEach(b => b.classList.remove('active'));
-  const activeBtn = document.querySelector('.result-lang-opt[onclick*="' + lang + '"]');
-  if (activeBtn) activeBtn.classList.add('active');
   document.getElementById('result-lang-dropdown').classList.remove('open');
   document.getElementById('result-lang-toggle').classList.remove('open');
   document.getElementById('result-lang-toggle').setAttribute('aria-expanded', 'false');
 
   currentResultLang = lang;
-
+  const currentLabel = document.getElementById('result-lang-current');
   const resultsEl = document.getElementById('results');
   if (!resultsEl) return;
 
   // Reset to English
   if (lang === 'en') {
+    currentLabel.textContent = 'English';
     if (originalResultHTML) {
       resultsEl.innerHTML = originalResultHTML;
       originalResultHTML = null;
@@ -1837,52 +1835,71 @@ async function switchResultLang(lang, label) {
     return;
   }
 
-  // Save original HTML before first translation
+  // Save original HTML snapshot before first translation
   if (!originalResultHTML) {
     originalResultHTML = resultsEl.innerHTML;
   }
 
-  // Show loading indicator on button
-  const toggle = document.getElementById('result-lang-toggle');
-  const currentLabel = document.getElementById('result-lang-current');
-  currentLabel.textContent = '...';
+  currentLabel.textContent = '⏳';
 
   try {
-    // Use MyMemory free translation API — no key needed, works for results text
-    const textNodes = collectTextNodes(resultsEl);
-    const texts = textNodes.map(n => n.nodeValue.trim()).filter(t => t.length > 1);
+    // Collect all text nodes inside results (skip UI elements)
+    const nodes = [];
+    const walker = document.createTreeWalker(resultsEl, NodeFilter.SHOW_TEXT, {
+      acceptNode: (node) => {
+        const p = node.parentElement;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        const tag = p.tagName.toLowerCase();
+        if (['script','style'].includes(tag)) return NodeFilter.FILTER_REJECT;
+        if (p.closest('.result-lang-wrap')) return NodeFilter.FILTER_REJECT;
+        if (p.closest('.new-analysis-btn')) return NodeFilter.FILTER_REJECT;
+        const txt = node.nodeValue.trim();
+        if (txt.length < 2) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    let n;
+    while (n = walker.nextNode()) nodes.push({ node: n, orig: n.nodeValue });
 
-    if (texts.length === 0) { currentLabel.textContent = label; return; }
+    if (nodes.length === 0) { currentLabel.textContent = label; return; }
 
-    // Batch translate using MyMemory (500 char limit per call)
-    const batches = [];
-    let batch = [];
-    let batchLen = 0;
-    for (const t of texts) {
-      if (batchLen + t.length > 400) { batches.push(batch); batch = [t]; batchLen = t.length; }
-      else { batch.push(t); batchLen += t.length + 1; }
-    }
-    if (batch.length) batches.push(batch);
-
-    const translated = [];
-    for (const b of batches) {
-      const joined = b.join('|||');
-      const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(joined) + '&langpair=en|' + lang;
-      const res = await fetch(url);
-      const data = await res.json();
-      const parts = data.responseData.translatedText.split('|||');
-      translated.push(...parts);
-    }
-
-    // Apply translations back
-    let i = 0;
-    for (const node of textNodes) {
-      if (node.nodeValue.trim().length > 1 && i < translated.length) {
-        node.nodeValue = translated[i++];
+    // Translate in chunks of ~400 chars using MyMemory (free, no key)
+    const SEP = ' ||| ';
+    const chunks = [];
+    let chunk = [], chunkLen = 0;
+    for (const item of nodes) {
+      const t = item.orig.trim();
+      if (chunkLen + t.length > 400 && chunk.length > 0) {
+        chunks.push(chunk); chunk = [item]; chunkLen = t.length;
+      } else {
+        chunk.push(item); chunkLen += t.length + SEP.length;
       }
     }
+    if (chunk.length) chunks.push(chunk);
+
+    for (const grp of chunks) {
+      const query = grp.map(i => i.orig.trim()).join(SEP);
+      // Map zh-TW to zh-CN for MyMemory (it supports both under zh)
+      const apiLang = lang === 'zh-TW' ? 'zh-TW' : lang;
+      const url = 'https://api.mymemory.translated.net/get?q='
+        + encodeURIComponent(query)
+        + '&langpair=en|' + apiLang
+        + '&de=vandlvhs@wellness.com';
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (data.responseStatus !== 200) continue;
+        const parts = data.responseData.translatedText.split(SEP);
+        grp.forEach((item, i) => {
+          if (parts[i] !== undefined && parts[i].trim().length > 0) {
+            item.node.nodeValue = parts[i];
+          }
+        });
+      } catch(e) { /* skip failed chunk, keep original */ }
+    }
   } catch(e) {
-    console.warn('Translation failed:', e);
+    console.warn('Translation error:', e);
   }
 
   currentLabel.textContent = label;
