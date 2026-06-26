@@ -1253,13 +1253,21 @@ function showErr(msg) { document.getElementById('err-msg').textContent = msg; do
 function hideErr() { document.getElementById('err-box').style.display = 'none'; }
 
 /* ── Loading steps UI ── */
-const STEPS = [
+const STEPS_EN = [
   'Reading and parsing documents',
   'Detecting language — translating markers',
   'Extracting and normalising lab values',
   'Calculating VHS Health Score',
   'Generating wellness recommendations',
 ];
+const STEPS_ZH = [
+  '正在读取和解析文档',
+  '正在检测语言并翻译指标',
+  '正在提取和标准化检验值',
+  '正在计算VHS健康评分',
+  '正在生成健康建议',
+];
+const STEPS = (currentLang === 'zh-CN' || currentLang === 'zh-TW') ? STEPS_ZH : STEPS_EN;
 let stepTimer, stepIdx = 0;
 function startLoading() {
   stepIdx = 0;
@@ -1310,9 +1318,17 @@ async function analyze() {
   document.getElementById('results').style.display        = 'none';
   startLoading();
 
+  // Determine output language based on IP-detected language
+  const outputLangMap = {
+    'en': 'English',
+    'zh-CN': 'Simplified Chinese (简体中文)',
+    'zh-TW': 'Traditional Chinese (繁體中文)'
+  };
+  const outputLang = outputLangMap[currentLang] || 'English';
+
   const langInstr = lang==='auto'
-    ? "Auto-detect each document's language. Translate all lab marker names and values to English. Note detected languages in your response."
-    : `Documents are in ${lang}. Translate all lab marker names and values to English.`;
+    ? 'Auto-detect each document language. Translate all lab marker names to standard English for the marker field, but write ALL descriptive text, summaries, notes, recommendations, and interpretations in ' + outputLang + '. Note detected languages in detected_languages field.'
+    : 'Documents are in ' + lang + '. Translate all lab marker names to standard English for the marker field, but write ALL descriptive text, summaries, notes, recommendations, and interpretations in ' + outputLang + '.';
 
   const filesSummary = uploadedFiles.map(f=>`"${f.name}" (${f.label})`).join(', ');
 
@@ -1331,12 +1347,13 @@ Individual context:
 - Health notes: ${notes||'none provided'}
 
 INSTRUCTIONS:
-1. Read ALL provided documents. Translate lab marker names to standard English.
-2. Apply international reference ranges appropriate for age and gender.
-3. Focus on wellness optimization only. Do NOT provide medication names, dosages, antibiotic recommendations or treatment prescriptions.
+1. Read ALL provided documents. Translate lab marker names to standard English for the "marker" field only.
+2. Write ALL other text fields (health_assessment, key_health_concerns, risk notes, findings interpretations, nutrition_recommendations, lifestyle_recommendations, nutritional_support, monitoring_plan, vhs_label) in ${outputLang}.
+3. Apply international reference ranges appropriate for age and gender.
+4. Focus on wellness optimization only. Do NOT provide medication names, dosages, antibiotic recommendations or treatment prescriptions.
 
-VHS HEALTH SCORE (0-100): Calculate based on markers within optimal range. 90-100=Excellent, 75-89=Good, 60-74=Fair, 40-59=Needs Attention, 0-39=Poor.
-RISK PROFILES: Score each 1-5 (1=Very Low, 5=Very High).
+VHS HEALTH SCORE (0-100): Calculate based on markers within optimal range. Labels should also be in ${outputLang} where applicable.
+RISK PROFILES: Score each 1-5 (1=Very Low, 5=Very High). Write the label and note in ${outputLang}.
 
 Return ONLY valid JSON:
 {
@@ -1345,23 +1362,23 @@ Return ONLY valid JSON:
   "translated_complaint": "English translation",
   "translated_notes": "English translation",
   "vhs_score": 85,
-  "vhs_label": "Good",
-  "health_assessment": "2-3 sentence wellness summary",
-  "key_health_concerns": "top 2-3 health areas, comma-separated",
+  "vhs_label": "Good (write in ${outputLang})",
+  "health_assessment": "2-3 sentence wellness summary in ${outputLang}",
+  "key_health_concerns": "top 2-3 health areas in ${outputLang}, comma-separated",
   "risk_profile": {
-    "cardiovascular": { "score": 2, "label": "Low", "note": "one sentence" },
-    "metabolic": { "score": 3, "label": "Moderate", "note": "one sentence" },
-    "liver": { "score": 1, "label": "Very Low", "note": "one sentence" },
-    "kidney": { "score": 2, "label": "Low", "note": "one sentence" },
-    "inflammation": { "score": 2, "label": "Low", "note": "one sentence" }
+    "cardiovascular": { "score": 2, "label": "Low (in ${outputLang})", "note": "one sentence in ${outputLang}" },
+    "metabolic": { "score": 3, "label": "Moderate (in ${outputLang})", "note": "one sentence in ${outputLang}" },
+    "liver": { "score": 1, "label": "Very Low (in ${outputLang})", "note": "one sentence in ${outputLang}" },
+    "kidney": { "score": 2, "label": "Low (in ${outputLang})", "note": "one sentence in ${outputLang}" },
+    "inflammation": { "score": 2, "label": "Low (in ${outputLang})", "note": "one sentence in ${outputLang}" }
   },
   "findings": [
     { "marker":"name", "original_name":"", "value":"value with unit", "status":"normal|high|low|critical", "interpretation":"wellness significance", "source":"" }
   ],
-  "nutrition_recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
-  "lifestyle_recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
-  "nutritional_support": ["supplement 1", "supplement 2", "supplement 3"],
-  "monitoring_plan": "follow-up tests and timeline"
+  "nutrition_recommendations": ["recommendation in ${outputLang}", "recommendation in ${outputLang}", "recommendation in ${outputLang}"],
+  "lifestyle_recommendations": ["recommendation in ${outputLang}", "recommendation in ${outputLang}", "recommendation in ${outputLang}"],
+  "nutritional_support": ["supplement in ${outputLang}", "supplement in ${outputLang}", "supplement in ${outputLang}"],
+  "monitoring_plan": "follow-up tests and timeline in ${outputLang}"
 }`;
 
   const parts = buildContentParts();
@@ -1387,6 +1404,31 @@ Return ONLY valid JSON:
     document.getElementById('form-heading').style.display = 'block';
     showErr('Analysis failed: ' + err.message);
   }
+}
+
+
+/* ── UI label translations ── */
+function uiT(key) {
+  const isChinese = currentLang === 'zh-CN' || currentLang === 'zh-TW';
+  const trad = currentLang === 'zh-TW';
+  const labels = {
+    reportTitle:     isChinese ? 'VHS健康报告' : 'VHS Wellness Report',
+    healthAssessment:isChinese ? (trad?'健康評估摘要':'健康评估摘要') : 'Health Assessment Summary',
+    keyConcerns:     isChinese ? (trad?'主要健康問題':'主要健康问题') : 'Key Health Concerns',
+    riskProfile:     isChinese ? (trad?'風險評估':'风险评估') : 'Risk Profile',
+    labFindings:     isChinese ? (trad?'檢驗結果':'检验结果') : 'Laboratory Findings',
+    nutrition:       isChinese ? (trad?'營養建議':'营养建议') : 'Nutrition Recommendations',
+    lifestyle:       isChinese ? (trad?'生活方式建議':'生活方式建议') : 'Lifestyle Recommendations',
+    supplements:     isChinese ? (trad?'營養補充建議':'营养补充建议') : 'Suggested Nutritional Support',
+    monitoring:      isChinese ? (trad?'監測計劃':'监测计划') : 'Monitoring Plan',
+    vhsScore:        isChinese ? 'VHS评分' : 'VHS Score',
+    newAssessment:   isChinese ? (trad?'← 新評估':'← 新评估') : '← New Assessment',
+    aiGenerated:     isChinese ? 'AI生成内容' : 'AI-Generated Content',
+    disclaimer:      isChinese ? (trad?'本報告由AI生成，僅供健康教育和健康管理目的，不構成醫療診斷、治療建議或處方。作出醫療決定前請諮詢合資格醫生。':'本报告由AI生成，仅供健康教育和健康管理目的，不构成医疗诊断、治疗建议或处方。在作出医疗决定前请咨询合资格医生。') : 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
+    detectedLang:    isChinese ? '检测语言' : 'Detected language',
+    translated:      isChinese ? '所有数值已翻译为中文进行分析' : 'all values translated to English for analysis',
+  };
+  return labels[key] || key;
 }
 
 /* ── Render results ── */
@@ -1445,11 +1487,11 @@ function renderResults(r, p) {
 
   document.getElementById('results').innerHTML = `
     <div class="result-topbar">
-      <h2>VHS Wellness Report</h2>
+      <h2>${uiT("reportTitle")}</h2>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          AI-Generated Content
+          ${uiT("aiGenerated")}
         </span>
         <div class="result-lang-wrap" id="result-lang-wrap">
           <button class="result-lang-toggle" id="result-lang-toggle" onclick="toggleResultLang()" aria-haspopup="listbox" aria-expanded="false">
@@ -1483,7 +1525,7 @@ function renderResults(r, p) {
             <button class="result-lang-opt" onclick="switchResultLang('vi','Tiếng Việt')">🇻🇳 Tiếng Việt</button>
           </div>
         </div>
-        <button class="new-analysis-btn" onclick="resetForm()" type="button">&#8592; New Assessment</button>
+        <button class="new-analysis-btn" onclick="resetForm()" type="button">${uiT("newAssessment")}</button>
       </div>
     </div>
 
@@ -1498,52 +1540,52 @@ function renderResults(r, p) {
       <div class="patient-right">
         <div class="vhs-score-badge" style="border-color:${scoreColor}">
           <div class="vhs-score-num" style="color:${scoreColor}">${score}</div>
-          <div class="vhs-score-label">VHS Score</div>
+          <div class="vhs-score-label">${uiT("vhsScore")}</div>
         </div>
         <span style="font-size:11px;color:var(--ink-4)">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</span>
       </div>
     </div>
 
     <div class="result-section" role="region" aria-label="Health assessment">
-      <div class="result-section-title">Health Assessment Summary</div>
+      <div class="result-section-title">${uiT("healthAssessment")}</div>
       <div class="summary-block">
         ${escHtml(r.health_assessment||'')}
-        ${r.key_health_concerns ? `<div class="differential"><strong>Key Health Concerns:</strong> ${escHtml(r.key_health_concerns)}</div>` : ''}
+        ${r.key_health_concerns ? `<div class="differential"><strong>${uiT("keyConcerns")}:</strong> ${escHtml(r.key_health_concerns)}</div>` : ''}
       </div>
     </div>
 
     ${riskHtml ? `
     <div class="result-section" role="region" aria-label="Risk profile">
-      <div class="result-section-title">Risk Profile</div>
+      <div class="result-section-title">${uiT("riskProfile")}</div>
       <div class="risk-grid">${riskHtml}</div>
     </div>` : ''}
 
     <div class="result-section" role="region" aria-label="Laboratory findings">
-      <div class="result-section-title">Laboratory Findings</div>
+      <div class="result-section-title">${uiT("labFindings")}</div>
       ${findingsHtml}
     </div>
 
     ${(r.nutrition_recommendations||[]).length ? `
     <div class="result-section" role="region" aria-label="Nutrition recommendations">
-      <div class="result-section-title">Nutrition Recommendations</div>
+      <div class="result-section-title">${uiT("nutrition")}</div>
       <div class="rec-card">${listHtml(r.nutrition_recommendations,'🥗')}</div>
     </div>` : ''}
 
     ${(r.lifestyle_recommendations||[]).length ? `
     <div class="result-section" role="region" aria-label="Lifestyle recommendations">
-      <div class="result-section-title">Lifestyle Recommendations</div>
+      <div class="result-section-title">${uiT("lifestyle")}</div>
       <div class="rec-card">${listHtml(r.lifestyle_recommendations,'🏃')}</div>
     </div>` : ''}
 
     ${(r.nutritional_support||[]).length ? `
     <div class="result-section" role="region" aria-label="Nutritional support">
-      <div class="result-section-title">Suggested Nutritional Support</div>
+      <div class="result-section-title">${uiT("supplements")}</div>
       <div class="rec-card">${listHtml(r.nutritional_support,'💊')}</div>
     </div>` : ''}
 
     ${r.monitoring_plan ? `
     <div class="result-section" role="region" aria-label="Monitoring plan">
-      <div class="result-section-title">Monitoring Plan</div>
+      <div class="result-section-title">${uiT("monitoring")}</div>
       <div class="monitoring-card">${escHtml(r.monitoring_plan)}</div>
     </div>` : ''}
 
