@@ -1789,12 +1789,21 @@ async function getBotReply() {
 </script>
 
 
-<!-- Results page language switcher -->
-<div id="result-google-translate" style="display:none"></div>
+<!-- Results page language switcher — translates results div only, no page reload -->
 <script>
-function googleTranslateResultInit() {
-  new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'result-google-translate');
-}
+// Translation map: lang code -> Google Translate supported code
+const RESULT_LANGS = {
+  'en': 'English', 'zh-CN': '简体中文', 'zh-TW': '繁體中文',
+  'es': 'Español', 'fr': 'Français', 'de': 'Deutsch',
+  'it': 'Italiano', 'pt': 'Português', 'ru': 'Русский',
+  'nl': 'Nederlands', 'pl': 'Polski', 'tr': 'Türkçe',
+  'ar': 'العربية', 'hi': 'हिन्दी', 'ja': '日本語',
+  'ko': '한국어', 'ms': 'Bahasa Melayu', 'id': 'Bahasa Indonesia',
+  'th': 'ภาษาไทย', 'vi': 'Tiếng Việt'
+};
+
+let currentResultLang = 'en';
+let originalResultHTML = null;
 
 function toggleResultLang() {
   const toggle = document.getElementById('result-lang-toggle');
@@ -1804,47 +1813,111 @@ function toggleResultLang() {
   toggle.setAttribute('aria-expanded', isOpen);
 }
 
-function switchResultLang(lang, label) {
+async function switchResultLang(lang, label) {
+  // Close dropdown
   document.getElementById('result-lang-current').textContent = label;
   document.querySelectorAll('.result-lang-opt').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector('.result-lang-opt[onclick*="' + lang + '"]');
+  if (activeBtn) activeBtn.classList.add('active');
   document.getElementById('result-lang-dropdown').classList.remove('open');
   document.getElementById('result-lang-toggle').classList.remove('open');
   document.getElementById('result-lang-toggle').setAttribute('aria-expanded', 'false');
 
+  currentResultLang = lang;
+
+  const resultsEl = document.getElementById('results');
+  if (!resultsEl) return;
+
+  // Reset to English
   if (lang === 'en') {
-    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + location.hostname;
-    // Only reload if a translation is active
-    const select = document.querySelector('select.goog-te-combo');
-    if (select && select.value) { select.value = ''; select.dispatchEvent(new Event('change')); }
+    if (originalResultHTML) {
+      resultsEl.innerHTML = originalResultHTML;
+      originalResultHTML = null;
+    }
     return;
   }
-  const select = document.querySelector('select.goog-te-combo');
-  if (select) {
-    select.value = lang;
-    select.dispatchEvent(new Event('change'));
-  } else {
-    document.cookie = 'googtrans=/en/' + lang + '; path=/';
-    document.cookie = 'googtrans=/en/' + lang + '; path=/; domain=.' + location.hostname;
-    location.reload();
+
+  // Save original HTML before first translation
+  if (!originalResultHTML) {
+    originalResultHTML = resultsEl.innerHTML;
   }
+
+  // Show loading indicator on button
+  const toggle = document.getElementById('result-lang-toggle');
+  const currentLabel = document.getElementById('result-lang-current');
+  currentLabel.textContent = '...';
+
+  try {
+    // Use MyMemory free translation API — no key needed, works for results text
+    const textNodes = collectTextNodes(resultsEl);
+    const texts = textNodes.map(n => n.nodeValue.trim()).filter(t => t.length > 1);
+
+    if (texts.length === 0) { currentLabel.textContent = label; return; }
+
+    // Batch translate using MyMemory (500 char limit per call)
+    const batches = [];
+    let batch = [];
+    let batchLen = 0;
+    for (const t of texts) {
+      if (batchLen + t.length > 400) { batches.push(batch); batch = [t]; batchLen = t.length; }
+      else { batch.push(t); batchLen += t.length + 1; }
+    }
+    if (batch.length) batches.push(batch);
+
+    const translated = [];
+    for (const b of batches) {
+      const joined = b.join('|||');
+      const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(joined) + '&langpair=en|' + lang;
+      const res = await fetch(url);
+      const data = await res.json();
+      const parts = data.responseData.translatedText.split('|||');
+      translated.push(...parts);
+    }
+
+    // Apply translations back
+    let i = 0;
+    for (const node of textNodes) {
+      if (node.nodeValue.trim().length > 1 && i < translated.length) {
+        node.nodeValue = translated[i++];
+      }
+    }
+  } catch(e) {
+    console.warn('Translation failed:', e);
+  }
+
+  currentLabel.textContent = label;
+}
+
+function collectTextNodes(el) {
+  const nodes = [];
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => {
+      const parent = node.parentElement;
+      if (!parent) return NodeFilter.FILTER_REJECT;
+      // Skip script, style, buttons that are UI controls
+      const tag = parent.tagName.toLowerCase();
+      if (['script','style','button'].includes(tag)) return NodeFilter.FILTER_REJECT;
+      if (parent.classList.contains('result-lang-wrap')) return NodeFilter.FILTER_REJECT;
+      if (node.nodeValue.trim().length < 2) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  let node;
+  while (node = walker.nextNode()) nodes.push(node);
+  return nodes;
 }
 
 // Close dropdown when clicking outside
 document.addEventListener('click', e => {
   const wrap = document.getElementById('result-lang-wrap');
   if (wrap && !wrap.contains(e.target)) {
-    document.getElementById('result-lang-dropdown').classList.remove('open');
-    document.getElementById('result-lang-toggle').classList.remove('open');
+    const dd = document.getElementById('result-lang-dropdown');
+    const tg = document.getElementById('result-lang-toggle');
+    if (dd) dd.classList.remove('open');
+    if (tg) { tg.classList.remove('open'); tg.setAttribute('aria-expanded','false'); }
   }
 });
 </script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateResultInit" defer></script>
-<style>
-.goog-te-banner-frame, .skiptranslate { display: none !important; }
-body { top: 0 !important; }
-.goog-te-gadget { display: none !important; }
-</style>
 
 </body>
 </html>
