@@ -1433,6 +1433,10 @@ function uiT(key) {
 
 /* ── Render results ── */
 function renderResults(r, p) {
+  // Store raw data for language switching
+  _rawResult = r;
+  _rawPatient = p;
+
   const initials = p.name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || 'P';
 
   const sourcesHtml = `
@@ -1831,21 +1835,11 @@ async function getBotReply() {
 </script>
 
 
-<!-- Results page language switcher — translates results div only, no page reload -->
+<!-- Results page language switcher — re-renders from stored raw result JSON -->
 <script>
-// Translation map: lang code -> Google Translate supported code
-const RESULT_LANGS = {
-  'en': 'English', 'zh-CN': '简体中文', 'zh-TW': '繁體中文',
-  'es': 'Español', 'fr': 'Français', 'de': 'Deutsch',
-  'it': 'Italiano', 'pt': 'Português', 'ru': 'Русский',
-  'nl': 'Nederlands', 'pl': 'Polski', 'tr': 'Türkçe',
-  'ar': 'العربية', 'hi': 'हिन्दी', 'ja': '日本語',
-  'ko': '한국어', 'ms': 'Bahasa Melayu', 'id': 'Bahasa Indonesia',
-  'th': 'ภาษาไทย', 'vi': 'Tiếng Việt'
-};
-
-let currentResultLang = 'en';
-let originalResultHTML = null;
+// Store raw result data so we can re-render in any language
+let _rawResult = null;
+let _rawPatient = null;
 
 function toggleResultLang() {
   const toggle = document.getElementById('result-lang-toggle');
@@ -1862,108 +1856,87 @@ async function switchResultLang(lang, label) {
   document.getElementById('result-lang-toggle').classList.remove('open');
   document.getElementById('result-lang-toggle').setAttribute('aria-expanded', 'false');
 
-  currentResultLang = lang;
-  const currentLabel = document.getElementById('result-lang-current');
-  const resultsEl = document.getElementById('results');
-  if (!resultsEl) return;
+  if (!_rawResult || !_rawPatient) return;
 
-  // Reset to English
+  const currentLabel = document.getElementById('result-lang-current');
+
+  // English — re-render with original data
   if (lang === 'en') {
-    currentLabel.textContent = 'English';
-    if (originalResultHTML) {
-      resultsEl.innerHTML = originalResultHTML;
-      originalResultHTML = null;
-    }
+    currentLang = 'en';
+    renderResults(_rawResult, _rawPatient);
+    document.getElementById('result-lang-current').textContent = 'English';
     return;
   }
 
-  // Save original HTML snapshot before first translation
-  if (!originalResultHTML) {
-    originalResultHTML = resultsEl.innerHTML;
-  }
+  currentLabel.textContent = '...';
 
-  currentLabel.textContent = '⏳';
+  const langNames = {
+    'zh-CN':'Simplified Chinese','zh-TW':'Traditional Chinese',
+    'es':'Spanish','fr':'French','de':'German','it':'Italian',
+    'pt':'Portuguese','ru':'Russian','nl':'Dutch','pl':'Polish',
+    'tr':'Turkish','ar':'Arabic','hi':'Hindi','ja':'Japanese',
+    'ko':'Korean','ms':'Malay','id':'Indonesian','th':'Thai','vi':'Vietnamese'
+  };
+  const targetLang = langNames[lang] || lang;
+
+  const toTranslate = {
+    health_assessment: _rawResult.health_assessment || '',
+    key_health_concerns: _rawResult.key_health_concerns || '',
+    vhs_label: _rawResult.vhs_label || '',
+    monitoring_plan: _rawResult.monitoring_plan || '',
+    nutrition: (_rawResult.nutrition_recommendations || []).join(' || '),
+    lifestyle: (_rawResult.lifestyle_recommendations || []).join(' || '),
+    supplements: (_rawResult.nutritional_support || []).join(' || '),
+    cv_note: _rawResult.risk_profile?.cardiovascular?.note || '',
+    met_note: _rawResult.risk_profile?.metabolic?.note || '',
+    liv_note: _rawResult.risk_profile?.liver?.note || '',
+    kid_note: _rawResult.risk_profile?.kidney?.note || '',
+    inf_note: _rawResult.risk_profile?.inflammation?.note || '',
+    findings: (_rawResult.findings || []).map(f => f.interpretation || '').join(' || ')
+  };
+
+  const prompt = 'Translate these health report fields to ' + targetLang + '. Return ONLY a JSON object with exactly the same keys. Keep medical marker names in English. Translate all descriptive text accurately.\n\n' + JSON.stringify(toTranslate);
 
   try {
-    // Collect all text nodes inside results (skip UI elements)
-    const nodes = [];
-    const walker = document.createTreeWalker(resultsEl, NodeFilter.SHOW_TEXT, {
-      acceptNode: (node) => {
-        const p = node.parentElement;
-        if (!p) return NodeFilter.FILTER_REJECT;
-        const tag = p.tagName.toLowerCase();
-        if (['script','style'].includes(tag)) return NodeFilter.FILTER_REJECT;
-        if (p.closest('.result-lang-wrap')) return NodeFilter.FILTER_REJECT;
-        if (p.closest('.new-analysis-btn')) return NodeFilter.FILTER_REJECT;
-        const txt = node.nodeValue.trim();
-        if (txt.length < 2) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
-      }
+    const resp = await fetch('/api/bot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], translate: true })
     });
-    let n;
-    while (n = walker.nextNode()) nodes.push({ node: n, orig: n.nodeValue });
+    const data = await resp.json();
+    if (!data.reply) throw new Error('No reply');
 
-    if (nodes.length === 0) { currentLabel.textContent = label; return; }
+    const t = JSON.parse(data.reply.replace(/```json|```/g,'').trim());
+    const tr = JSON.parse(JSON.stringify(_rawResult));
 
-    // Translate in chunks of ~400 chars using MyMemory (free, no key)
-    const SEP = ' ||| ';
-    const chunks = [];
-    let chunk = [], chunkLen = 0;
-    for (const item of nodes) {
-      const t = item.orig.trim();
-      if (chunkLen + t.length > 400 && chunk.length > 0) {
-        chunks.push(chunk); chunk = [item]; chunkLen = t.length;
-      } else {
-        chunk.push(item); chunkLen += t.length + SEP.length;
-      }
+    if (t.health_assessment) tr.health_assessment = t.health_assessment;
+    if (t.key_health_concerns) tr.key_health_concerns = t.key_health_concerns;
+    if (t.vhs_label) tr.vhs_label = t.vhs_label;
+    if (t.monitoring_plan) tr.monitoring_plan = t.monitoring_plan;
+    if (t.nutrition) tr.nutrition_recommendations = t.nutrition.split(' || ').map(s=>s.trim()).filter(Boolean);
+    if (t.lifestyle) tr.lifestyle_recommendations = t.lifestyle.split(' || ').map(s=>s.trim()).filter(Boolean);
+    if (t.supplements) tr.nutritional_support = t.supplements.split(' || ').map(s=>s.trim()).filter(Boolean);
+    if (tr.risk_profile) {
+      if (t.cv_note && tr.risk_profile.cardiovascular) tr.risk_profile.cardiovascular.note = t.cv_note;
+      if (t.met_note && tr.risk_profile.metabolic) tr.risk_profile.metabolic.note = t.met_note;
+      if (t.liv_note && tr.risk_profile.liver) tr.risk_profile.liver.note = t.liv_note;
+      if (t.kid_note && tr.risk_profile.kidney) tr.risk_profile.kidney.note = t.kid_note;
+      if (t.inf_note && tr.risk_profile.inflammation) tr.risk_profile.inflammation.note = t.inf_note;
     }
-    if (chunk.length) chunks.push(chunk);
-
-    for (const grp of chunks) {
-      const query = grp.map(i => i.orig.trim()).join(SEP);
-      // Map zh-TW to zh-CN for MyMemory (it supports both under zh)
-      const apiLang = lang === 'zh-TW' ? 'zh-TW' : lang;
-      const url = 'https://api.mymemory.translated.net/get?q='
-        + encodeURIComponent(query)
-        + '&langpair=en|' + apiLang
-        + '&de=vandlvhs@wellness.com';
-      try {
-        const res = await fetch(url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (data.responseStatus !== 200) continue;
-        const parts = data.responseData.translatedText.split(SEP);
-        grp.forEach((item, i) => {
-          if (parts[i] !== undefined && parts[i].trim().length > 0) {
-            item.node.nodeValue = parts[i];
-          }
-        });
-      } catch(e) { /* skip failed chunk, keep original */ }
+    if (t.findings && tr.findings) {
+      const parts = t.findings.split(' || ');
+      tr.findings.forEach((f, i) => { if (parts[i]) f.interpretation = parts[i].trim(); });
     }
+
+    currentLang = lang;
+    renderResults(tr, _rawPatient);
+    document.getElementById('result-lang-current').textContent = label;
+
   } catch(e) {
     console.warn('Translation error:', e);
+    renderResults(_rawResult, _rawPatient);
+    document.getElementById('result-lang-current').textContent = label + ' (failed)';
   }
-
-  currentLabel.textContent = label;
-}
-
-function collectTextNodes(el) {
-  const nodes = [];
-  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
-    acceptNode: (node) => {
-      const parent = node.parentElement;
-      if (!parent) return NodeFilter.FILTER_REJECT;
-      // Skip script, style, buttons that are UI controls
-      const tag = parent.tagName.toLowerCase();
-      if (['script','style','button'].includes(tag)) return NodeFilter.FILTER_REJECT;
-      if (parent.classList.contains('result-lang-wrap')) return NodeFilter.FILTER_REJECT;
-      if (node.nodeValue.trim().length < 2) return NodeFilter.FILTER_REJECT;
-      return NodeFilter.FILTER_ACCEPT;
-    }
-  });
-  let node;
-  while (node = walker.nextNode()) nodes.push(node);
-  return nodes;
 }
 
 // Close dropdown when clicking outside
