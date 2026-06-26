@@ -1,480 +1,1957 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
-const crypto = require("crypto");
-const { MongoClient } = require("mongodb");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VANDL Health Score (VHS)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap&font-display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Tokens ───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:        #111827;
+  --ink-2:      #374151;
+  --ink-3:      #6b7280;
+  --ink-4:      #9ca3af;
+  --border:     #e5e7eb;
+  --border-2:   #d1d5db;
+  --surface:    #ffffff;
+  --bg:         #f7f8f9;
+  --bg-2:       #f3f4f6;
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+  /* Brand — deep clinical red */
+  --brand:      #b91c1c;
+  --brand-dark: #991b1b;
+  --brand-bg:   #fff1f1;
+  --brand-bd:   #fecaca;
 
-// ── Environment validation on startup ─────────────────────────
-const REQUIRED_ENV = ["ANTHROPIC_API_KEY", "MONGODB_URI", "ADMIN_PASSWORD"];
-REQUIRED_ENV.forEach(key => {
-  if (!process.env[key]) console.warn(`WARNING: ${key} not set in environment`);
-});
+  /* Semantic */
+  --green:      #059669;
+  --green-bg:   #ecfdf5;
+  --green-bd:   #a7f3d0;
+  --amber:      #b45309;
+  --amber-bg:   #fffbeb;
+  --amber-bd:   #fde68a;
+  --red:        #dc2626;
+  --red-bg:     #fef2f2;
+  --red-bd:     #fecaca;
+  --blue:       #2563eb;
+  --blue-bg:    #eff6ff;
+  --blue-bd:    #bfdbfe;
+  --purple:     #7c3aed;
+  --purple-bg:  #f5f3ff;
+  --purple-bd:  #ddd6fe;
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "bloodrx-admin-2024";
+  --radius-sm:  6px;
+  --radius:     10px;
+  --radius-lg:  14px;
+  --radius-xl:  18px;
+  --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
+  --shadow:     0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
 
-// ── MongoDB ────────────────────────────────────────────────────
-let _db = null;
-async function getDB() {
-  if (_db) return _db;
-  const client = new MongoClient(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000,
-    maxPoolSize: 10,
-  });
-  await client.connect();
-  _db = client.db("bloodrx");
-  console.log("Connected to MongoDB");
-  return _db;
+  /* Animation tokens — §7 */
+  --t-fast: 150ms;
+  --t-mid:  250ms;
+  --ease-out: cubic-bezier(0,0,.2,1);
 }
-getDB().catch(e => console.error("MongoDB startup error:", e.message));
 
-// ── IP Geolocation / Language detection ───────────────────────
-const LANG_MAP = { CN: "zh-CN", HK: "zh-TW", TW: "zh-TW", MO: "zh-TW" };
+/* §7: reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
 
-app.get("/api/lang", (req, res) => {
-  const ip = (req.headers["x-forwarded-for"] || req.ip || "").split(",")[0].trim();
-  fetch(`http://ip-api.com/json/${ip}?fields=countryCode`)
-    .then(r => r.json())
-    .then(data => { res.json({ lang: LANG_MAP[data.countryCode] || "en", country: data.countryCode }); })
-    .catch(() => res.json({ lang: "en", country: null }));
-});
+/* §1: skip link */
+.skip-link {
+  position: absolute; top: -100px; left: 12px;
+  background: var(--brand); color: #fff;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500; z-index: 9999; text-decoration: none;
+}
+.skip-link:focus { top: 12px; }
 
-// ── Trust Render proxy ─────────────────────────────────────────
-app.set("trust proxy", 1);
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px; line-height: 1.6;
+  color: var(--ink); background: var(--bg);
+  min-height: 100dvh; -webkit-font-smoothing: antialiased;
+}
 
-// ── Security headers (comprehensive) ──────────────────────────
-app.disable("x-powered-by");
-app.use((req, res, next) => {
-  // Prevent clickjacking
-  res.setHeader("X-Frame-Options", "DENY");
-  // Prevent MIME sniffing
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  // XSS protection (legacy browsers)
-  res.setHeader("X-XSS-Protection", "1; mode=block");
-  // Referrer policy
-  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  // Content Security Policy
-  res.setHeader("Content-Security-Policy",
-    "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; " +
-    "font-src 'self' https://fonts.gstatic.com; " +
-    "img-src 'self' data:; " +
-    "connect-src 'self'; " +
-    "frame-ancestors 'none';"
-  );
-  // Permissions policy — disable unnecessary browser features
-  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
-  // HSTS — force HTTPS (only effective over HTTPS)
-  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
-  // Prevent caching of sensitive pages
-  if (req.path.startsWith("/api/") || req.path.startsWith("/admin")) {
-    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
-    res.setHeader("Pragma", "no-cache");
-  }
-  next();
-});
+/* ─── Nav ───────────────────────────────────────────────────── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 0 1.5rem; height: 60px;
+  display: flex; align-items: center; gap: 1rem;
+}
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--brand);
+  display: flex; align-items: center; justify-content: center;
+}
+.logo-icon svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.logo-text { font-size: 16px; font-weight: 700; color: var(--ink); letter-spacing: -.3px; }
+.logo-text em { color: var(--brand); font-style: normal; }
+.topbar-tag {
+  font-size: 10px; font-weight: 600; letter-spacing: .05em;
+  background: var(--brand-bg); color: var(--brand);
+  border: 1px solid var(--brand-bd); border-radius: 4px;
+  padding: 2px 8px; text-transform: uppercase;
+}
+.topbar-right {
+  margin-left: auto; display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: var(--ink-3);
+}
+.topbar-right .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); display: inline-block;
+}
 
-// ── CORS — only allow same origin ─────────────────────────────
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || null;
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (same-origin, curl for dev)
-    if (!origin) return callback(null, true);
-    // In production lock to specific domain
-    if (ALLOWED_ORIGIN && origin !== ALLOWED_ORIGIN) {
-      return callback(new Error("CORS policy violation"), false);
-    }
-    callback(null, true);
+/* ─── Hero ──────────────────────────────────────────────────── */
+.hero {
+  background: var(--ink);
+  padding: 48px 24px 44px; text-align: center;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase; color: #7fa8c4; margin-bottom: 18px;
+}
+.hero h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(28px, 5vw, 38px); font-weight: 400;
+  line-height: 1.15; letter-spacing: -.01em;
+  margin-bottom: 12px; color: #fff;
+}
+.hero h1 em { color: #f4a99a; font-style: normal; }
+.hero-sub {
+  font-size: 16px; color: #8aafc9;
+  max-width: 500px; margin: 0 auto 28px; line-height: 1.65;
+}
+.capability-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; color: #8aafc9;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px; padding: 5px 13px;
+}
+.chip svg { width: 12px; height: 12px; flex-shrink: 0; }
+
+/* ─── Page layout ───────────────────────────────────────────── */
+.page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+/* ─── Page heading (shown above form) ──────────────────────── */
+.page-heading { margin-bottom: 1.75rem; }
+.page-heading h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; color: var(--ink); }
+.page-heading p  { font-size: 14px; color: var(--ink-3); margin-top: 4px; }
+
+/* ─── Section cards ─────────────────────────────────────────── */
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.section-header {
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg-2);
+}
+.section-header .icon-wrap {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.icon-wrap svg { width: 17px; height: 17px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-blue   { background: var(--blue-bg); }
+.icon-blue svg   { stroke: var(--blue); }
+.icon-green  { background: var(--green-bg); }
+.icon-green svg  { stroke: var(--green); }
+.icon-amber  { background: var(--amber-bg); }
+.icon-amber svg  { stroke: var(--amber); }
+.icon-purple { background: var(--purple-bg); }
+.icon-purple svg { stroke: var(--purple); }
+.section-header h2 { font-size: 14px; font-weight: 600; color: var(--ink); letter-spacing: -.01em; }
+.section-header p  { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.section-body { padding: 1.5rem; }
+
+/* ─── Form fields ───────────────────────────────────────────── */
+.field-group { margin-bottom: 1.1rem; }
+.field-group:last-child { margin-bottom: 0; }
+
+/* §8: visible labels with for= attribute in HTML */
+.field-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600;
+  color: var(--ink-2); margin-bottom: 5px;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.field-hint { font-size: 12px; color: var(--ink-4); margin-bottom: 7px; line-height: 1.5; }
+
+/* §2: min-height 44px touch targets; §6: 16px base font */
+input[type=text], input[type=number], select, textarea {
+  width: 100%; padding: 10px 12px; min-height: 44px;
+  border: 1px solid var(--border-2); border-radius: var(--radius-sm);
+  font-size: 15px; font-family: inherit; color: var(--ink);
+  background: var(--surface);
+  transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
+  box-shadow: var(--shadow-sm);
+  touch-action: manipulation; /* §2 tap-delay */
+}
+/* §1: focus-states — 3px visible ring */
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(185,28,28,.12);
+}
+textarea { resize: vertical; min-height: 80px; }
+select {
+  height: 44px; cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
+}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ─── Language row ──────────────────────────────────────────── */
+.lang-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 1.25rem; padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+.lang-row svg { width: 16px; height: 16px; flex-shrink: 0; stroke: var(--ink-4); fill: none; stroke-width: 2; stroke-linecap: round; }
+.lang-row label {
+  font-size: 12px; font-weight: 600; color: var(--ink-2);
+  white-space: nowrap; text-transform: uppercase; letter-spacing: .04em;
+}
+.lang-row select { flex: 1; min-height: 36px; height: 36px; }
+
+/* ─── Drop zone ─────────────────────────────────────────────── */
+.drop-zone {
+  border: 1.5px dashed var(--border-2);
+  border-radius: var(--radius-lg); padding: 2.25rem 1rem;
+  text-align: center; cursor: pointer;
+  transition: border-color var(--t-mid) var(--ease-out), background var(--t-mid) var(--ease-out);
+  background: var(--bg-2); position: relative;
+}
+.drop-zone:hover, .drop-zone.over {
+  border-color: var(--brand); background: var(--brand-bg);
+}
+/* §1: focus-within for keyboard nav */
+.drop-zone:focus-within { box-shadow: 0 0 0 3px rgba(185,28,28,.12); }
+.drop-zone.has-files {
+  border-color: var(--green); border-style: solid; background: var(--green-bg);
+}
+.dz-icon-wrap {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px; box-shadow: var(--shadow);
+}
+.dz-icon-wrap svg { width: 24px; height: 24px; stroke: var(--ink-3); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.drop-zone.has-files .dz-icon-wrap { background: var(--green-bg); border-color: var(--green-bd); }
+.drop-zone.has-files .dz-icon-wrap svg { stroke: var(--green); }
+.drop-zone p { font-size: 14px; color: var(--ink-2); font-weight: 500; }
+.dz-sub { font-size: 12px; color: var(--ink-4); margin-top: 4px; font-weight: 400 !important; }
+input[type=file] { display: none; }
+
+/* ─── File list ─────────────────────────────────────────────── */
+.file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.file-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 12px;
+  transition: border-color var(--t-fast);
+}
+.file-item:hover { border-color: var(--border-2); }
+.file-icon-box {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+/* §4: SVG icons not emoji — set via inline svg in JS below */
+.file-info { flex: 1; min-width: 0; }
+.file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-meta { font-size: 11px; color: var(--ink-4); margin-top: 1px; }
+
+/* §2: remove button ≥44px tap area */
+.file-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-4); font-size: 14px;
+  padding: 10px 8px; border-radius: 4px; flex-shrink: 0;
+  line-height: 1; transition: color var(--t-fast), background var(--t-fast);
+  min-height: 44px; display: flex; align-items: center;
+  touch-action: manipulation;
+}
+.file-remove:hover { color: var(--red); background: var(--red-bg); }
+.ftype-badge {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0;
+}
+.fb-pdf   { background: var(--red-bg);    color: var(--red);    border: 1px solid var(--red-bd); }
+.fb-image { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-bd); }
+.fb-text  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
+.fb-other { background: var(--bg-2);      color: var(--ink-3);  border: 1px solid var(--border); }
+
+/* §2: add-more touch target */
+.add-more-btn {
+  margin-top: 8px; width: 100%; padding: 10px;
+  min-height: 44px; touch-action: manipulation;
+  background: none; border: 1px dashed var(--border-2);
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+  color: var(--ink-3); cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+  font-family: inherit;
+}
+.add-more-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-bg); }
+
+/* ─── Consent box ───────────────────────────────────────────── */
+.consent-box {
+  background: var(--amber-bg); border: 1px solid var(--amber-bd);
+  border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 0.75rem;
+}
+/* §2: checkbox label = 44px tap area */
+.consent-label {
+  display: flex; align-items: flex-start; gap: 10px;
+  cursor: pointer; font-size: 14px; color: var(--ink-2); line-height: 1.6;
+}
+.consent-label input[type=checkbox] {
+  width: 18px; height: 18px; min-width: 18px;
+  margin-top: 3px; flex-shrink: 0; cursor: pointer;
+  accent-color: var(--brand);
+}
+.consent-label a { color: var(--brand); }
+.consent-label a:hover { text-decoration: underline; }
+
+/* ─── Primary button ────────────────────────────────────────── */
+/* §2: min-height 44px, touch-action, press feedback; §4: one primary CTA */
+.analyze-btn {
+  width: 100%; padding: 14px; min-height: 52px;
+  background: var(--brand); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 16px; font-weight: 600; font-family: inherit;
+  cursor: pointer; margin-top: 0.75rem;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  letter-spacing: -.1px;
+  transition: background var(--t-fast) var(--ease-out), transform var(--t-fast);
+  touch-action: manipulation;
+}
+.analyze-btn:hover:not(:disabled) { background: var(--brand-dark); }
+.analyze-btn:active:not(:disabled) { transform: scale(0.98); } /* §2: press-feedback */
+/* §1: focus-visible ring */
+.analyze-btn:focus-visible { box-shadow: 0 0 0 3px rgba(185,28,28,.3); outline: none; }
+.analyze-btn:disabled { background: var(--ink-4); cursor: not-allowed; transform: none; }
+.analyze-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+/* ─── Disclaimer ────────────────────────────────────────────── */
+.disclaimer {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 12px; color: var(--ink-3); padding: 12px 14px;
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-top: 1rem; line-height: 1.6;
+}
+.disclaimer svg { flex-shrink: 0; margin-top: 1px; }
+
+/* ─── Error ─────────────────────────────────────────────────── */
+.error-box {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--red-bg); border: 1px solid var(--red-bd);
+  border-radius: var(--radius); padding: 12px 14px;
+  color: #7f1d1d; font-size: 14px; margin-top: 1rem; line-height: 1.6;
+}
+
+/* ─── Loading ───────────────────────────────────────────────── */
+#loading { display: none; text-align: center; padding: 5rem 1rem; }
+/* §3: progress bar instead of blocking spinner */
+.loading-progress-track {
+  width: 220px; height: 4px; background: var(--bg-2);
+  border-radius: 2px; margin: 0 auto 1.5rem; overflow: hidden;
+}
+.loading-progress-bar {
+  height: 4px; background: var(--brand); border-radius: 2px;
+  animation: progress 25s linear forwards;
+}
+@keyframes progress { from { width: 0% } to { width: 90% } }
+#loading h3 { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+#loading p  { font-size: 13px; color: var(--ink-3); }
+.loading-steps { display: flex; flex-direction: column; gap: 4px; margin-top: 1.5rem; align-items: center; }
+.loading-step { font-size: 12px; color: var(--ink-4); display: flex; align-items: center; gap: 6px; }
+.loading-step.active { color: var(--brand); font-weight: 500; }
+.step-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* ─── Results ───────────────────────────────────────────────── */
+#results { display: none; }
+.result-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;
+}
+.result-topbar h2 { font-size: 20px; font-weight: 700; letter-spacing: -.3px; }
+.new-analysis-btn {
+  padding: 9px 16px; min-height: 44px; touch-action: manipulation;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+  color: var(--ink-2); cursor: pointer; font-family: inherit;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+  display: flex; align-items: center; gap: 6px;
+}
+.new-analysis-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-bg); }
+
+/* Patient card */
+.patient-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem; box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 1rem;
+}
+.patient-avatar {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--brand); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; flex-shrink: 0;
+}
+.patient-info h3 { font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
+.patient-info p  { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
+.patient-right { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+
+/* Severity badge */
+.sev-badge {
+  font-size: 11px; font-weight: 700; padding: 4px 12px;
+  border-radius: 20px; text-transform: uppercase; letter-spacing: .06em;
+}
+.sev-mild     { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.sev-moderate { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+.sev-severe, .sev-critical { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+
+/* Info banners */
+.info-banner {
+  display: flex; gap: 10px; align-items: flex-start;
+  border-radius: var(--radius); padding: 10px 14px;
+  font-size: 13px; margin-bottom: 10px; line-height: 1.6;
+}
+.banner-blue   { background: var(--blue-bg); border: 1px solid var(--blue-bd); color: #1e3a8a; }
+.banner-amber  { background: var(--amber-bg); border: 1px solid var(--amber-bd); color: #78350f; }
+.banner-green  { background: var(--green-bg); border: 1px solid var(--green-bd); color: #064e3b; }
+
+/* Result sections */
+.result-section { margin-bottom: 1rem; }
+.result-section-title {
+  font-size: 11px; font-weight: 700; color: var(--ink-3);
+  text-transform: uppercase; letter-spacing: .07em;
+  margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+}
+.result-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* Summary */
+.summary-block {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 1.1rem 1.4rem;
+  font-size: 14px; line-height: 1.8; box-shadow: var(--shadow-sm);
+}
+.differential {
+  font-size: 13px; color: var(--ink-3);
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+}
+
+/* Findings table */
+.findings-table {
+  width: 100%; border-collapse: collapse; background: var(--surface);
+  border-radius: var(--radius-lg); overflow: hidden;
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.findings-table thead tr { background: var(--bg-2); border-bottom: 1px solid var(--border); }
+.findings-table th {
+  padding: 10px 14px; font-size: 11px; font-weight: 700;
+  color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; text-align: left;
+}
+.findings-table td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.findings-table tr:last-child td { border-bottom: none; }
+.findings-table tr:hover td { background: var(--bg-2); }
+.marker-name { font-weight: 600; }
+.marker-orig { font-size: 11px; color: var(--ink-4); font-weight: 400; display: block; }
+.val-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600; padding: 2px 9px;
+  border-radius: 6px; white-space: nowrap;
+}
+.val-normal   { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.val-high     { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red-bd); }
+.val-low      { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+.val-critical { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
+.interp-text  { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+/* Antibiotic cards */
+.ab-grid { display: flex; flex-direction: column; gap: 10px; }
+.ab-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow-sm); position: relative; overflow: hidden;
+}
+.ab-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.ab-first::before  { background: var(--brand); }
+.ab-second::before { background: var(--green); }
+.ab-alt::before    { background: var(--amber); }
+.ab-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.ab-name { font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+.ab-pri {
+  font-size: 10px; font-weight: 700; padding: 3px 9px;
+  border-radius: 4px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
+}
+.ab-pri-first  { background: var(--brand-bg); color: var(--brand); border: 1px solid var(--brand-bd); }
+.ab-pri-second { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.ab-pri-alt    { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+.ab-dosage { font-size: 13px; color: var(--ink-2); font-weight: 500; margin-bottom: 8px; }
+.ab-dosage span { color: var(--ink-4); }
+.ab-reason { font-size: 13px; color: var(--ink-3); padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.6; }
+.ab-caution {
+  display: flex; gap: 6px; align-items: flex-start; font-size: 12px;
+  color: var(--amber); margin-top: 6px; background: var(--amber-bg);
+  padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--amber-bd);
+}
+
+/* Monitoring */
+.monitoring-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 1.1rem 1.4rem;
+  font-size: 14px; line-height: 1.8; box-shadow: var(--shadow-sm);
+}
+
+/* Sources */
+.sources-row {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  font-size: 12px; color: var(--ink-3); margin-bottom: 1rem;
+}
+.source-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 500;
+}
+
+/* ─── Footer ────────────────────────────────────────────────── */
+.site-footer {
+  max-width: 860px; margin: 0 auto;
+  padding: 1.5rem; text-align: center;
+  font-size: 12px; color: var(--ink-4);
+  border-top: 1px solid var(--border); margin-top: 2rem;
+}
+.site-footer a { color: var(--ink-3); text-decoration: none; }
+.site-footer a:hover { color: var(--brand); }
+
+
+/* VHS Score badge */
+.vhs-score-badge { border:2px solid; border-radius:12px; padding:8px 14px; text-align:center; min-width:80px; }
+.vhs-score-num { font-size:28px; font-weight:700; letter-spacing:-.03em; line-height:1; }
+.vhs-score-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin-top:2px; }
+
+/* Risk profile */
+.risk-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+.risk-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow-sm); }
+.risk-label { font-size:12px; font-weight:600; color:var(--ink-2); margin-bottom:8px; text-transform:capitalize; }
+.risk-bar-wrap { height:6px; background:var(--bg-2); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+.risk-bar { height:6px; border-radius:3px; transition:width .4s ease; }
+.risk-score-row { margin-bottom:6px; }
+.risk-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
+.risk-note { font-size:12px; color:var(--ink-3); line-height:1.5; }
+
+/* Recommendations */
+.rec-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.25rem; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:10px; }
+.rec-item { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:var(--ink-2); line-height:1.6; }
+.rec-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+
+
+/* ── Help Bot ────────────────────────────────────────────────── */
+.bot-trigger {
+  background: none; border: none; cursor: pointer;
+  font-family: inherit; font-size: 12px; color: var(--ink-3);
+  text-decoration: underline; text-decoration-style: dotted;
+  padding: 0; transition: color .15s;
+}
+.bot-trigger:hover { color: var(--brand); }
+
+.bot-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.35); z-index: 300;
+  align-items: flex-end; justify-content: flex-end;
+  padding: 24px;
+}
+.bot-overlay.open { display: flex; }
+
+.bot-window {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(0,0,0,.22);
+  width: 100%; max-width: 380px;
+  display: flex; flex-direction: column;
+  max-height: 520px;
+  animation: botIn .2s ease-out;
+}
+@keyframes botIn { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:translateY(0) } }
+
+.bot-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  background: var(--brand); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.bot-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.bot-avatar svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+.bot-head-text { flex: 1; }
+.bot-head-name { font-size: 13px; font-weight: 600; color: #fff; }
+.bot-head-status { font-size: 11px; color: rgba(255,255,255,.75); margin-top: 1px; }
+.bot-close {
+  background: none; border: none; cursor: pointer;
+  color: rgba(255,255,255,.8); font-size: 18px; line-height: 1;
+  padding: 4px; border-radius: 4px; transition: color .15s;
+}
+.bot-close:hover { color: #fff; }
+
+.bot-messages {
+  flex: 1; overflow-y: auto; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  scroll-behavior: smooth;
+}
+.bot-msg {
+  display: flex; gap: 8px; align-items: flex-start;
+  animation: msgIn .15s ease-out;
+}
+@keyframes msgIn { from { opacity:0; transform:translateY(4px) } to { opacity:1; transform:translateY(0) } }
+.bot-msg.user { flex-direction: row-reverse; }
+.bot-msg-bubble {
+  max-width: 78%; padding: 9px 12px; border-radius: 12px;
+  font-size: 13px; line-height: 1.55; word-break: break-word;
+}
+.bot-msg.bot .bot-msg-bubble {
+  background: var(--bg-2); color: var(--ink-2);
+  border-bottom-left-radius: 4px;
+}
+.bot-msg.user .bot-msg-bubble {
+  background: var(--brand); color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.bot-typing {
+  display: flex; gap: 4px; align-items: center; padding: 10px 12px;
+  background: var(--bg-2); border-radius: 12px; border-bottom-left-radius: 4px;
+  width: fit-content;
+}
+.bot-typing span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--ink-4);
+  animation: typingDot 1.2s infinite;
+}
+.bot-typing span:nth-child(2) { animation-delay: .2s; }
+.bot-typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes typingDot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+.bot-input-row {
+  display: flex; gap: 8px; padding: 12px 16px;
+  border-top: 1px solid var(--border); align-items: flex-end;
+}
+.bot-input {
+  flex: 1; padding: 9px 12px; font-size: 13px; font-family: inherit;
+  border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  outline: none; resize: none; max-height: 80px; min-height: 36px;
+  line-height: 1.4; color: var(--ink); background: var(--surface);
+  transition: border-color .15s;
+}
+.bot-input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(185,28,28,.1); }
+.bot-send {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  background: var(--brand); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s;
+}
+.bot-send:hover { background: var(--brand-dark, #991b1b); }
+.bot-send:disabled { background: var(--ink-4); cursor: not-allowed; }
+.bot-send svg { width: 16px; height: 16px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+.bot-suggestions {
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px;
+}
+.bot-chip {
+  font-size: 11px; padding: 5px 10px; border-radius: 20px;
+  background: var(--brand-bg); color: var(--brand);
+  border: 1px solid var(--brand-bd); cursor: pointer;
+  transition: background .15s; font-family: inherit;
+  white-space: nowrap;
+}
+.bot-chip:hover { background: var(--brand); color: #fff; }
+
+
+/* ── Age Gate ─────────────────────────────────────────────────── */
+.age-gate-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(17,24,39,.92); z-index: 9999;
+  align-items: center; justify-content: center; padding: 24px;
+}
+.age-gate-overlay.show { display: flex; }
+.age-gate-box {
+  background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: 0 32px 80px rgba(0,0,0,.4);
+  width: 100%; max-width: 440px;
+  padding: 36px 32px; text-align: center;
+}
+.age-gate-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--brand-bg); border: 2px solid var(--brand-bd);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+}
+.age-gate-icon svg { width: 28px; height: 28px; stroke: var(--brand); fill: none; stroke-width: 2; stroke-linecap: round; }
+.age-gate-box h2 { font-size: 20px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+.age-gate-box p { font-size: 14px; color: var(--ink-3); line-height: 1.6; margin-bottom: 24px; }
+.age-gate-btns { display: flex; flex-direction: column; gap: 10px; }
+.age-gate-confirm {
+  width: 100%; padding: 13px; background: var(--brand); color: #fff;
+  border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600;
+  font-family: inherit; cursor: pointer; transition: background .15s;
+}
+.age-gate-confirm:hover { background: #991b1b; }
+.age-gate-deny {
+  width: 100%; padding: 11px; background: none; color: var(--ink-3);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; font-family: inherit; cursor: pointer; transition: all .15s;
+}
+.age-gate-deny:hover { border-color: var(--brand); color: var(--brand); }
+.age-gate-legal { font-size: 11px; color: var(--ink-4); margin-top: 16px; line-height: 1.5; }
+.age-gate-legal a { color: var(--ink-3); }
+
+
+/* Results page language switcher */
+.result-lang-wrap { position: relative; display: inline-block; }
+.result-lang-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 500; color: var(--ink-3);
+  font-family: inherit; cursor: pointer; transition: all .15s;
+  white-space: nowrap;
+}
+.result-lang-toggle:hover { border-color: var(--brand); color: var(--brand); }
+.result-lang-toggle svg { transition: transform .2s; }
+.result-lang-toggle.open svg:last-child { transform: rotate(180deg); }
+
+.result-lang-dropdown {
+  display: none; position: absolute; top: calc(100% + 5px); right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 100; min-width: 185px;
+  max-height: 320px; overflow-y: auto;
+  animation: dropIn .15s ease-out;
+}
+.result-lang-dropdown.open { display: block; }
+.result-lang-opt {
+  display: block; width: 100%; padding: 9px 14px;
+  text-align: left; background: none; border: none;
+  font-size: 12px; font-family: inherit; color: var(--ink-2);
+  cursor: pointer; transition: background .1s; white-space: nowrap;
+}
+.result-lang-opt:hover { background: var(--bg-2); color: var(--brand); }
+.result-lang-opt.active { background: var(--brand-bg); color: var(--brand); font-weight: 600; }
+.result-lang-opt:first-child { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.result-lang-opt:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.result-lang-divider { height: 1px; background: var(--border); margin: 3px 0; }
+
+/* §5: responsive */
+@media (max-width: 600px) {
+  .topbar-right { display: none; }
+  .hero { padding: 36px 16px 32px; }
+  .page { padding: 1.5rem 1rem 3rem; }
+  .section-body, .section-header { padding: 1.1rem; }
+}
+</style>
+
+<script>
+// ── Auto language detection ────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    pageTitle: 'VHS Wellness Assessment',
+    heroTitle: 'VANDL Health Score &amp;<br><em>Wellness Assessment Platform</em>',
+    heroSub: 'Submit health documents in any format or language to receive a comprehensive wellness assessment and VHS Health Score.',
+    formHeading: 'VHS Wellness Assessment',
+    formSub: 'Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.',
+    patientName: 'Patient name',
+    phone: 'Phone number',
+    age: 'Age',
+    gender: 'Gender',
+    genderSelect: 'Select',
+    genderM: 'Male', genderF: 'Female', genderO: 'Other / prefer not to say',
+    complaint: 'Chief Complaint / Symptoms',
+    complaintHint: 'Write in any language — automatically translated for analysis',
+    notes: 'Clinical Notes',
+    notesHint: 'Allergies, current medications, comorbidities — any language. Include known drug allergies; this directly influences antibiotic selection.',
+    docLang: 'Document language',
+    uploadTitle: 'Click to select files, or drag &amp; drop here',
+    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; Multiple files &nbsp;·&nbsp; Max 20 MB each',
+    consent: 'I confirm that I am a <strong>licensed healthcare professional</strong> and I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>. I understand that all AI-generated results are for clinical decision <strong>support only</strong> and must be validated by a licensed physician before any prescribing decision.',
+    analyze: 'Generate Health Assessment',
+    disclaimer: 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
   },
-  credentials: true,
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+  'zh-CN': {
+    pageTitle: 'VHS健康评估',
+    heroTitle: 'VANDL健康评分 &amp;<br><em>企业健康管理平台</em>',
+    heroSub: '上传任意格式或语言的健康文档，获取全面的VHS健康评分和wellness建议。',
+    formHeading: 'VHS健康评估',
+    formSub: '上传任意格式或语言的健康文档，获取全面的VANDL健康评分和wellness建议。',
+    patientName: '姓名',
+    phone: '电话号码',
+    age: '年龄',
+    gender: '性别',
+    genderSelect: '请选择',
+    genderM: '男', genderF: '女', genderO: '其他 / 不愿透露',
+    complaint: '主诉 / 症状',
+    complaintHint: '可用任何语言填写 — 系统将自动翻译进行分析',
+    notes: '健康备注',
+    notesHint: '过敏史、当前用药、合并症等 — 可用任何语言填写',
+    docLang: '文件语言',
+    uploadTitle: '点击选择文件，或拖拽至此处',
+    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; 支持多文件 &nbsp;·&nbsp; 每个最大20MB',
+    consent: '本人确认为<strong>持牌医疗专业人员</strong>，同意<a href="/terms">服务条款</a>及<a href="/privacy">隐私政策</a>。本人理解所有AI生成结果仅供临床决策<strong>参考</strong>，任何处方决定前须经持牌医师验证。',
+    analyze: '生成健康评估报告',
+    disclaimer: '本报告仅供健康教育和健康管理目的，不构成医疗诊断、治疗建议或处方。用户在作出医疗决策前应咨询持牌医生。',
+  },
+  'zh-TW': {
+    pageTitle: 'VHS健康評估',
+    heroTitle: 'VANDL健康評分 &amp;<br><em>企業健康管理平台</em>',
+    heroSub: '上傳任意格式或語言的健康文件，獲取全面的VHS健康評分和wellness建議。',
+    formHeading: 'VHS健康評估',
+    formSub: '上傳任意格式或語言的健康文件，獲取全面的VANDL健康評分和wellness建議。',
+    patientName: '姓名',
+    phone: '電話號碼',
+    age: '年齡',
+    gender: '性別',
+    genderSelect: '請選擇',
+    genderM: '男', genderF: '女', genderO: '其他 / 不願透露',
+    complaint: '主訴 / 症狀',
+    complaintHint: '可用任何語言填寫 — 系統將自動翻譯進行分析',
+    notes: '健康備註',
+    notesHint: '過敏史、當前用藥、合併症等 — 可用任何語言填寫',
+    docLang: '文件語言',
+    uploadTitle: '點擊選擇文件，或拖曳至此處',
+    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; 支援多文件 &nbsp;·&nbsp; 每個最大20MB',
+    consent: '本人確認為<strong>持牌醫療專業人員</strong>，同意<a href="/terms">服務條款</a>及<a href="/privacy">隱私政策</a>。本人理解所有AI生成結果僅供臨床決策<strong>參考</strong>，任何處方決定前須經持牌醫師驗證。',
+    analyze: '生成健康評估報告',
+    disclaimer: '本報告僅供健康教育和健康管理目的，不構成醫療診斷、治療建議或處方。用戶在作出醫療決策前應諮詢持牌醫生。',
+  }
+};
 
-// ── Rate limiting (persistent per-IP sliding window) ──────────
-const rateLimits = new Map();
+let currentLang = 'en';
+let _rawResult = null;      // current result (may be translated)
+let _rawPatient = null;     // patient info
+let _originalResult = null; // always the first result as received from Claude
 
-function makeRateLimiter(limit, windowMs, message) {
-  return (req, res, next) => {
-    const ip = req.ip || "unknown";
-    const now = Date.now();
-    const key = ip;
-    let record = rateLimits.get(key) || { timestamps: [] };
-    // Remove timestamps outside window
-    record.timestamps = record.timestamps.filter(t => now - t < windowMs);
-    if (record.timestamps.length >= limit) {
-      const retryAfter = Math.ceil((record.timestamps[0] + windowMs - now) / 1000);
-      res.setHeader("Retry-After", retryAfter);
-      res.setHeader("X-RateLimit-Limit", limit);
-      res.setHeader("X-RateLimit-Remaining", 0);
-      return res.status(429).json({ error: message });
-    }
-    record.timestamps.push(now);
-    rateLimits.set(key, record);
-    res.setHeader("X-RateLimit-Limit", limit);
-    res.setHeader("X-RateLimit-Remaining", limit - record.timestamps.length);
-    next();
-  };
+function applyLang(lang) {
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
+  currentLang = lang;
+  document.documentElement.lang = lang === 'zh-CN' ? 'zh-Hans' : lang === 'zh-TW' ? 'zh-Hant' : 'en';
+
+  // Labels
+  const set = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const setPlaceholder = (id, val) => { const el = document.getElementById(id); if(el) el.placeholder = val; };
+
+  set('hero-title', t.heroTitle);
+  set('hero-sub', t.heroSub);
+  setText('form-heading-h1', t.formHeading);
+  set('form-heading-p', t.formSub);
+  setText('label-name', t.patientName);
+  setText('label-phone', t.phone);
+  setText('label-age', t.age);
+  setText('label-gender', t.gender);
+  setText('label-complaint', t.complaint);
+  set('hint-complaint', t.complaintHint);
+  setText('label-notes', t.notes);
+  set('hint-notes', t.notesHint);
+  setText('label-doclang', t.docLang);
+  set('dz-text', t.uploadTitle);
+  document.querySelectorAll('.dz-sub').forEach(el => el.innerHTML = t.uploadSub);
+  set('consent-text', t.consent);
+  setText('analyze-label', t.analyze);
+  document.querySelectorAll('.disclaimer span').forEach(el => el.textContent = t.disclaimer);
+
+  // Gender options
+  const gSel = document.getElementById('p-gender');
+  if (gSel) {
+    gSel.options[0].text = t.genderSelect;
+    if(gSel.options[1]) gSel.options[1].text = t.genderM;
+    if(gSel.options[2]) gSel.options[2].text = t.genderF;
+    if(gSel.options[3]) gSel.options[3].text = t.genderO;
+  }
 }
 
-// Clean up old rate limit entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of rateLimits.entries()) {
-    record.timestamps = record.timestamps.filter(t => now - t < 3600000);
-    if (record.timestamps.length === 0) rateLimits.delete(key);
-  }
-}, 300000);
-
-const globalLimit   = makeRateLimiter(30,  60000,  "Too many requests. Please wait and try again.");
-const analysisLimit = makeRateLimiter(5,   60000,  "Analysis rate limit reached. Please wait a minute.");
-const adminLimit    = makeRateLimiter(20,  60000,  "Too many admin requests.");
-
-// ── Admin brute-force lockout ──────────────────────────────────
-const adminFailures = new Map();
-const MAX_ADMIN_FAILURES = 5;
-const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
-
-function adminBruteForceProtection(req, res, next) {
-  const ip = req.ip || "unknown";
-  const now = Date.now();
-  const record = adminFailures.get(ip) || { count: 0, lockedUntil: 0, lastAttempt: 0 };
-
-  if (now < record.lockedUntil) {
-    const remaining = Math.ceil((record.lockedUntil - now) / 60000);
-    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
-    return res.status(429).send(`Too many failed attempts. Try again in ${remaining} minutes.`);
-  }
-
-  req._adminIp = ip;
-  next();
-}
-
-function recordAdminFailure(ip) {
-  const now = Date.now();
-  const record = adminFailures.get(ip) || { count: 0, lockedUntil: 0 };
-  record.count++;
-  record.lastAttempt = now;
-  if (record.count >= MAX_ADMIN_FAILURES) {
-    record.lockedUntil = now + LOCKOUT_DURATION;
-    record.count = 0;
-    console.warn(`Admin lockout triggered for IP: ${ip}`);
-  }
-  adminFailures.set(ip, record);
-}
-
-function clearAdminFailure(ip) {
-  adminFailures.delete(ip);
-}
-
-// ── Input validation ───────────────────────────────────────────
-function validateAnalysisRequest(req, res, next) {
-  const body = req.body;
-  if (!body || typeof body !== "object") {
-    return res.status(400).json({ error: "Invalid request." });
-  }
-  if (!body.messages || !Array.isArray(body.messages)) {
-    return res.status(400).json({ error: "Invalid request format." });
-  }
-  if (body.messages.length === 0 || body.messages.length > 10) {
-    return res.status(400).json({ error: "Invalid number of messages." });
-  }
-  // Validate each message structure
-  for (const msg of body.messages) {
-    if (!msg.role || !["user", "assistant"].includes(msg.role)) {
-      return res.status(400).json({ error: "Invalid message role." });
-    }
-    if (!msg.content) {
-      return res.status(400).json({ error: "Invalid message content." });
-    }
-  }
-  // Strict size limit
-  const bodySize = JSON.stringify(body).length;
-  if (bodySize > 52428800) {
-    return res.status(413).json({ error: "Request too large." });
-  }
-  next();
-}
-
-// ── Admin authentication ───────────────────────────────────────
-function adminAuth(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth || !auth.startsWith("Basic ")) {
-    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
-    return res.status(401).send("Authentication required.");
-  }
-
-  let credentials;
+async function detectLang() {
   try {
-    credentials = Buffer.from(auth.slice(6), "base64").toString("utf8");
-  } catch {
-    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
-    return res.status(401).send("Invalid credentials.");
-  }
-
-  const colonIdx = credentials.indexOf(":");
-  if (colonIdx === -1) {
-    recordAdminFailure(req._adminIp || req.ip);
-    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
-    return res.status(401).send("Invalid credentials.");
-  }
-
-  const username = credentials.slice(0, colonIdx);
-  const password = credentials.slice(colonIdx + 1);
-
-  // Constant-time comparison for both username and password
-  const validUser = username.length === "admin".length &&
-    crypto.timingSafeEqual(Buffer.from(username.padEnd(32)), Buffer.from("admin".padEnd(32)));
-
-  const storedPass = Buffer.from(ADMIN_PASSWORD);
-  const providedPass = Buffer.from(password || "");
-  const passBuffer = Buffer.alloc(storedPass.length);
-  providedPass.copy(passBuffer, 0, 0, Math.min(providedPass.length, storedPass.length));
-
-  let validPass = false;
-  try {
-    validPass = providedPass.length === storedPass.length &&
-      crypto.timingSafeEqual(passBuffer, storedPass);
-  } catch { validPass = false; }
-
-  if (!validUser || !validPass) {
-    recordAdminFailure(req._adminIp || req.ip);
-    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
-    return res.status(401).send("Invalid credentials.");
-  }
-
-  clearAdminFailure(req._adminIp || req.ip);
-  next();
-}
-
-// ── Body parsers ───────────────────────────────────────────────
-app.use(express.json({ limit: "50mb", strict: true }));
-app.use(express.urlencoded({ extended: false, limit: "1mb" }));
-
-// ── Static files ───────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, "public"), {
-  etag: true,
-  lastModified: true,
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith(".html")) {
-      res.setHeader("Cache-Control", "no-store");
-    }
-  }
-}));
-
-// ── Block common attack paths ──────────────────────────────────
-const BLOCKED_PATHS = [
-  ".env", ".git", "wp-admin", "phpinfo", "config.php",
-  "wp-login", "phpmyadmin", "admin.php", ".htaccess",
-  "xmlrpc.php", "shell.php", "eval", "base64_decode",
-  "/.well-known/acme", "/cgi-bin", "/proc/", "/etc/passwd"
-];
-
-app.use((req, res, next) => {
-  const lowerPath = req.path.toLowerCase();
-  if (BLOCKED_PATHS.some(b => lowerPath.includes(b))) {
-    console.warn(`Blocked request: ${req.ip} -> ${req.path}`);
-    return res.status(404).send("Not found.");
-  }
-  next();
-});
-
-// ── Analysis route ─────────────────────────────────────────────
-app.post("/api/analyze", globalLimit, analysisLimit, validateAnalysisRequest, async (req, res) => {
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: "Server configuration error." });
-  }
-
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 8096,
-        system: "You are a corporate health and wellness analyst. Return ONLY a valid JSON object. Be concise — keep findings to the 10 most important markers only, keep all text fields under 200 characters each. Never truncate the JSON — always close all brackets properly. Do NOT include any medication names, antibiotic recommendations, or prescriptions.",
-        messages: req.body.messages,
-      }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      return res.status(response.status).json({ error: "Analysis service error. Please try again." });
-    }
-
-    const text = data.content.map(b => b.text || "").join("");
-
-    try {
-      const clean = text.replace(/```json|```/g, "").trim();
-      const result = JSON.parse(clean);
-
-      const promptText = req.body.messages
-        .map(m => typeof m.content === "string" ? m.content :
-          Array.isArray(m.content) ? m.content.filter(p => p.type === "text").map(p => p.text).join(" ") : "")
-        .join(" ");
-
-      const nameMatch      = promptText.match(/Name:\s*(.+)/);
-      const phoneMatch     = promptText.match(/Phone:\s*(.+)/);
-      const ageMatch       = promptText.match(/Age:\s*(.+)/);
-      const genderMatch    = promptText.match(/Gender:\s*(.+)/);
-      const complaintMatch = promptText.match(/Health concern:\s*(.+)/);
-      const notesMatch     = promptText.match(/Health notes:\s*(.+)/);
-
-      const sanitize = (str) => (str || "")
-        .replace(/<[^>]*>/g, "")   // strip HTML
-        .replace(/[^\x20-\x7E\u00C0-\u024F\u4E00-\u9FFF\u3400-\u4DBF\uAC00-\uD7AF]/g, "") // allow ASCII + CJK + Latin ext
-        .trim()
-        .slice(0, 500);
-
-      const record = {
-        id:                    Date.now(),
-        name:                  sanitize(nameMatch?.[1])      || "Unknown",
-        phone:                 sanitize(phoneMatch?.[1])     || "",
-        age:                   sanitize(ageMatch?.[1])       || "",
-        gender:                sanitize(genderMatch?.[1])    || "",
-        complaint:             sanitize(complaintMatch?.[1]) || "",
-        notes:                 sanitize(notesMatch?.[1])     || "",
-        vhs_score:             Number(result.vhs_score)      || 0,
-        vhs_label:             sanitize(result.vhs_label)    || "",
-        summary:               sanitize(result.health_assessment) || "",
-        key_health_concerns:   sanitize(result.key_health_concerns) || "",
-        detected_languages:    sanitize(result.detected_languages) || "",
-        risk_cardiovascular:   Number(result.risk_profile?.cardiovascular?.score) || 0,
-        risk_metabolic:        Number(result.risk_profile?.metabolic?.score) || 0,
-        risk_liver:            Number(result.risk_profile?.liver?.score) || 0,
-        risk_kidney:           Number(result.risk_profile?.kidney?.score) || 0,
-        risk_inflammation:     Number(result.risk_profile?.inflammation?.score) || 0,
-        nutrition:             (result.nutrition_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
-        lifestyle:             (result.lifestyle_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
-        supplements:           (result.nutritional_support||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
-        monitoring_plan:       sanitize(result.monitoring_plan) || "",
-        ip:                    req.ip || "",
-        created_at:            new Date().toISOString()
-      };
-
-      const database = await getDB();
-      await database.collection("patients").insertOne(record);
-    } catch (e) {
-      console.log("Could not save to DB:", e.message);
-    }
-
-    res.json(data);
-
-  } catch (err) {
-    console.error("Analysis error:", err.message);
-    res.status(500).json({ error: "Server error. Please try again." });
-  }
-});
-
-// ── Admin routes (protected) ───────────────────────────────────
-app.get("/admin", adminBruteForceProtection, adminLimit, adminAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
-
-app.get("/api/admin/patients", adminBruteForceProtection, adminLimit, adminAuth, async (req, res) => {
-  try {
-    const database = await getDB();
-    // Never expose internal MongoDB _id or IP to frontend
-    const patients = await database.collection("patients")
-      .find({}, { projection: { _id: 0, ip: 0 } })
-      .sort({ id: -1 })
-      .limit(1000) // safety cap
-      .toArray();
-    res.json(patients);
+    const res = await fetch('/api/lang');
+    const data = await res.json();
+    applyLang(data.lang || 'en');
   } catch(e) {
-    res.status(500).json({ error: "Failed to load records." });
+    applyLang('en');
   }
-});
+}
 
-// ── Help Bot route ────────────────────────────────────────────
-const botLimit = makeRateLimiter(20, 60000, "Too many bot requests. Please wait a minute.");
+document.addEventListener('DOMContentLoaded', detectLang);
+</script>
+</head>
+<body>
 
-const BOT_SYSTEM = `You are the VHS Help Assistant for VANDL Health Score platform. Your ONLY job is to help users understand how to submit their health report and interpret their VHS wellness results.
+<!-- §1: skip link -->
+<a href="#main-form" class="skip-link">Skip to main form</a>
 
-STRICTLY LIMITED to these topics:
-1. How to fill in the form (name, phone, age, gender, complaint, notes)
-2. How to upload files (PDF, JPG, PNG, TXT, CSV — max 20MB, multiple files supported)
-3. How to select document language
+<!-- Nav -->
+<nav class="topbar" aria-label="Site navigation">
+  <div class="topbar-inner">
+    <a href="#" class="logo" aria-label="VANDL VHS home">
+      <div class="logo-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg>
+      </div>
+      <span class="logo-text">VANDL<em>VHS</em></span>
+    </a>
+    <span class="topbar-tag">Clinical AI</span>
+    <div class="topbar-right" aria-hidden="true">
+      <span class="dot"></span> AI-powered analysis
+      &nbsp;·&nbsp; Multilingual
+      &nbsp;·&nbsp; For licensed clinicians
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero" role="banner">
+  <div class="hero-eyebrow" aria-hidden="true">
+    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
+    For licensed clinicians only
+    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
+  </div>
+  <h1 id="hero-title">VANDL Health Score &amp;<br><em>Wellness Assessment Platform</em></h1>
+  <p class="hero-sub" id="hero-sub">Submit health documents in any format or language to receive a comprehensive wellness assessment and VHS Health Score.</p>
+  <div class="capability-chips" role="list" aria-label="Supported capabilities">
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 3h6v1H5V8zm0 3h4v1H5v-1z"/></svg>
+      PDF Documents
+    </span>
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm5 1L3 9h3v3l5-5H8V4z"/></svg>
+      JPG / PNG Images
+    </span>
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v12H2V2zm2 2v8h8V4H4zm1 1h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/></svg>
+      TXT / CSV Files
+    </span>
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a1 1 0 110 2 1 1 0 010-2zm0 3a1 1 0 011 1v4a1 1 0 11-2 0V7a1 1 0 011-1z"/></svg>
+      Multiple files at once
+    </span>
+    <span class="chip" role="listitem">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 2c.9 0 1.76.2 2.53.55L3.55 10.53A5 5 0 018 3zm0 10a5 5 0 01-2.53-.55l7-7A5 5 0 018 13z"/></svg>
+      25+ languages
+    </span>
+  </div>
+</div>
+
+<main class="page" id="main-form">
+
+  <!-- Page heading -->
+  <div class="page-heading" id="form-heading">
+    <h1 id="form-heading-h1">VHS Wellness Assessment</h1>
+    <p id="form-heading-p">Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.</p>
+  </div>
+
+  <!-- FORM SECTION -->
+  <div id="form-section">
+
+    <!-- Patient information -->
+    <div class="section-card" role="region" aria-labelledby="patient-heading">
+      <div class="section-header">
+        <div class="icon-wrap icon-blue" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <h2 id="patient-heading">Patient Information</h2>
+          <p>Demographic and clinical context</p>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <div class="lang-row">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <label for="report-lang" id="label-doclang">Document language</label>
+          <select id="report-lang" name="report-lang">
+            <option value="auto">Auto-detect (recommended)</option>
+            <option value="English">English</option>
+            <option value="Arabic">Arabic / العربية</option>
+            <option value="French">French / Français</option>
+            <option value="Spanish">Spanish / Español</option>
+            <option value="German">German / Deutsch</option>
+            <option value="Chinese (Simplified)">Chinese Simplified / 简体中文</option>
+            <option value="Chinese (Traditional)">Chinese Traditional / 繁體中文</option>
+            <option value="Hindi">Hindi / हिन्दी</option>
+            <option value="Urdu">Urdu / اردو</option>
+            <option value="Portuguese">Portuguese / Português</option>
+            <option value="Russian">Russian / Русский</option>
+            <option value="Japanese">Japanese / 日本語</option>
+            <option value="Korean">Korean / 한국어</option>
+            <option value="Turkish">Turkish / Türkçe</option>
+            <option value="Persian">Persian / فارسی</option>
+            <option value="Bengali">Bengali / বাংলা</option>
+            <option value="Indonesian">Indonesian / Bahasa Indonesia</option>
+            <option value="Italian">Italian / Italiano</option>
+            <option value="Dutch">Dutch / Nederlands</option>
+            <option value="Polish">Polish / Polski</option>
+            <option value="Thai">Thai / ภาษาไทย</option>
+            <option value="Vietnamese">Vietnamese / Tiếng Việt</option>
+            <option value="Swahili">Swahili / Kiswahili</option>
+            <option value="Hausa">Hausa</option>
+            <option value="Amharic">Amharic / አማርኛ</option>
+          </select>
+        </div>
+
+        <div class="grid-2 field-group">
+          <div>
+            <label class="field-label" for="p-name" id="label-name">Patient name</label>
+            <div class="field-hint">Any script accepted</div>
+            <input type="text" id="p-name" name="p-name" dir="auto" placeholder="Full name" autocomplete="off" />
+          </div>
+          <div>
+            <label class="field-label" for="p-phone" id="label-phone">Phone number</label>
+            <div class="field-hint">Optional — for follow-up</div>
+            <input type="tel" id="p-phone" name="p-phone" placeholder="e.g. +1 555 000 0000" autocomplete="tel" />
+          </div>
+        </div>
+
+        <div class="grid-2 field-group">
+          <div>
+            <label class="field-label" for="p-age" id="label-age">Age</label>
+            <input type="number" id="p-age" name="p-age" placeholder="Years" min="0" max="120" />
+          </div>
+          <div>
+            <label class="field-label" for="p-gender" id="label-gender">Gender</label>
+            <select id="p-gender" name="p-gender">
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other / prefer not to say</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="p-complaint" id="label-complaint">Chief Complaint / Symptoms</label>
+          <div class="field-hint">Write in any language — automatically translated for analysis</div>
+          <textarea id="p-complaint" name="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough · حمى وسعال · Fièvre et toux · 发烧咳嗽 · Fieber und Husten"></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="p-notes" id="label-notes">Clinical Notes</label>
+          <!-- §8: helper text — explains what to include, especially drug allergies -->
+          <div class="field-hint">Allergies, current medications, comorbidities — any language. Include known drug allergies; this directly influences antibiotic selection.</div>
+          <textarea id="p-notes" name="p-notes" rows="3" dir="auto" placeholder="e.g. Penicillin allergy, Type 2 diabetes, on Metformin · حساسية للبنسلين · Allergie à la pénicilline · 青霉素过敏"></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Document upload -->
+    <div class="section-card" role="region" aria-labelledby="docs-heading">
+      <div class="section-header">
+        <div class="icon-wrap icon-green" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div>
+          <h2 id="docs-heading">Documents &amp; Reports</h2>
+          <p>Upload one or more files in any format or language</p>
+        </div>
+      </div>
+      <div class="section-body">
+
+        <!-- §1: keyboard-accessible upload zone -->
+        <div class="drop-zone" id="drop-zone"
+          role="button" tabindex="0"
+          aria-label="Upload files. Click or press Enter to browse, or drag and drop files here."
+          onclick="document.getElementById('file-in').click()"
+          onkeydown="if(event.key==='Enter'||event.key===' '){document.getElementById('file-in').click()}">
+          <div class="dz-icon-wrap" id="dz-icon-wrap">
+            <svg id="dz-svg" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          </div>
+          <p id="dz-text">Click to select files, or drag &amp; drop here</p>
+          <p class="dz-sub">PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; Multiple files &nbsp;·&nbsp; Max 20 MB each</p>
+          <label for="file-in" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Choose files to upload</label>
+          <input type="file" id="file-in" multiple
+            accept=".pdf,.jpg,.jpeg,.png,.txt,.csv,application/pdf,image/jpeg,image/png,text/plain,text/csv"
+            onchange="addFiles(this.files)"
+            aria-label="Choose files to upload">
+        </div>
+
+        <div id="file-list" class="file-list" style="display:none"></div>
+        <button class="add-more-btn" id="add-more-btn" style="display:none"
+          onclick="document.getElementById('file-in').click()"
+          type="button">
+          + Add more files
+        </button>
+
+        <!-- §8: error-placement — below the related control -->
+        <div id="err-box" class="error-box" style="display:none" role="alert">
+          <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+          <span id="err-msg"></span>
+        </div>
+
+        <!-- Consent checkbox -->
+        <div id="consent-box" class="consent-box">
+          <label class="consent-label" for="consent-check">
+            <input type="checkbox" id="consent-check" onchange="updateAnalyzeBtn()">
+            <span id="consent-text">I am 18 years or older and agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this platform uses AI to generate wellness assessments for <strong>educational purposes only</strong> — not medical diagnosis or prescription. I consent to my data being processed as described in the Privacy Policy.</span>
+          </label>
+        </div>
+
+        <!-- §4: single primary CTA per screen -->
+        <button class="analyze-btn" id="analyze-btn" onclick="analyze()" disabled type="button"
+          aria-describedby="analyze-disclaimer">
+          <svg width="17" height="17" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
+          Generate Health Assessment
+        </button>
+
+      </div>
+    </div>
+
+    <div class="disclaimer" id="analyze-disclaimer">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+      <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.</span>
+    </div>
+
+  </div><!-- /form-section -->
+
+  <!-- LOADING — §3: progress bar; §7: aria-live -->
+  <div id="loading" aria-live="polite" aria-atomic="true" role="status">
+    <div class="loading-progress-track">
+      <div class="loading-progress-bar" id="progress-bar"></div>
+    </div>
+    <h3 id="loading-title">Analyzing documents…</h3>
+    <p id="loading-sub">This typically takes 15–30 seconds</p>
+    <div class="loading-steps" id="loading-steps"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results"></div>
+
+</main>
+
+<script>
+let uploadedFiles = [];
+
+const TYPE_MAP = {
+  'application/pdf': { cat:'pdf',   icon:'pdf',   badge:'fb-pdf',   label:'PDF'   },
+  'image/jpeg':      { cat:'image', icon:'image', badge:'fb-image', label:'IMAGE' },
+  'image/png':       { cat:'image', icon:'image', badge:'fb-image', label:'PNG'   },
+  'text/plain':      { cat:'text',  icon:'text',  badge:'fb-text',  label:'TXT'   },
+  'text/csv':        { cat:'text',  icon:'csv',   badge:'fb-text',  label:'CSV'   },
+};
+
+/* SVG icons for file types — §4: no emoji */
+const FILE_ICONS = {
+  pdf:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
+  image: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
+  text:  `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+  csv:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>`,
+  other: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`,
+};
+const DZ_UPLOAD_SVG = `<svg id="dz-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>`;
+const DZ_CHECK_SVG  = `<svg id="dz-svg" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+function detectType(file) {
+  const mt = (file.type||'').toLowerCase();
+  if (TYPE_MAP[mt]) return TYPE_MAP[mt];
+  const ext = file.name.split('.').pop().toLowerCase();
+  const extMap = { pdf:'application/pdf', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', txt:'text/plain', csv:'text/csv' };
+  if (extMap[ext]) return TYPE_MAP[extMap[ext]];
+  return { cat:'other', icon:'other', badge:'fb-other', label:(ext.toUpperCase()||'FILE') };
+}
+function resolvedMime(file) {
+  if (file.type) return file.type;
+  const ext = file.name.split('.').pop().toLowerCase();
+  return ({ pdf:'application/pdf', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', txt:'text/plain', csv:'text/csv' })[ext] || 'application/octet-stream';
+}
+function fmtSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(0) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+function addFiles(fileList) {
+  hideErr();
+  const errs = [];
+  Array.from(fileList).forEach(file => {
+    if (file.size > 20*1024*1024) { errs.push(file.name + ' exceeds 20 MB.'); return; }
+    if (uploadedFiles.find(f => f.name===file.name && f.size===file.size)) return;
+    const info = detectType(file);
+    const entry = { file, name:file.name, size:file.size, category:info.cat, icon:info.icon, badgeCls:info.badge, label:info.label, base64:null, mimeType:resolvedMime(file) };
+    uploadedFiles.push(entry);
+    const r = new FileReader();
+    r.onload = e => { entry.base64 = e.target.result.split(',')[1]; renderFileList(); };
+    r.readAsDataURL(file);
+  });
+  if (errs.length) showErr(errs.join(' '));
+  renderFileList();
+  document.getElementById('file-in').value = '';
+}
+
+function removeFile(i) { uploadedFiles.splice(i,1); renderFileList(); }
+
+function updateAnalyzeBtn() {
+  const consent = document.getElementById('consent-check')?.checked;
+  const hasFiles = uploadedFiles.length > 0 && uploadedFiles.every(f => f.base64 !== null);
+  document.getElementById('analyze-btn').disabled = !(consent && hasFiles);
+}
+
+function renderFileList() {
+  const listEl = document.getElementById('file-list');
+  const addBtn = document.getElementById('add-more-btn');
+  const btn    = document.getElementById('analyze-btn');
+  const dz     = document.getElementById('drop-zone');
+  const dzWrap = document.getElementById('dz-icon-wrap');
+  if (uploadedFiles.length === 0) {
+    listEl.style.display = 'none'; addBtn.style.display = 'none';
+    btn.disabled = true; dz.classList.remove('has-files');
+    dzWrap.innerHTML = DZ_UPLOAD_SVG;
+    document.getElementById('dz-text').textContent = 'Click to select files, or drag & drop here';
+    dz.setAttribute('aria-label','Upload files. Click or press Enter to browse, or drag and drop files here.');
+    return;
+  }
+  dz.classList.add('has-files');
+  dzWrap.innerHTML = DZ_CHECK_SVG;
+  const label = uploadedFiles.length + ' file' + (uploadedFiles.length>1?'s':'') + ' selected';
+  document.getElementById('dz-text').textContent = label;
+  dz.setAttribute('aria-label', label + '. Press Enter to change selection.');
+  listEl.style.display = 'flex'; addBtn.style.display = 'block';
+  const consent = document.getElementById('consent-check')?.checked;
+  btn.disabled = !(consent && uploadedFiles.every(f => f.base64 !== null));
+  const bgMap = { pdf:'var(--red-bg)', image:'var(--purple-bg)', text:'var(--green-bg)', csv:'var(--green-bg)', other:'var(--bg-2)' };
+  listEl.innerHTML = uploadedFiles.map((f,i) => `
+    <div class="file-item">
+      <div class="file-icon-box" style="background:${bgMap[f.category]||'var(--bg-2)'}; color:var(--ink-3)">
+        ${FILE_ICONS[f.icon]||FILE_ICONS.other}
+      </div>
+      <div class="file-info">
+        <div class="file-name">${escHtml(f.name)}</div>
+        <div class="file-meta">${fmtSize(f.size)}${f.base64===null?' &nbsp;·&nbsp; <em>loading…</em>':''}</div>
+      </div>
+      <span class="ftype-badge ${f.badgeCls}">${f.label}</span>
+      <button class="file-remove" onclick="removeFile(${i})" type="button"
+        aria-label="Remove ${escHtml(f.name)}">&#x2715;</button>
+    </div>`).join('');
+}
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); addFiles(e.dataTransfer.files); });
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showErr(msg) { document.getElementById('err-msg').textContent = msg; document.getElementById('err-box').style.display = 'flex'; }
+function hideErr() { document.getElementById('err-box').style.display = 'none'; }
+
+/* ── Loading steps UI ── */
+const STEPS_EN = [
+  'Reading and parsing documents',
+  'Detecting language — translating markers',
+  'Extracting and normalising lab values',
+  'Calculating VHS Health Score',
+  'Generating wellness recommendations',
+];
+const STEPS_ZH = [
+  '正在读取和解析文档',
+  '正在检测语言并翻译指标',
+  '正在提取和标准化检验值',
+  '正在计算VHS健康评分',
+  '正在生成健康建议',
+];
+const STEPS = (currentLang === 'zh-CN' || currentLang === 'zh-TW') ? STEPS_ZH : STEPS_EN;
+let stepTimer, stepIdx = 0;
+function startLoading() {
+  stepIdx = 0;
+  const el = document.getElementById('loading-steps');
+  el.innerHTML = STEPS.map((s,i) => `<div class="loading-step" id="lstep-${i}"><div class="step-dot"></div>${s}</div>`).join('');
+  setStep(0);
+  stepTimer = setInterval(() => { stepIdx = Math.min(stepIdx+1, STEPS.length-1); setStep(stepIdx); }, 3000);
+}
+function setStep(i) {
+  STEPS.forEach((_,j) => {
+    const el = document.getElementById('lstep-'+j);
+    if (el) el.className = 'loading-step' + (j===i?' active':'');
+  });
+  document.getElementById('loading-title').textContent = STEPS[i] + '…';
+}
+function stopLoading() { clearInterval(stepTimer); }
+
+/* ── Build content parts ── */
+function buildContentParts() {
+  return uploadedFiles.filter(f => f.base64).map(f => {
+    if (f.category === 'pdf')
+      return { type:'document', source:{ type:'base64', media_type:'application/pdf', data:f.base64 }, title:f.name };
+    if (f.category === 'image')
+      return { type:'image', source:{ type:'base64', media_type:f.mimeType, data:f.base64 } };
+    try {
+      const raw = atob(f.base64);
+      const txt = new TextDecoder('utf-8').decode(Uint8Array.from(raw, c=>c.charCodeAt(0)));
+      return { type:'text', text:`--- FILE: ${f.name} ---\n${txt}\n--- END FILE ---` };
+    } catch(e) { return { type:'text', text:`[Could not decode ${f.name}]` }; }
+  });
+}
+
+/* ── Main analysis ── */
+async function analyze() {
+  if (!uploadedFiles.length || !uploadedFiles.every(f=>f.base64)) { showErr('Please wait for all files to finish loading.'); return; }
+
+  const name      = document.getElementById('p-name').value.trim() || 'Patient';
+  const phone     = document.getElementById('p-phone').value.trim();
+  const age       = document.getElementById('p-age').value;
+  const gender    = document.getElementById('p-gender').value;
+  const complaint = document.getElementById('p-complaint').value.trim();
+  const notes     = document.getElementById('p-notes').value.trim();
+  const lang      = document.getElementById('report-lang').value;
+
+  document.getElementById('form-section').style.display   = 'none';
+  document.getElementById('form-heading').style.display   = 'none';
+  document.getElementById('loading').style.display        = 'block';
+  document.getElementById('results').style.display        = 'none';
+  startLoading();
+
+  // Determine output language based on IP-detected language
+  const outputLangMap = {
+    'en': 'English',
+    'zh-CN': 'Simplified Chinese (简体中文)',
+    'zh-TW': 'Traditional Chinese (繁體中文)'
+  };
+  const outputLang = outputLangMap[currentLang] || 'English';
+
+  const langInstr = lang==='auto'
+    ? 'Auto-detect each document language. Translate all lab marker names to standard English for the marker field, but write ALL descriptive text, summaries, notes, recommendations, and interpretations in ' + outputLang + '. Note detected languages in detected_languages field.'
+    : 'Documents are in ' + lang + '. Translate all lab marker names to standard English for the marker field, but write ALL descriptive text, summaries, notes, recommendations, and interpretations in ' + outputLang + '.';
+
+  const filesSummary = uploadedFiles.map(f=>`"${f.name}" (${f.label})`).join(', ');
+
+  const prompt = `You are a leading corporate health and wellness analyst specializing in preventive health management and lifestyle optimization.
+
+${langInstr}
+
+Documents provided (${uploadedFiles.length}): ${filesSummary}
+
+Individual context:
+- Name: ${name}
+- Phone: ${phone||'not provided'}
+- Age: ${age||'unknown'}
+- Gender: ${gender||'unknown'}
+- Health concern: ${complaint||'not provided'}
+- Health notes: ${notes||'none provided'}
+
+INSTRUCTIONS:
+1. Read ALL provided documents. Translate lab marker names to standard English for the "marker" field only.
+2. Write ALL other text fields (health_assessment, key_health_concerns, risk notes, findings interpretations, nutrition_recommendations, lifestyle_recommendations, nutritional_support, monitoring_plan, vhs_label) in ${outputLang}.
+3. Apply international reference ranges appropriate for age and gender.
+4. Focus on wellness optimization only. Do NOT provide medication names, dosages, antibiotic recommendations or treatment prescriptions.
+
+VHS HEALTH SCORE (0-100): Calculate based on markers within optimal range. Labels should also be in ${outputLang} where applicable.
+RISK PROFILES: Score each 1-5 (1=Very Low, 5=Very High). Write the label and note in ${outputLang}.
+
+Return ONLY valid JSON:
+{
+  "detected_languages": "languages detected",
+  "documents_analysed": "brief description",
+  "translated_complaint": "English translation",
+  "translated_notes": "English translation",
+  "vhs_score": 85,
+  "vhs_label": "Good (write in ${outputLang})",
+  "health_assessment": "2-3 sentence wellness summary in ${outputLang}",
+  "key_health_concerns": "top 2-3 health areas in ${outputLang}, comma-separated",
+  "risk_profile": {
+    "cardiovascular": { "score": 2, "label": "Low (in ${outputLang})", "note": "one sentence in ${outputLang}" },
+    "metabolic": { "score": 3, "label": "Moderate (in ${outputLang})", "note": "one sentence in ${outputLang}" },
+    "liver": { "score": 1, "label": "Very Low (in ${outputLang})", "note": "one sentence in ${outputLang}" },
+    "kidney": { "score": 2, "label": "Low (in ${outputLang})", "note": "one sentence in ${outputLang}" },
+    "inflammation": { "score": 2, "label": "Low (in ${outputLang})", "note": "one sentence in ${outputLang}" }
+  },
+  "findings": [
+    { "marker":"name", "original_name":"", "value":"value with unit", "status":"normal|high|low|critical", "interpretation":"wellness significance", "source":"" }
+  ],
+  "nutrition_recommendations": ["recommendation in ${outputLang}", "recommendation in ${outputLang}", "recommendation in ${outputLang}"],
+  "lifestyle_recommendations": ["recommendation in ${outputLang}", "recommendation in ${outputLang}", "recommendation in ${outputLang}"],
+  "nutritional_support": ["supplement in ${outputLang}", "supplement in ${outputLang}", "supplement in ${outputLang}"],
+  "monitoring_plan": "follow-up tests and timeline in ${outputLang}"
+}`;
+
+  const parts = buildContentParts();
+  parts.push({ type:'text', text:prompt });
+
+  try {
+    const resp = await fetch('/api/analyze', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:2000, messages:[{ role:'user', content:parts }] })
+    });
+    stopLoading();
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error?.message || `API error ${resp.status}`);
+    const txt = data.content.map(b=>b.text||'').join('');
+    const result = JSON.parse(txt.replace(/```json|```/g,'').trim());
+    document.getElementById('loading').style.display = 'none';
+    _originalResult = null; // reset for new analysis
+    renderResults(result, { name, age, gender, complaint, notes });
+  } catch(err) {
+    stopLoading();
+    document.getElementById('loading').style.display  = 'none';
+    document.getElementById('form-section').style.display = 'block';
+    document.getElementById('form-heading').style.display = 'block';
+    showErr('Analysis failed: ' + err.message);
+  }
+}
+
+
+/* ── UI label translations ── */
+function uiT(key) {
+  const isChinese = currentLang === 'zh-CN' || currentLang === 'zh-TW';
+  const trad = currentLang === 'zh-TW';
+  const labels = {
+    reportTitle:     isChinese ? 'VHS健康报告' : 'VHS Wellness Report',
+    healthAssessment:isChinese ? (trad?'健康評估摘要':'健康评估摘要') : 'Health Assessment Summary',
+    keyConcerns:     isChinese ? (trad?'主要健康問題':'主要健康问题') : 'Key Health Concerns',
+    riskProfile:     isChinese ? (trad?'風險評估':'风险评估') : 'Risk Profile',
+    labFindings:     isChinese ? (trad?'檢驗結果':'检验结果') : 'Laboratory Findings',
+    nutrition:       isChinese ? (trad?'營養建議':'营养建议') : 'Nutrition Recommendations',
+    lifestyle:       isChinese ? (trad?'生活方式建議':'生活方式建议') : 'Lifestyle Recommendations',
+    supplements:     isChinese ? (trad?'營養補充建議':'营养补充建议') : 'Suggested Nutritional Support',
+    monitoring:      isChinese ? (trad?'監測計劃':'监测计划') : 'Monitoring Plan',
+    vhsScore:        isChinese ? 'VHS评分' : 'VHS Score',
+    newAssessment:   isChinese ? (trad?'← 新評估':'← 新评估') : '← New Assessment',
+    aiGenerated:     isChinese ? 'AI生成内容' : 'AI-Generated Content',
+    disclaimer:      isChinese ? (trad?'本報告由AI生成，僅供健康教育和健康管理目的，不構成醫療診斷、治療建議或處方。作出醫療決定前請諮詢合資格醫生。':'本报告由AI生成，仅供健康教育和健康管理目的，不构成医疗诊断、治疗建议或处方。在作出医疗决定前请咨询合资格医生。') : 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
+    detectedLang:    isChinese ? '检测语言' : 'Detected language',
+    translated:      isChinese ? '所有数值已翻译为中文进行分析' : 'all values translated to English for analysis',
+  };
+  return labels[key] || key;
+}
+
+/* ── Render results ── */
+function renderResults(r, p) {
+  // Store raw data for language switching
+  _rawResult = r;
+  _rawPatient = p;
+  if (!_originalResult) _originalResult = JSON.parse(JSON.stringify(r)); // save original once
+
+  const initials = p.name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || 'P';
+
+  const sourcesHtml = `
+    <div class="sources-row">
+      <strong>Sources:</strong>
+      ${uploadedFiles.map(f=>`<span class="source-chip">${FILE_ICONS[f.icon]||FILE_ICONS.other} ${escHtml(f.name)}</span>`).join('')}
+    </div>`;
+
+  const langHtml = r.detected_languages ? `
+    <div class="info-banner banner-blue" role="note">
+      <strong>Detected language${r.detected_languages.includes(',')?' (multiple)':''}:</strong>&nbsp;
+      ${escHtml(r.detected_languages)} — all values translated to English for analysis.
+      ${r.documents_analysed ? `<br><span style="opacity:.8">${escHtml(r.documents_analysed)}</span>` : ''}
+    </div>` : '';
+
+  const valCls = { normal:'val-normal', high:'val-high', low:'val-low', critical:'val-critical' };
+  const valIco = { normal:'↔', high:'↑', low:'↓', critical:'⚠' };
+
+  // VHS Score colour
+  const score = r.vhs_score || 0;
+  const scoreColor = score >= 90 ? '#059669' : score >= 75 ? '#2563eb' : score >= 60 ? '#b45309' : score >= 40 ? '#dc2626' : '#7f1d1d';
+
+  // Risk profile
+  const riskColors = ['#059669','#65a30d','#b45309','#dc2626','#7f1d1d'];
+  const riskHtml = r.risk_profile ? Object.entries(r.risk_profile).map(([key, val]) => `
+    <div class="risk-card">
+      <div class="risk-label">${key.charAt(0).toUpperCase()+key.slice(1)} Risk</div>
+      <div class="risk-bar-wrap"><div class="risk-bar" style="width:${(val.score/5)*100}%;background:${riskColors[(val.score||1)-1]}"></div></div>
+      <div class="risk-score-row"><span class="risk-badge" style="background:${riskColors[(val.score||1)-1]}20;color:${riskColors[(val.score||1)-1]};border:1px solid ${riskColors[(val.score||1)-1]}40">${escHtml(val.label||'')}</span></div>
+      <div class="risk-note">${escHtml(val.note||'')}</div>
+    </div>`).join('') : '';
+
+  const findingsHtml = (r.findings||[]).length ? `
+    <table class="findings-table">
+      <thead><tr>
+        <th scope="col">Marker</th><th scope="col">Value</th><th scope="col">Status</th><th scope="col">Wellness Significance</th>
+        ${uploadedFiles.length>1 ? '<th scope="col">Source</th>' : ''}
+      </tr></thead>
+      <tbody>
+        ${(r.findings||[]).map(f=>`
+          <tr>
+            <td><span class="marker-name">${escHtml(f.marker)}</span>${f.original_name?`<span class="marker-orig">${escHtml(f.original_name)}</span>`:''}</td>
+            <td><strong>${escHtml(f.value)}</strong></td>
+            <td><span class="val-pill ${valCls[f.status]||'val-normal'}">${valIco[f.status]||''} ${f.status||'normal'}</span></td>
+            <td><span class="interp-text">${escHtml(f.interpretation)}</span></td>
+            ${uploadedFiles.length>1 ? `<td style="font-size:11px;color:var(--ink-4)">${escHtml(f.source||'')}</td>` : ''}
+          </tr>`).join('')}
+      </tbody>
+    </table>` : '<p style="color:var(--ink-4);font-size:14px">No specific findings extracted.</p>';
+
+  const listHtml = (items, icon) => (items||[]).map(i=>`<div class="rec-item"><span class="rec-icon">${icon}</span><span>${escHtml(i)}</span></div>`).join('');
+
+  document.getElementById('results').innerHTML = `
+    <div class="result-topbar">
+      <h2>${uiT("reportTitle")}</h2>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe;border-radius:20px;padding:3px 10px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          ${uiT("aiGenerated")}
+        </span>
+        <div class="result-lang-wrap" id="result-lang-wrap">
+          <button class="result-lang-toggle" id="result-lang-toggle" onclick="toggleResultLang()" aria-haspopup="listbox" aria-expanded="false">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span id="result-lang-current">Language</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="result-lang-dropdown" id="result-lang-dropdown" role="listbox">
+            <button class="result-lang-opt active" onclick="switchResultLang('en','English')">🇬🇧 English</button>
+            <div class="result-lang-divider"></div>
+            <button class="result-lang-opt" onclick="switchResultLang('zh-CN','简体中文')">🇨🇳 简体中文</button>
+            <button class="result-lang-opt" onclick="switchResultLang('zh-TW','繁體中文')">🇹🇼 繁體中文</button>
+            <div class="result-lang-divider"></div>
+            <button class="result-lang-opt" onclick="switchResultLang('es','Español')">🇪🇸 Español</button>
+            <button class="result-lang-opt" onclick="switchResultLang('fr','Français')">🇫🇷 Français</button>
+            <button class="result-lang-opt" onclick="switchResultLang('de','Deutsch')">🇩🇪 Deutsch</button>
+            <button class="result-lang-opt" onclick="switchResultLang('it','Italiano')">🇮🇹 Italiano</button>
+            <button class="result-lang-opt" onclick="switchResultLang('pt','Português')">🇵🇹 Português</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ru','Русский')">🇷🇺 Русский</button>
+            <button class="result-lang-opt" onclick="switchResultLang('nl','Nederlands')">🇳🇱 Nederlands</button>
+            <button class="result-lang-opt" onclick="switchResultLang('pl','Polski')">🇵🇱 Polski</button>
+            <button class="result-lang-opt" onclick="switchResultLang('tr','Türkçe')">🇹🇷 Türkçe</button>
+            <div class="result-lang-divider"></div>
+            <button class="result-lang-opt" onclick="switchResultLang('ar','العربية')">🇸🇦 العربية</button>
+            <button class="result-lang-opt" onclick="switchResultLang('hi','हिन्दी')">🇮🇳 हिन्दी</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ja','日本語')">🇯🇵 日本語</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ko','한국어')">🇰🇷 한국어</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ms','Bahasa Melayu')">🇲🇾 Bahasa Melayu</button>
+            <button class="result-lang-opt" onclick="switchResultLang('id','Bahasa Indonesia')">🇮🇩 Bahasa Indonesia</button>
+            <button class="result-lang-opt" onclick="switchResultLang('th','ภาษาไทย')">🇹🇭 ภาษาไทย</button>
+            <button class="result-lang-opt" onclick="switchResultLang('vi','Tiếng Việt')">🇻🇳 Tiếng Việt</button>
+          </div>
+        </div>
+        <button class="new-analysis-btn" onclick="resetForm()" type="button">${uiT("newAssessment")}</button>
+      </div>
+    </div>
+
+    ${sourcesHtml}${langHtml}
+
+    <div class="patient-card" role="region" aria-label="Individual summary">
+      <div class="patient-avatar" aria-hidden="true">${escHtml(initials)}</div>
+      <div class="patient-info">
+        <h3>${escHtml(p.name)}</h3>
+        <p>${[p.age&&p.age+' years', p.gender].filter(Boolean).map(escHtml).join(' &nbsp;·&nbsp; ')}</p>
+      </div>
+      <div class="patient-right">
+        <div class="vhs-score-badge" style="border-color:${scoreColor}">
+          <div class="vhs-score-num" style="color:${scoreColor}">${score}</div>
+          <div class="vhs-score-label">${uiT("vhsScore")}</div>
+        </div>
+        <span style="font-size:11px;color:var(--ink-4)">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</span>
+      </div>
+    </div>
+
+    <div class="result-section" role="region" aria-label="Health assessment">
+      <div class="result-section-title">${uiT("healthAssessment")}</div>
+      <div class="summary-block">
+        ${escHtml(r.health_assessment||'')}
+        ${r.key_health_concerns ? `<div class="differential"><strong>${uiT("keyConcerns")}:</strong> ${escHtml(r.key_health_concerns)}</div>` : ''}
+      </div>
+    </div>
+
+    ${riskHtml ? `
+    <div class="result-section" role="region" aria-label="Risk profile">
+      <div class="result-section-title">${uiT("riskProfile")}</div>
+      <div class="risk-grid">${riskHtml}</div>
+    </div>` : ''}
+
+    <div class="result-section" role="region" aria-label="Laboratory findings">
+      <div class="result-section-title">${uiT("labFindings")}</div>
+      ${findingsHtml}
+    </div>
+
+    ${(r.nutrition_recommendations||[]).length ? `
+    <div class="result-section" role="region" aria-label="Nutrition recommendations">
+      <div class="result-section-title">${uiT("nutrition")}</div>
+      <div class="rec-card">${listHtml(r.nutrition_recommendations,'🥗')}</div>
+    </div>` : ''}
+
+    ${(r.lifestyle_recommendations||[]).length ? `
+    <div class="result-section" role="region" aria-label="Lifestyle recommendations">
+      <div class="result-section-title">${uiT("lifestyle")}</div>
+      <div class="rec-card">${listHtml(r.lifestyle_recommendations,'🏃')}</div>
+    </div>` : ''}
+
+    ${(r.nutritional_support||[]).length ? `
+    <div class="result-section" role="region" aria-label="Nutritional support">
+      <div class="result-section-title">${uiT("supplements")}</div>
+      <div class="rec-card">${listHtml(r.nutritional_support,'💊')}</div>
+    </div>` : ''}
+
+    ${r.monitoring_plan ? `
+    <div class="result-section" role="region" aria-label="Monitoring plan">
+      <div class="result-section-title">${uiT("monitoring")}</div>
+      <div class="monitoring-card">${escHtml(r.monitoring_plan)}</div>
+    </div>` : ''}
+
+    <div class="disclaimer" role="note">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+      <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.</span>
+    </div>
+  `;
+
+  document.getElementById('results').style.display = 'block';
+  window.scrollTo(0,0);
+}
+
+function resetForm() {
+  uploadedFiles = [];
+  ['results','loading'].forEach(id => document.getElementById(id).style.display='none');
+  ['form-section','form-heading'].forEach(id => document.getElementById(id).style.display='block');
+  document.getElementById('file-list').style.display = 'none';
+  document.getElementById('add-more-btn').style.display = 'none';
+  document.getElementById('analyze-btn').disabled = true;
+  document.getElementById('file-in').value = '';
+  dz.classList.remove('has-files','over');
+  document.getElementById('dz-icon-wrap').innerHTML = DZ_UPLOAD_SVG;
+  document.getElementById('dz-text').textContent = 'Click to select files, or drag & drop here';
+  dz.setAttribute('aria-label','Upload files. Click or press Enter to browse, or drag and drop files here.');
+  hideErr(); window.scrollTo(0,0);
+}
+</script>
+
+<footer class="site-footer">
+  <p>VANDL Health Score (VHS) &nbsp;·&nbsp;
+    <a href="/terms">Terms of Service</a> &nbsp;·&nbsp;
+    <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp;
+    <button class="bot-trigger" onclick="openBot()">&#x1F4AC; Help</button>
+  </p>
+  <p style="margin-top:6px">This report is for health education and wellness management only. Not a medical diagnosis or prescription.</p>
+</footer>
+
+<!-- Help Bot -->
+<div class="bot-overlay" id="bot-overlay" onclick="if(event.target===this)closeBot()">
+  <div class="bot-window" role="dialog" aria-label="VHS Help Assistant" aria-modal="true">
+    <div class="bot-head">
+      <div class="bot-avatar">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      </div>
+      <div class="bot-head-text">
+        <div class="bot-head-name">VHS Help Assistant</div>
+        <div class="bot-head-status">AI Assistant · Not a human</div>
+      </div>
+      <button class="bot-close" onclick="closeBot()" aria-label="Close help">&#x2715;</button>
+    </div>
+
+    <div class="bot-messages" id="bot-messages">
+      <div class="bot-msg bot">
+        <div class="bot-msg-bubble">Hi! I can help you submit your health report and understand your VHS results. What would you like to know?</div>
+      </div>
+    </div>
+
+    <div class="bot-suggestions" id="bot-suggestions">
+      <button class="bot-chip" onclick="askBot('How do I upload my blood report?')">How to upload?</button>
+      <button class="bot-chip" onclick="askBot('What file formats are accepted?')">File formats?</button>
+      <button class="bot-chip" onclick="askBot('What does the VHS score mean?')">VHS score?</button>
+      <button class="bot-chip" onclick="askBot('What is the risk profile?')">Risk profile?</button>
+    </div>
+
+    <div class="bot-input-row">
+      <textarea class="bot-input" id="bot-input" placeholder="Ask about submitting your report…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendBot()}"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+      <button class="bot-send" id="bot-send-btn" onclick="sendBot()" aria-label="Send">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── VHS Help Bot ─────────────────────────────────────────────── */
+const BOT_SYSTEM = `You are the VHS Help Assistant for VANDL Health Score platform. Your ONLY job is to help users understand how to submit their health report and interpret their VHS wellness results on this page.
+
+You are STRICTLY LIMITED to these topics:
+1. How to fill in the patient information form (name, phone, age, gender, complaint, notes)
+2. How to upload files (accepted formats: PDF, JPG, PNG, TXT, CSV — max 20MB each, multiple files supported)
+3. How to select the document language
 4. What the consent checkbox means
-5. How to click Generate Health Assessment
+5. How to click "Generate Health Assessment"
 6. What the VHS Health Score (0-100) means: 90-100 Excellent, 75-89 Good, 60-74 Fair, 40-59 Needs Attention, 0-39 Poor
-7. What the 5 risk categories mean: Cardiovascular, Metabolic, Liver, Kidney, Inflammation scored 1-5
-8. What Nutrition, Lifestyle, Nutritional Support, and Monitoring Plan sections mean
-9. Why results are in English (auto-translated)
+7. What the 5 risk categories mean: Cardiovascular, Metabolic, Liver, Kidney, Inflammation — each scored 1-5
+8. What Nutrition Recommendations, Lifestyle Recommendations, Suggested Nutritional Support, and Monitoring Plan sections mean
+9. Why results are in English (translation happens automatically)
 10. How to start a new assessment
 
-REFUSE everything else — medical advice, data privacy, pricing, technical issues, anything unrelated.
-If asked anything outside scope: "I can only help with submitting your health report and understanding your VHS results."
-Keep responses under 3 sentences. Be friendly and clear.`;
+You must REFUSE to answer anything about:
+- Medical diagnoses, treatments, prescriptions, or medications
+- Data privacy, data storage, or who can see the data
+- Pricing, billing, or account management
+- Technical issues unrelated to the report submission page
+- Any other topic not listed above
 
-app.post("/api/bot", globalLimit, botLimit, async (req, res) => {
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "Configuration error." });
+If asked anything outside your scope, respond: "I can only help with submitting your health report and understanding your VHS results. For other questions, please contact support."
 
-  const { messages, translate } = req.body;
-  if (!messages || !Array.isArray(messages) || messages.length === 0 || messages.length > 12) {
-    return res.status(400).json({ error: "Invalid request." });
-  }
-  // Validate messages — translation requests get higher content limit
-  const contentLimit = translate ? 8000 : 1000;
-  for (const m of messages) {
-    if (!["user","assistant"].includes(m.role) || typeof m.content !== "string" || m.content.length > contentLimit) {
-      return res.status(400).json({ error: "Invalid message." });
-    }
-  }
+Keep responses short, clear, and friendly. Maximum 3 sentences per response.`;
+
+let botHistory = [];
+let botLoading = false;
+
+function openBot() {
+  document.getElementById('bot-overlay').classList.add('open');
+  document.getElementById('bot-input').focus();
+}
+function closeBot() {
+  document.getElementById('bot-overlay').classList.remove('open');
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeBot(); });
+
+function appendMsg(role, text) {
+  const msgs = document.getElementById('bot-messages');
+  const div = document.createElement('div');
+  div.className = 'bot-msg ' + role;
+  const bubble = document.createElement('div');
+  bubble.className = 'bot-msg-bubble';
+  bubble.textContent = text;
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  const msgs = document.getElementById('bot-messages');
+  const div = document.createElement('div');
+  div.className = 'bot-msg bot';
+  div.id = 'bot-typing-indicator';
+  div.innerHTML = '<div class="bot-typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('bot-typing-indicator');
+  if (el) el.remove();
+}
+
+async function askBot(question) {
+  if (botLoading) return;
+  // Hide suggestions after first interaction
+  document.getElementById('bot-suggestions').style.display = 'none';
+  document.getElementById('bot-input').value = '';
+  appendMsg('user', question);
+  botHistory.push({ role: 'user', content: question });
+  await getBotReply();
+}
+
+async function sendBot() {
+  const input = document.getElementById('bot-input');
+  const text = input.value.trim();
+  if (!text || botLoading) return;
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('bot-suggestions').style.display = 'none';
+  appendMsg('user', text);
+  botHistory.push({ role: 'user', content: text });
+  await getBotReply();
+}
+
+async function getBotReply() {
+  if (botLoading) return;
+  botLoading = true;
+  document.getElementById('bot-send-btn').disabled = true;
+  showTyping();
 
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: translate ? 2000 : 300,
-        system: translate ? "You are a professional medical translator. Translate the provided JSON fields accurately. Return ONLY valid JSON with the same keys. Never add explanations or markdown." : BOT_SYSTEM,
-        messages: messages.slice(-6),
-      }),
+    const res = await fetch('/api/bot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: botHistory.slice(-6) })
     });
-    const data = await response.json();
-    if (!response.ok) return res.status(500).json({ error: "Bot unavailable." });
-    const reply = data.content?.[0]?.text || "Sorry, I could not respond.";
-    res.json({ reply });
+    const data = await res.json();
+    const reply = data.reply || 'Sorry, I could not get a response. Please try again.';
+    hideTyping();
+    appendMsg('bot', reply);
+    botHistory.push({ role: 'assistant', content: reply });
   } catch(e) {
-    res.status(500).json({ error: "Bot unavailable." });
+    hideTyping();
+    appendMsg('bot', 'Sorry, something went wrong. Please try again.');
+  }
+
+  botLoading = false;
+  document.getElementById('bot-send-btn').disabled = false;
+  document.getElementById('bot-input').focus();
+}
+</script>
+
+
+<!-- Age Gate -->
+<div class="age-gate-overlay" id="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-gate-title">
+  <div class="age-gate-box">
+    <div class="age-gate-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h2 id="age-gate-title">Age Verification Required</h2>
+    <p>VANDL Health Score (VHS) is intended for use by adults aged 18 and over. By continuing, you confirm that you are at least 18 years old and agree to our Terms of Service and Privacy Policy.</p>
+    <div class="age-gate-btns">
+      <button class="age-gate-confirm" onclick="confirmAge()">I am 18 years or older — Continue</button>
+      <button class="age-gate-deny" onclick="denyAge()">I am under 18 — Exit</button>
+    </div>
+    <p class="age-gate-legal">By clicking continue you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>. We do not knowingly collect data from individuals under 18.</p>
+  </div>
+</div>
+
+<script>
+/* ── Age Gate ─────────────────────────────────────────────────── */
+(function() {
+  const CONSENT_KEY = 'vhs_age_confirmed';
+  const CONSENT_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+  function checkAgeGate() {
+    try {
+      const stored = localStorage.getItem(CONSENT_KEY);
+      if (stored) {
+        const { timestamp } = JSON.parse(stored);
+        if (Date.now() - timestamp < CONSENT_EXPIRY) return; // valid consent
+      }
+    } catch(e) {}
+    document.getElementById('age-gate').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  window.confirmAge = function() {
+    try {
+      localStorage.setItem(CONSENT_KEY, JSON.stringify({ timestamp: Date.now() }));
+    } catch(e) {}
+    document.getElementById('age-gate').classList.remove('show');
+    document.body.style.overflow = '';
+  };
+
+  window.denyAge = function() {
+    window.location.href = 'https://www.google.com';
+  };
+
+  // Run on load
+  document.addEventListener('DOMContentLoaded', checkAgeGate);
+})();
+</script>
+
+
+<!-- Results page language switcher — re-renders from stored raw result JSON -->
+<script>
+function toggleResultLang() {
+  const toggle = document.getElementById('result-lang-toggle');
+  const dropdown = document.getElementById('result-lang-dropdown');
+  const isOpen = dropdown.classList.toggle('open');
+  toggle.classList.toggle('open', isOpen);
+  toggle.setAttribute('aria-expanded', isOpen);
+}
+
+async function switchResultLang(lang, label) {
+  // Close dropdown
+  document.querySelectorAll('.result-lang-opt').forEach(b => b.classList.remove('active'));
+  document.getElementById('result-lang-dropdown').classList.remove('open');
+  document.getElementById('result-lang-toggle').classList.remove('open');
+  document.getElementById('result-lang-toggle').setAttribute('aria-expanded', 'false');
+
+  if (!_rawResult || !_rawPatient) return;
+
+  const currentLabel = document.getElementById('result-lang-current');
+
+  // English — re-render with the original result as received from Claude
+  if (lang === 'en') {
+    currentLang = 'en';
+    _originalResult = _originalResult || _rawResult;
+    renderResults(_originalResult, _rawPatient);
+    document.getElementById('result-lang-current').textContent = 'English';
+    return;
+  }
+
+  currentLabel.textContent = '...';
+
+  const langNames = {
+    'zh-CN':'Simplified Chinese','zh-TW':'Traditional Chinese',
+    'es':'Spanish','fr':'French','de':'German','it':'Italian',
+    'pt':'Portuguese','ru':'Russian','nl':'Dutch','pl':'Polish',
+    'tr':'Turkish','ar':'Arabic','hi':'Hindi','ja':'Japanese',
+    'ko':'Korean','ms':'Malay','id':'Indonesian','th':'Thai','vi':'Vietnamese'
+  };
+  const targetLang = langNames[lang] || lang;
+
+  const toTranslate = {
+    health_assessment: _rawResult.health_assessment || '',
+    key_health_concerns: _rawResult.key_health_concerns || '',
+    vhs_label: _rawResult.vhs_label || '',
+    monitoring_plan: _rawResult.monitoring_plan || '',
+    nutrition: (_rawResult.nutrition_recommendations || []).join(' || '),
+    lifestyle: (_rawResult.lifestyle_recommendations || []).join(' || '),
+    supplements: (_rawResult.nutritional_support || []).join(' || '),
+    cv_note: _rawResult.risk_profile?.cardiovascular?.note || '',
+    met_note: _rawResult.risk_profile?.metabolic?.note || '',
+    liv_note: _rawResult.risk_profile?.liver?.note || '',
+    kid_note: _rawResult.risk_profile?.kidney?.note || '',
+    inf_note: _rawResult.risk_profile?.inflammation?.note || '',
+    findings: (_rawResult.findings || []).map(f => f.interpretation || '').join(' || ')
+  };
+
+  const prompt = 'Translate these health report fields to ' + targetLang + '. Return ONLY a JSON object with exactly the same keys. Keep medical marker names in English. Translate all descriptive text accurately.\n\n' + JSON.stringify(toTranslate);
+
+  try {
+    const resp = await fetch('/api/bot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], translate: true })
+    });
+    const data = await resp.json();
+    if (!data.reply) throw new Error('No reply');
+
+    const t = JSON.parse(data.reply.replace(/```json|```/g,'').trim());
+    const tr = JSON.parse(JSON.stringify(_rawResult));
+
+    if (t.health_assessment) tr.health_assessment = t.health_assessment;
+    if (t.key_health_concerns) tr.key_health_concerns = t.key_health_concerns;
+    if (t.vhs_label) tr.vhs_label = t.vhs_label;
+    if (t.monitoring_plan) tr.monitoring_plan = t.monitoring_plan;
+    if (t.nutrition) tr.nutrition_recommendations = t.nutrition.split(' || ').map(s=>s.trim()).filter(Boolean);
+    if (t.lifestyle) tr.lifestyle_recommendations = t.lifestyle.split(' || ').map(s=>s.trim()).filter(Boolean);
+    if (t.supplements) tr.nutritional_support = t.supplements.split(' || ').map(s=>s.trim()).filter(Boolean);
+    if (tr.risk_profile) {
+      if (t.cv_note && tr.risk_profile.cardiovascular) tr.risk_profile.cardiovascular.note = t.cv_note;
+      if (t.met_note && tr.risk_profile.metabolic) tr.risk_profile.metabolic.note = t.met_note;
+      if (t.liv_note && tr.risk_profile.liver) tr.risk_profile.liver.note = t.liv_note;
+      if (t.kid_note && tr.risk_profile.kidney) tr.risk_profile.kidney.note = t.kid_note;
+      if (t.inf_note && tr.risk_profile.inflammation) tr.risk_profile.inflammation.note = t.inf_note;
+    }
+    if (t.findings && tr.findings) {
+      const parts = t.findings.split(' || ');
+      tr.findings.forEach((f, i) => { if (parts[i]) f.interpretation = parts[i].trim(); });
+    }
+
+    currentLang = lang;
+    renderResults(tr, _rawPatient);
+    document.getElementById('result-lang-current').textContent = label;
+
+  } catch(e) {
+    console.warn('Translation error:', e);
+    renderResults(_rawResult, _rawPatient);
+    document.getElementById('result-lang-current').textContent = label + ' (failed)';
+  }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('result-lang-wrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const dd = document.getElementById('result-lang-dropdown');
+    const tg = document.getElementById('result-lang-toggle');
+    if (dd) dd.classList.remove('open');
+    if (tg) { tg.classList.remove('open'); tg.setAttribute('aria-expanded','false'); }
   }
 });
+</script>
 
-// ── Legal pages ────────────────────────────────────────────────
-app.get("/terms",   (req, res) => res.sendFile(path.join(__dirname, "public", "terms.html")));
-app.get("/privacy", (req, res) => res.sendFile(path.join(__dirname, "public", "privacy.html")));
-
-// ── Catch-all ──────────────────────────────────────────────────
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// ── Global error handler ───────────────────────────────────────
-app.use((err, req, res, next) => {
-  // Never leak stack traces or internal error details
-  console.error("Unhandled error:", err.message);
-  if (err.message && err.message.includes("CORS")) {
-    return res.status(403).json({ error: "Forbidden." });
-  }
-  res.status(500).json({ error: "An error occurred. Please try again." });
-});
-
-// ── Start ──────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`VHS platform running on port ${PORT}`);
-});
+</body>
+</html>
