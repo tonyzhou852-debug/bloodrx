@@ -2031,7 +2031,8 @@ async function switchResultLang(lang, label) {
     const saved = _originalResult;
     renderResults(source, _rawPatient);
     _originalResult = saved;
-    document.getElementById('result-lang-current').textContent = 'Language';
+    document.getElementById('result-lang-current').textContent = label + ' ✗';
+    alert('Translation failed: ' + (e.message || 'Unknown error') + '. Please try again in a moment.');
   }
 }
 
