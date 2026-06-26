@@ -464,6 +464,26 @@ app.post("/api/bot", globalLimit, botLimit, async (req, res) => {
   }
 });
 
+// ── Admin delete endpoint ─────────────────────────────────────
+app.post("/api/admin/patients/delete", adminBruteForceProtection, adminLimit, adminAuth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0 || ids.length > 100) {
+      return res.status(400).json({ error: "Invalid request." });
+    }
+    // Convert ids to numbers (they are stored as timestamps)
+    const numIds = ids.map(id => Number(id)).filter(n => !isNaN(n) && n > 0);
+    if (numIds.length === 0) return res.status(400).json({ error: "No valid IDs." });
+
+    const database = await getDB();
+    const result = await database.collection("patients").deleteMany({ id: { $in: numIds } });
+    res.json({ deleted: result.deletedCount });
+  } catch(e) {
+    console.error("Delete error:", e.message);
+    res.status(500).json({ error: "Delete failed." });
+  }
+});
+
 // ── Translation endpoint ──────────────────────────────────────
 const translateLimit = makeRateLimiter(10, 60000, "Translation rate limit reached.");
 
