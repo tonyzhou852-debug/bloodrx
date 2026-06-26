@@ -1897,18 +1897,15 @@ async function switchResultLang(lang, label) {
     findings: (_rawResult.findings || []).map(f => f.interpretation || '').join(' || ')
   };
 
-  const prompt = 'Translate these health report fields to ' + targetLang + '. Return ONLY a JSON object with exactly the same keys. Keep medical marker names in English. Translate all descriptive text accurately.\n\n' + JSON.stringify(toTranslate);
-
   try {
-    const resp = await fetch('/api/bot', {
+    const resp = await fetch('/api/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], translate: true })
+      body: JSON.stringify({ fields: toTranslate, targetLang })
     });
     const data = await resp.json();
-    if (!data.reply) throw new Error('No reply');
-
-    const t = JSON.parse(data.reply.replace(/```json|```/g,'').trim());
+    if (!data.translated) throw new Error('No translation');
+    const t = data.translated;
     const tr = JSON.parse(JSON.stringify(_rawResult));
 
     if (t.health_assessment) tr.health_assessment = t.health_assessment;
