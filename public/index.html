@@ -109,6 +109,11 @@ body {
   margin-left: auto; display: flex; align-items: center; gap: 10px;
   font-size: 12px; color: var(--ink-3);
 }
+.user-badge { display:flex; align-items:center; gap:8px; }
+.user-avatar { width:28px; height:28px; border-radius:50%; background:var(--brand); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.user-name { font-size:13px; font-weight:500; color:var(--ink-2); max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.logout-btn { padding:5px 12px; background:none; border:1px solid var(--border); border-radius:6px; font-size:12px; font-family:inherit; color:var(--ink-3); cursor:pointer; transition:all .15s; }
+.logout-btn:hover { border-color:var(--brand); color:var(--brand); }
 .topbar-right .dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--green); display: inline-block;
@@ -929,10 +934,12 @@ document.addEventListener('DOMContentLoaded', detectLang);
       <span class="logo-text">VANDL<em>VHS</em></span>
     </a>
     <span class="topbar-tag">Clinical AI</span>
-    <div class="topbar-right" aria-hidden="true">
-      <span class="dot"></span> AI-powered analysis
-      &nbsp;·&nbsp; Multilingual
-      &nbsp;·&nbsp; For licensed clinicians
+    <div class="topbar-right">
+      <div class="user-badge" id="user-badge" style="display:none">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <span class="user-name" id="user-name"></span>
+        <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+      </div>
     </div>
   </div>
 </nav>
@@ -2013,5 +2020,29 @@ document.addEventListener('click', e => {
   <div class="translate-spinner"></div>
   <p id="translate-overlay-msg">Translating report...</p>
 </div>
+
+<script>
+// ── Auth: load user and show in navbar ─────────────────────────
+async function loadUser() {
+  try {
+    const resp = await fetch('/api/auth/me', { credentials: 'include' });
+    if (!resp.ok) { window.location.href = '/login'; return; }
+    const data = await resp.json();
+    const u = data.user;
+    document.getElementById('user-name').textContent = u.username || u.email;
+    document.getElementById('user-avatar').textContent = (u.username || u.email || '?')[0].toUpperCase();
+    document.getElementById('user-badge').style.display = 'flex';
+  } catch(e) {
+    window.location.href = '/login';
+  }
+}
+
+async function doLogout() {
+  await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+  window.location.href = '/login';
+}
+
+loadUser();
+</script>
 </body>
 </html>
