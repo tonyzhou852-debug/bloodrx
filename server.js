@@ -216,6 +216,32 @@ const sanitize = (str) => (str || "")
   .replace(/[^\x20-\x7E\u00C0-\u024F\u4E00-\u9FFF\u3400-\u4DBF\uAC00-\uD7AF]/g, "")
   .trim().slice(0, 500);
 
+// ── Admin token exchange ──────────────────────────────────────
+// Returns a short-lived admin session token so JS fetches don't need to re-send Basic Auth
+const adminTokens = new Map(); // token -> expiry
+
+app.get("/api/admin/token", adminBruteForceProtection, adminLimit, adminAuth, (req, res) => {
+  const token = crypto.randomBytes(32).toString("hex");
+  adminTokens.set(token, Date.now() + 3600000); // 1 hour
+  // Clean old tokens
+  for (const [t, exp] of adminTokens.entries()) {
+    if (Date.now() > exp) adminTokens.delete(t);
+  }
+  res.json({ token });
+});
+
+// Middleware that accepts either Basic Auth OR admin token
+function adminAuthOrToken(req, res, next) {
+  const token = req.headers["x-admin-token"];
+  if (token) {
+    const exp = adminTokens.get(token);
+    if (exp && Date.now() < exp) return next();
+    return res.status(401).json({ error: "Invalid or expired admin token." });
+  }
+  // Fall back to Basic Auth
+  adminBruteForceProtection(req, res, () => adminAuth(req, res, next));
+}
+
 // ── Body parsers ───────────────────────────────────────────────
 app.use(express.json({ limit: "50mb", strict: true }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
@@ -467,7 +493,7 @@ app.get("/admin", adminBruteForceProtection, adminLimit, adminAuth, (req, res) =
   res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
-app.get("/api/admin/patients", adminBruteForceProtection, adminLimit, adminAuth, async (req, res) => {
+app.get("/api/admin/patients", adminLimit, adminAuthOrToken, async (req, res) => {
   try {
     const db = await getDB();
     const patients = await db.collection("patients")
@@ -477,7 +503,7 @@ app.get("/api/admin/patients", adminBruteForceProtection, adminLimit, adminAuth,
   } catch(e) { res.status(500).json({ error: "Failed to load records." }); }
 });
 
-app.post("/api/admin/patients/delete", adminBruteForceProtection, adminLimit, adminAuth, async (req, res) => {
+app.post("/api/admin/patients/delete", adminLimit, adminAuthOrToken, async (req, res) => {
   try {
     const { ids } = req.body;
     if (!ids || !Array.isArray(ids) || ids.length === 0 || ids.length > 100) return res.status(400).json({ error: "Invalid request." });
@@ -490,7 +516,7 @@ app.post("/api/admin/patients/delete", adminBruteForceProtection, adminLimit, ad
 });
 
 // Admin: get users list
-app.get("/api/admin/users", adminBruteForceProtection, adminLimit, adminAuth, async (req, res) => {
+app.get("/api/admin/users", adminLimit, adminAuthOrToken, async (req, res) => {
   try {
     const db = await getDB();
     const users = await db.collection("users")
