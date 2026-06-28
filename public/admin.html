@@ -7,19 +7,19 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --ink:#111827; --ink-2:#374151; --ink-3:#6b7280; --ink-4:#9ca3af;
-  --border:#e5e7eb; --surface:#fff; --bg:#f7f8f9; --bg-2:#f3f4f6;
-  --brand:#b91c1c; --brand-bg:#fff1f1; --brand-bd:#fecaca;
-  --green:#059669; --green-bg:#ecfdf5; --green-bd:#a7f3d0;
-  --amber:#b45309; --amber-bg:#fffbeb; --amber-bd:#fde68a;
-  --red:#dc2626; --red-bg:#fef2f2; --red-bd:#fecaca;
-  --radius-sm:6px; --radius:10px; --radius-lg:14px;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#111827;--ink-2:#374151;--ink-3:#6b7280;--ink-4:#9ca3af;
+  --border:#e5e7eb;--surface:#fff;--bg:#f7f8f9;--bg-2:#f3f4f6;
+  --brand:#b91c1c;--brand-bg:#fff1f1;--brand-bd:#fecaca;
+  --green:#059669;--green-bg:#ecfdf5;--green-bd:#a7f3d0;
+  --amber:#b45309;--amber-bg:#fffbeb;--amber-bd:#fde68a;
+  --red:#dc2626;--red-bg:#fef2f2;--red-bd:#fecaca;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-bd:#bfdbfe;
+  --radius-sm:6px;--radius:10px;--radius-lg:14px;
   --shadow-sm:0 1px 2px rgba(0,0,0,.05);
   --shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
 }
-@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 html{scroll-behavior:smooth}
 body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6;color:var(--ink);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
 
@@ -29,39 +29,45 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .logo-icon{width:32px;height:32px;border-radius:8px;background:var(--brand);display:flex;align-items:center;justify-content:center}
 .logo-icon svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.logo-text{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-.2px}
+.logo-text{font-size:15px;font-weight:700;color:var(--ink)}
 .logo-text em{color:var(--brand);font-style:normal}
 .admin-badge{font-size:10px;font-weight:600;letter-spacing:.05em;background:var(--brand-bg);color:var(--brand);border:1px solid var(--brand-bd);border-radius:4px;padding:2px 8px;text-transform:uppercase}
-.topbar-right{margin-left:auto}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .back-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;min-height:36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:500;color:var(--ink-2);text-decoration:none;transition:border-color .15s,color .15s}
 .back-btn:hover{border-color:var(--brand);color:var(--brand)}
 
 /* Page */
 .page{max-width:1400px;margin:0 auto;padding:2rem 1.5rem 4rem}
-.page-header{margin-bottom:1.75rem}
+.page-header{margin-bottom:1.75rem;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .page-header h1{font-size:22px;font-weight:700;letter-spacing:-.3px;margin-bottom:2px}
 .page-header p{font-size:13px;color:var(--ink-3)}
 
+/* View toggle */
+.view-toggle{display:flex;gap:4px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px}
+.view-btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;color:var(--ink-3);background:none}
+.view-btn.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+
 /* Stats */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;box-shadow:var(--shadow-sm)}
 .stat-label{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 .stat-value{font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ink);line-height:1}
 .stat-card.brand .stat-value{color:var(--brand)}
+.stat-card.green .stat-value{color:var(--green)}
 .stat-card.amber .stat-value{color:var(--amber)}
 .stat-card.red .stat-value{color:var(--red)}
 
 /* Table card */
 .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
-.table-card-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg)}
+.table-card-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap;gap:8px}
 .table-card-head h2{font-size:13px;font-weight:600;color:var(--ink)}
-.head-right{display:flex;align-items:center;gap:10px}
+.head-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .record-count{font-size:12px;font-weight:500;color:var(--ink-3);background:var(--bg-2);border:1px solid var(--border);border-radius:20px;padding:2px 10px}
 .search-wrap{padding:1rem 1.25rem .5rem}
-.search-input{width:100%;max-width:320px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s}
+.search-input{width:100%;max-width:320px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:inherit;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s}
 .search-input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(185,28,28,.1)}
 .table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:900px}
+table{width:100%;border-collapse:collapse;min-width:600px}
 thead tr{border-bottom:1px solid var(--border)}
 th{padding:10px 14px;font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;text-align:left;white-space:nowrap;background:var(--bg-2)}
 td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
@@ -69,49 +75,92 @@ tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:#fafafa}
 .patient-name{font-weight:600;color:var(--ink)}
 
-/* Severity */
-.sev{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-.sev-mild{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
-.sev-moderate{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
-.sev-severe,.sev-critical{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+/* Patient cards (grouped view) */
+.patients-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:1.25rem}
+.patient-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.patient-card:hover{border-color:var(--brand);box-shadow:0 4px 12px rgba(185,28,28,.08)}
+.patient-card-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.patient-avatar{width:40px;height:40px;border-radius:50%;background:var(--brand);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.patient-card-name{font-weight:600;font-size:15px;color:var(--ink)}
+.patient-card-meta{font-size:12px;color:var(--ink-3);margin-top:2px}
+.patient-card-stats{display:flex;gap:12px;flex-wrap:wrap}
+.pstat{text-align:center}
+.pstat-val{font-size:18px;font-weight:700;color:var(--ink);line-height:1}
+.pstat-lbl{font-size:10px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.trend-up{color:var(--green)}
+.trend-down{color:var(--red)}
+.trend-flat{color:var(--ink-4)}
+.sparkline{margin-top:10px}
 
-/* Summary btn */
-.summary-btn{display:flex;align-items:flex-start;gap:6px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;text-align:left;color:var(--ink-2);font-size:12px;line-height:1.5;max-width:240px;transition:color .15s}
-.summary-btn:hover{color:var(--brand)}
-.summary-preview{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1}
-.expand-ico{flex-shrink:0;margin-top:2px;opacity:.5}
-.summary-btn:hover .expand-ico{opacity:1}
+/* VHS badge */
+.vhs-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.vhs-excellent{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+.vhs-good{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
+.vhs-fair{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}
+.vhs-attention,.vhs-poor{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
 
-/* CSV btn */
-.csv-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;min-height:36px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s;touch-action:manipulation}
+/* CSV / Delete buttons */
+.csv-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;min-height:36px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s}
 .csv-btn:hover{background:#991b1b}
-.csv-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.del-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;min-height:36px;background:#fff;color:var(--brand);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+.del-btn:hover{background:var(--brand);color:#fff}
+.del-btn:disabled{opacity:.4;cursor:not-allowed}
 
 /* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:24px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:24px}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 20px 60px rgba(0,0,0,.2);width:100%;max-width:540px;animation:modalIn .2s ease-out}
+.modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:760px;max-height:90vh;display:flex;flex-direction:column;animation:modalIn .2s ease-out}
+.modal-sm{max-width:420px}
 @keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
-.modal-title{font-size:14px;font-weight:600;color:var(--ink)}
-.modal-sub{font-size:12px;color:var(--ink-3);margin-top:2px}
-.modal-close{width:32px;height:32px;border-radius:6px;background:none;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-3);transition:border-color .15s,color .15s;font-size:16px;flex-shrink:0}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.modal-title{font-size:16px;font-weight:700;color:var(--ink)}
+.modal-sub{font-size:12px;color:var(--ink-3);margin-top:3px}
+.modal-close{width:32px;height:32px;border-radius:6px;background:none;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:16px;flex-shrink:0;transition:all .15s}
 .modal-close:hover{border-color:var(--brand);color:var(--brand)}
-.modal-body{padding:20px;font-size:14px;color:var(--ink-2);line-height:1.75}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0}
 
-/* Download panel */
-.dl-opt-btn{width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-family:inherit;text-align:left;transition:border-color .15s,background .15s}
+/* Profile modal styles */
+.profile-summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.profile-stat{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;flex:1;min-width:100px;text-align:center}
+.profile-stat-val{font-size:22px;font-weight:700;line-height:1}
+.profile-stat-lbl{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+
+.visits-list{display:flex;flex-direction:column;gap:10px}
+.visit-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.visit-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px}
+.visit-date{font-size:12px;color:var(--ink-3)}
+.visit-score{display:flex;align-items:center;gap:8px}
+.visit-body{font-size:13px;color:var(--ink-2);line-height:1.6}
+.visit-risks{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.risk-chip{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg-2);border:1px solid var(--border);color:var(--ink-3)}
+.risk-chip.r4,.risk-chip.r5{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+.risk-chip.r3{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd)}
+
+/* Chart */
+.sparkline-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px}
+.sparkline-title{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+
+/* Download / delete panel */
+.dl-opt-btn{width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-family:inherit;text-align:left;transition:all .15s;margin-bottom:8px}
 .dl-opt-btn:hover:not(:disabled){border-color:var(--brand);background:var(--brand-bg)}
 .dl-opt-btn:disabled{opacity:.45;cursor:not-allowed}
 .dl-opt-btn svg{flex-shrink:0;stroke:var(--brand);fill:none}
+.del-confirm-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.btn-cancel{padding:9px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer}
+.btn-danger{padding:9px 18px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
 
-/* Empty / loading */
-.empty-state{text-align:center;padding:4rem 2rem;color:var(--ink-3)}
+/* Empty */
+.empty-state{text-align:center;padding:3rem 2rem;color:var(--ink-3)}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* Footer */
 .site-footer{text-align:center;font-size:12px;color:var(--ink-4);margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)}
+
+/* Compact table row cells */
+#records-table td{padding:8px 12px}
+#records-table th{padding:8px 12px}
+.makeWrapCell{max-width:150px;white-space:normal;font-size:12px;color:var(--ink-3);line-height:1.4}
+.expand-btn{background:none;border:none;cursor:pointer;color:var(--brand);font-size:10px;padding:0;margin-left:4px}
 </style>
 </head>
 <body>
@@ -119,83 +168,118 @@ tbody tr:hover td{background:#fafafa}
 <nav class="topbar">
   <div class="topbar-inner">
     <a href="/" class="logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg>
-      </div>
+      <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg></div>
       <span class="logo-text">VANDL<em>VHS</em></span>
     </a>
     <span class="admin-badge">Admin</span>
     <div class="topbar-right">
-      <a href="/" class="back-btn">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
-        Back to Analyzer
-      </a>
+      <a href="/" class="back-btn">&#8592; Back to Analyzer</a>
     </div>
   </div>
 </nav>
 
 <main class="page">
   <div class="page-header">
-    <h1>Health Assessment Records</h1>
-    <p>All wellness assessments submitted through VANDL VHS — most recent first</p>
+    <div>
+      <h1>Health Assessment Records</h1>
+      <p>All VHS wellness assessments submitted through VANDL VHS</p>
+    </div>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-grouped" onclick="setView('grouped')">&#128100; Patients</button>
+      <button class="view-btn" id="btn-all" onclick="setView('all')">&#128203; All Records</button>
+    </div>
   </div>
 
+  <!-- Stats -->
   <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label">Total Records</div><div class="stat-value" id="st-total">—</div></div>
-    <div class="stat-card brand"><div class="stat-label">Today</div><div class="stat-value" id="st-today">—</div></div>
-    <div class="stat-card amber"><div class="stat-label">Avg VHS Score</div><div class="stat-value" id="st-moderate">—</div></div>
-    <div class="stat-card red"><div class="stat-label">Needs Attention</div><div class="stat-value" id="st-severe">—</div></div>
+    <div class="stat-card"><div class="stat-label">Unique Patients</div><div class="stat-value" id="st-patients">—</div></div>
+    <div class="stat-card brand"><div class="stat-label">Total Visits</div><div class="stat-value" id="st-total">—</div></div>
+    <div class="stat-card green"><div class="stat-label">Today</div><div class="stat-value" id="st-today">—</div></div>
+    <div class="stat-card amber"><div class="stat-label">Avg VHS Score</div><div class="stat-value" id="st-avg">—</div></div>
+    <div class="stat-card red"><div class="stat-label">Needs Attention</div><div class="stat-value" id="st-attention">—</div></div>
   </div>
 
-  <div class="table-card">
-    <div class="table-card-head">
-      <h2>All Analyses</h2>
-      <div class="head-right">
-        <span class="record-count" id="record-count">Loading…</span>
-        <button class="csv-btn" onclick="openDownloadPanel()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download CSV
-        </button>
-        <button class="del-btn" id="del-btn" onclick="openDeleteConfirm()" disabled>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          Delete Selected
-        </button>
+  <!-- Grouped patients view -->
+  <div id="view-grouped">
+    <div class="table-card">
+      <div class="table-card-head">
+        <h2>Patient Profiles</h2>
+        <div class="head-right">
+          <span class="record-count" id="patient-count">Loading…</span>
+          <input type="search" class="search-input" id="search-patients" placeholder="Search patients…" oninput="filterPatients(this.value)">
+        </div>
+      </div>
+      <div class="patients-grid" id="patients-grid">
+        <div class="empty-state"><div class="spinner"></div><p>Loading patients…</p></div>
       </div>
     </div>
-    <div class="search-wrap">
-      <input type="search" class="search-input" id="search-input" placeholder="Filter by name, complaint, severity…" oninput="filterTable(this.value)">
-    </div>
-    <div class="table-wrap">
-      <table id="records-table">
-        <thead>
-          <tr>
-            <th style="width:36px;text-align:center">
-              <input type="checkbox" id="select-all-check" style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer" onchange="toggleAll(this.checked)">
-            </th>
-            <th>ID</th><th>Name</th><th>Phone</th><th>Age</th><th>Gender</th><th>Language</th>
-            <th>Complaint</th><th>Notes</th><th>VHS Score</th><th>Key Concerns</th>
-            <th>CV</th><th>Met</th><th>Liver</th><th>Kidney</th><th>Inflam</th>
-            <th>Nutrition</th><th>Lifestyle</th><th>Supplements</th><th>Monitoring</th>
-            <th>Summary</th><th>Date</th>
-          </tr>
-        </thead>
-        <tbody id="records-body">
-          <tr><td colspan="21"><div class="empty-state"><div class="spinner"></div><p>Loading records…</p></div></td></tr>
-        </tbody>
-      </table>
+  </div>
+
+  <!-- All records flat view -->
+  <div id="view-all" style="display:none">
+    <div class="table-card">
+      <div class="table-card-head">
+        <h2>All Assessments</h2>
+        <div class="head-right">
+          <span class="record-count" id="record-count">Loading…</span>
+          <input type="search" class="search-input" id="search-records" placeholder="Filter records…" oninput="filterTable(this.value)">
+          <button class="csv-btn" onclick="openDownloadPanel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download CSV
+          </button>
+          <button class="del-btn" id="del-btn" onclick="openDeleteConfirm()" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Delete Selected
+          </button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="records-table">
+          <thead>
+            <tr>
+              <th style="width:36px;text-align:center">
+                <input type="checkbox" id="select-all-check" style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer" onchange="toggleAll(this.checked)">
+              </th>
+              <th>ID</th><th>Name</th><th>Submitted By</th><th>Phone</th><th>Age</th><th>Gender</th><th>Language</th>
+              <th>Complaint</th><th>Notes</th><th>VHS Score</th><th>Key Concerns</th>
+              <th>CV</th><th>Met</th><th>Liver</th><th>Kidney</th><th>Inflam</th>
+              <th>Nutrition</th><th>Lifestyle</th><th>Supplements</th><th>Monitoring</th>
+              <th>Summary</th><th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="records-body">
+            <tr><td colspan="23"><div class="empty-state"><div class="spinner"></div><p>Loading records…</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <footer class="site-footer">
-    <p>VANDL Health Score (VHS) Admin &nbsp;·&nbsp; For authorized use only &nbsp;·&nbsp; All data is confidential</p>
-  </footer>
+  <footer class="site-footer">VANDL Health Score (VHS) Admin &nbsp;·&nbsp; Authorized use only &nbsp;·&nbsp; All data confidential</footer>
 </main>
+
+<!-- Patient Profile Modal -->
+<div class="modal-overlay" id="profile-overlay" onclick="if(event.target===this)closeProfile()">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title" id="profile-name">Patient Profile</div>
+        <div class="modal-sub" id="profile-meta"></div>
+      </div>
+      <button class="modal-close" onclick="closeProfile()">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="profile-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeProfile()">Close</button>
+    </div>
+  </div>
+</div>
 
 <!-- Summary modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
+  <div class="modal modal-sm">
     <div class="modal-head">
-      <div><div class="modal-title">Clinical Summary</div><div class="modal-sub" id="modal-patient"></div></div>
+      <div><div class="modal-title">Assessment Summary</div><div class="modal-sub" id="modal-patient"></div></div>
       <button class="modal-close" onclick="closeModal()">&#x2715;</button>
     </div>
     <div class="modal-body" id="modal-body"></div>
@@ -204,13 +288,13 @@ tbody tr:hover td{background:#fafafa}
 
 <!-- Download panel -->
 <div class="modal-overlay" id="dl-overlay" onclick="if(event.target===this)closeDL()">
-  <div class="modal" style="max-width:420px">
+  <div class="modal modal-sm">
     <div class="modal-head">
       <div><div class="modal-title">Download CSV</div><div class="modal-sub">Choose which records to export</div></div>
       <button class="modal-close" onclick="closeDL()">&#x2715;</button>
     </div>
-    <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;gap:12px">
-      <button class="dl-opt-btn" id="dl-all-btn" onclick="doDownload('all')">
+    <div class="modal-body">
+      <button class="dl-opt-btn" onclick="doDownload('all')">
         <svg width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         <div><div style="font-weight:600;font-size:14px">Download All Records</div><div id="dl-all-count" style="font-size:12px;color:var(--ink-3);margin-top:2px"></div></div>
       </button>
@@ -222,199 +306,407 @@ tbody tr:hover td{background:#fafafa}
   </div>
 </div>
 
-<!-- Delete confirm modal -->
+<!-- Delete confirm -->
 <div class="modal-overlay" id="del-overlay" onclick="if(event.target===this)closeDeleteConfirm()">
-  <div class="modal" style="max-width:420px">
+  <div class="modal modal-sm">
     <div class="modal-head">
-      <div><div class="modal-title" style="color:var(--brand)">Delete Records</div><div class="modal-sub">This action cannot be undone</div></div>
+      <div><div class="modal-title" style="color:var(--brand)">Delete Records</div><div class="modal-sub">This cannot be undone</div></div>
       <button class="modal-close" onclick="closeDeleteConfirm()">&#x2715;</button>
     </div>
-    <div class="del-confirm-box">
-      <div class="del-confirm-msg" id="del-confirm-msg"></div>
+    <div class="modal-body">
+      <div id="del-confirm-msg" style="font-size:14px;color:var(--ink-2);line-height:1.6"></div>
       <div class="del-confirm-btns">
-        <button class="del-confirm-cancel" onclick="closeDeleteConfirm()">Cancel</button>
-        <button class="del-confirm-go" onclick="doDelete()">Delete</button>
+        <button class="btn-cancel" onclick="closeDeleteConfirm()">Cancel</button>
+        <button class="btn-danger" onclick="doDelete()">Delete</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// All patient data stored in JS — never interpolated into HTML strings
 let allPatients = [];
+let currentView = 'grouped';
 
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+// ── Load data ──────────────────────────────────────────────────
+// Admin token — exchanged on page load from the Basic Auth session
+// The browser already authenticated with Basic Auth to load this page,
+// so we get a short-lived token for subsequent API calls (no prompts needed)
+let _adminToken = sessionStorage.getItem('vhs_admin_token') || '';
+
+async function getAdminToken() {
+  // Try to get a fresh token using the browser's cached Basic Auth credentials
+  const res = await fetch('/api/admin/token', { credentials: 'include' });
+  if (!res.ok) {
+    // Force browser to re-ask for Basic Auth by redirecting
+    window.location.href = '/admin';
+    return;
+  }
+  const data = await res.json();
+  _adminToken = data.token;
+  sessionStorage.setItem('vhs_admin_token', _adminToken);
+  return _adminToken;
+}
+
+async function adminFetch(url, opts = {}) {
+  if (!_adminToken) await getAdminToken();
+  const headers = { 'X-Admin-Token': _adminToken, ...(opts.headers || {}) };
+  const res = await fetch(url, { ...opts, headers, credentials: 'include' });
+  if (res.status === 401) {
+    sessionStorage.removeItem('vhs_admin_token');
+    _adminToken = '';
+    window.location.href = '/admin';
+    return res;
+  }
+  return res;
 }
 
 async function loadPatients() {
+  // First get admin token, then load data
   try {
-    const res = await fetch('/api/admin/patients');
-    if (!res.ok) throw new Error('Failed to load');
-    allPatients = await res.json();
-    renderAll();
+    if (!_adminToken) await getAdminToken();
   } catch(e) {
-    document.getElementById('records-body').innerHTML =
-      '<tr><td colspan="21"><div class="empty-state"><p>Failed to load records. Please refresh.</p></div></td></tr>';
+    return; // getAdminToken redirects on failure
+  }
+  try {
+    const res = await adminFetch('/api/admin/patients');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    allPatients = await res.json();
+    renderStats();
+    renderGrouped();
+    renderTable();
+  } catch(e) {
+    console.error('Load error:', e);
+    document.getElementById('patients-grid').innerHTML =
+      '<div class="empty-state"><p style="color:var(--brand)">Failed to load records: ' + e.message + '. Please refresh the page.</p></div>';
+    // Reset stats to show 0
+    ['st-patients','st-total','st-today','st-avg','st-attention'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = 'Error';
+    });
   }
 }
 
-function renderAll() {
+// ── Stats ──────────────────────────────────────────────────────
+function renderStats() {
   const total = allPatients.length;
   const today = allPatients.filter(p => new Date(p.created_at).toDateString() === new Date().toDateString()).length;
   const scores = allPatients.filter(p => p.vhs_score > 0).map(p => p.vhs_score);
-  const avgScore = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
-  const needsAttention = allPatients.filter(p => p.vhs_score > 0 && p.vhs_score < 60).length;
+  const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+  const attention = allPatients.filter(p => p.vhs_score > 0 && p.vhs_score < 60).length;
 
+  // Unique patients by name
+  const uniqueNames = new Set(allPatients.map(p => (p.name||'').toLowerCase().trim()));
+  document.getElementById('st-patients').textContent = uniqueNames.size;
   document.getElementById('st-total').textContent = total;
   document.getElementById('st-today').textContent = today;
-  document.getElementById('st-moderate').textContent = avgScore || '—';
-  document.getElementById('st-severe').textContent = needsAttention;
-  document.getElementById('record-count').textContent = total + ' record' + (total !== 1 ? 's' : '');
+  document.getElementById('st-avg').textContent = avg || '—';
+  document.getElementById('st-attention').textContent = attention;
+}
 
-  const tbody = document.getElementById('records-body');
+// ── Grouped patient view ───────────────────────────────────────
+function groupByPatient(records) {
+  const map = new Map();
+  records.forEach(p => {
+    const key = (p.name||'Unknown').toLowerCase().trim();
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(p);
+  });
+  // Sort each patient's visits by date ascending
+  map.forEach((visits, key) => {
+    visits.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  });
+  return map;
+}
 
-  if (total === 0) {
-    tbody.innerHTML = '<tr><td colspan="21"><div class="empty-state"><p>No records yet.</p></div></td></tr>';
+function vhsClass(score) {
+  if (score >= 90) return 'vhs-excellent';
+  if (score >= 75) return 'vhs-good';
+  if (score >= 60) return 'vhs-fair';
+  if (score >= 40) return 'vhs-attention';
+  return 'vhs-poor';
+}
+
+function vhsLabel(score) {
+  if (score >= 90) return 'Excellent';
+  if (score >= 75) return 'Good';
+  if (score >= 60) return 'Fair';
+  if (score >= 40) return 'Needs Attention';
+  if (score > 0) return 'Poor';
+  return '—';
+}
+
+function trendArrow(visits) {
+  if (visits.length < 2) return '<span class="trend-flat">—</span>';
+  const scores = visits.filter(v=>v.vhs_score>0).map(v=>v.vhs_score);
+  if (scores.length < 2) return '<span class="trend-flat">—</span>';
+  const diff = scores[scores.length-1] - scores[0];
+  if (diff > 2) return '<span class="trend-up">↑ +' + diff + '</span>';
+  if (diff < -2) return '<span class="trend-down">↓ ' + diff + '</span>';
+  return '<span class="trend-flat">→ stable</span>';
+}
+
+function makeSVGSparkline(visits) {
+  const scores = visits.filter(v=>v.vhs_score>0).map(v=>v.vhs_score);
+  if (scores.length < 2) return '';
+  const W=200, H=40, pad=4;
+  const min=Math.max(0,Math.min(...scores)-10);
+  const max=Math.min(100,Math.max(...scores)+10);
+  const range=max-min||1;
+  const pts = scores.map((s,i) => {
+    const x = pad + (i/(scores.length-1))*(W-pad*2);
+    const y = H-pad - ((s-min)/range)*(H-pad*2);
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  const color = scores[scores.length-1] >= 75 ? '#059669' : scores[scores.length-1] >= 60 ? '#b45309' : '#dc2626';
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    ${scores.map((s,i)=>{
+      const x=pad+(i/(scores.length-1))*(W-pad*2);
+      const y=H-pad-((s-min)/range)*(H-pad*2);
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${color}"/>`;
+    }).join('')}
+  </svg>`;
+}
+
+let patientGroups = new Map();
+
+function renderGrouped() {
+  patientGroups = groupByPatient(allPatients);
+  const grid = document.getElementById('patients-grid');
+  if (patientGroups.size === 0) {
+    grid.innerHTML = '<div class="empty-state"><p>No patient records yet.</p></div>';
+    document.getElementById('patient-count').textContent = '0 patients';
     return;
   }
+  document.getElementById('patient-count').textContent = patientGroups.size + ' patient' + (patientGroups.size !== 1 ? 's' : '');
+  grid.innerHTML = '';
+  for (const [key, visits] of patientGroups) {
+    const latest = visits[visits.length-1];
+    const name = latest.name || 'Unknown';
+    const initials = name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2)||'?';
+    const latestScore = visits.filter(v=>v.vhs_score>0).map(v=>v.vhs_score).pop() || 0;
+    const sparkline = makeSVGSparkline(visits);
+    const card = document.createElement('div');
+    card.className = 'patient-card';
+    card.dataset.name = key;
+    card.innerHTML = `
+      <div class="patient-card-header">
+        <div class="patient-avatar">${initials}</div>
+        <div>
+          <div class="patient-card-name">${esc(name)}</div>
+          <div class="patient-card-meta">${visits.length} visit${visits.length!==1?'s':''} · ${esc(latest.age||'')} ${esc(latest.gender||'')}</div>
+        </div>
+      </div>
+      <div class="patient-card-stats">
+        <div class="pstat">
+          <div class="pstat-val">${latestScore||'—'}</div>
+          <div class="pstat-lbl">Latest VHS</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val">${trendArrow(visits)}</div>
+          <div class="pstat-lbl">Trend</div>
+        </div>
+        <div class="pstat">
+          <div class="pstat-val"><span class="vhs-badge ${vhsClass(latestScore)}">${vhsLabel(latestScore)}</span></div>
+          <div class="pstat-lbl">Status</div>
+        </div>
+      </div>
+      ${sparkline ? '<div class="sparkline">' + sparkline + '</div>' : ''}
+    `;
+    card.addEventListener('click', () => openProfile(key));
+    grid.appendChild(card);
+  }
+}
 
+function filterPatients(q) {
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.patient-card').forEach(card => {
+    card.style.display = (!q || card.dataset.name.includes(q) || card.textContent.toLowerCase().includes(q)) ? '' : 'none';
+  });
+}
+
+// ── Patient profile modal ──────────────────────────────────────
+function openProfile(patientKey) {
+  const visits = patientGroups.get(patientKey);
+  if (!visits || visits.length === 0) return;
+  const latest = visits[visits.length-1];
+  const name = latest.name || 'Unknown';
+  const scores = visits.filter(v=>v.vhs_score>0).map(v=>v.vhs_score);
+  const firstScore = scores[0] || 0;
+  const lastScore = scores[scores.length-1] || 0;
+  const diff = lastScore - firstScore;
+
+  document.getElementById('profile-name').textContent = name;
+  document.getElementById('profile-meta').textContent =
+    visits.length + ' visit' + (visits.length!==1?'s':'') +
+    ' · ' + (latest.age ? latest.age + ' yrs' : '') +
+    (latest.gender ? ' · ' + latest.gender : '') +
+    (latest.phone ? ' · ' + latest.phone : '');
+
+  const body = document.getElementById('profile-body');
+
+  // Summary stats
+  const avgScore = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+  let progressMsg = '';
+  if (scores.length >= 2) {
+    progressMsg = diff > 0 ? `VHS improved from ${firstScore} to ${lastScore} over ${visits.length} visits` :
+                  diff < 0 ? `VHS declined from ${firstScore} to ${lastScore} over ${visits.length} visits` :
+                  `VHS stable at ${lastScore} over ${visits.length} visits`;
+  }
+
+  body.innerHTML = `
+    <div class="profile-summary">
+      <div class="profile-stat"><div class="profile-stat-val" style="color:${scoreColor(lastScore)}">${lastScore||'—'}</div><div class="profile-stat-lbl">Latest VHS</div></div>
+      <div class="profile-stat"><div class="profile-stat-val">${avgScore||'—'}</div><div class="profile-stat-lbl">Avg VHS</div></div>
+      <div class="profile-stat"><div class="profile-stat-val">${visits.length}</div><div class="profile-stat-lbl">Total Visits</div></div>
+      <div class="profile-stat"><div class="profile-stat-val">${diff>0?'↑ +'+diff:diff<0?'↓ '+diff:'→'}</div><div class="profile-stat-lbl">Progress</div></div>
+    </div>
+    ${progressMsg ? `<div style="font-size:13px;color:var(--ink-3);margin-bottom:14px;padding:10px 14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)">${progressMsg}</div>` : ''}
+    ${scores.length >= 2 ? `<div class="sparkline-wrap"><div class="sparkline-title">VHS Score Over Time</div>${makeSVGSparkline(visits)}</div>` : ''}
+    <div class="visits-list">
+      ${[...visits].reverse().map((v, i) => `
+        <div class="visit-card">
+          <div class="visit-header">
+            <div>
+              <span style="font-weight:600;font-size:13px">Visit ${visits.length - i}</span>
+              <span class="visit-date"> · ${new Date(v.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+              ${v.submittedBy ? '<span style="font-size:11px;color:var(--ink-4);margin-left:6px">by ' + esc(v.submittedBy) + '</span>' : ''}
+            </div>
+            <div class="visit-score">
+              <strong style="font-size:16px;color:${scoreColor(v.vhs_score)}">${v.vhs_score||'—'}</strong>
+              <span class="vhs-badge ${vhsClass(v.vhs_score)}">${vhsLabel(v.vhs_score)}</span>
+            </div>
+          </div>
+          ${v.summary ? `<div class="visit-body">${esc(v.summary)}</div>` : ''}
+          ${v.key_health_concerns ? `<div style="font-size:12px;color:var(--ink-3);margin-top:6px"><strong>Key concerns:</strong> ${esc(v.key_health_concerns)}</div>` : ''}
+          <div class="visit-risks">
+            ${riskChip('CV', v.risk_cardiovascular)}
+            ${riskChip('Met', v.risk_metabolic)}
+            ${riskChip('Liver', v.risk_liver)}
+            ${riskChip('Kidney', v.risk_kidney)}
+            ${riskChip('Inflam', v.risk_inflammation)}
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+  document.getElementById('profile-overlay').classList.add('open');
+}
+
+function riskChip(label, score) {
+  if (!score) return '';
+  return `<span class="risk-chip r${score}">${label}: ${score}</span>`;
+}
+
+function scoreColor(s) {
+  if (s >= 90) return '#059669';
+  if (s >= 75) return '#2563eb';
+  if (s >= 60) return '#b45309';
+  return '#dc2626';
+}
+
+function closeProfile() { document.getElementById('profile-overlay').classList.remove('open'); }
+
+// ── Flat table view ────────────────────────────────────────────
+function renderTable() {
+  const total = allPatients.length;
+  document.getElementById('record-count').textContent = total + ' record' + (total!==1?'s':'');
+  const tbody = document.getElementById('records-body');
   tbody.innerHTML = '';
+  if (total === 0) {
+    tbody.innerHTML = '<tr><td colspan="23"><div class="empty-state"><p>No records yet.</p></div></td></tr>';
+    return;
+  }
   allPatients.forEach((p, idx) => {
     const tr = document.createElement('tr');
     tr.dataset.idx = idx;
-    tr.dataset.id = String(p.id || '');
+    tr.dataset.id = String(p.id||'');
 
     // Checkbox
-    const tdCheck = document.createElement('td');
-    tdCheck.style.cssText = 'width:36px;text-align:center';
+    const tdCb = document.createElement('td');
+    tdCb.style.cssText = 'width:36px;text-align:center';
     const cb = document.createElement('input');
-    cb.type = 'checkbox';
-    cb.className = 'row-check';
+    cb.type = 'checkbox'; cb.className = 'row-check';
     cb.style.cssText = 'width:16px;height:16px;accent-color:var(--brand);cursor:pointer';
     cb.addEventListener('change', updateSelectionBar);
-    tdCheck.appendChild(cb);
-    tr.appendChild(tdCheck);
+    tdCb.appendChild(cb); tr.appendChild(tdCb);
 
-    // All data cells
-    const riskLabel = s => ['','Very Low','Low','Moderate','High','Very High'][s||0] || '—';
-    const riskColor = s => ['','#059669','#65a30d','#b45309','#dc2626','#7f1d1d'][s||0] || 'var(--ink-4)';
-
-    const makeTd = (val, style) => {
+    const makeTd = (val, style) => { const td=document.createElement('td'); if(style)td.style.cssText=style; td.textContent=val||'—'; return td; };
+    const makeWrapTd = (val) => {
       const td = document.createElement('td');
-      if(style) td.style.cssText = style;
-      td.textContent = val || '—';
-      return td;
-    };
-    const makeTdHtml = (html, style) => {
-      const td = document.createElement('td');
-      if(style) td.style.cssText = style;
-      td.innerHTML = html;
-      return td;
-    };
-    const makeWrapTd = (val, maxW) => {
-      const td = document.createElement('td');
-      td.style.cssText = 'max-width:' + maxW + 'px;vertical-align:middle';
-      if (!val || val === '—') {
-        td.textContent = '—';
-        td.style.color = 'var(--ink-4)';
-        return td;
-      }
-      // Show truncated text + expand button
-      const LIMIT = 60;
-      const preview = val.length > LIMIT ? val.slice(0, LIMIT) + '…' : val;
+      if (!val||val==='—') { td.textContent='—'; td.style.color='var(--ink-4)'; return td; }
+      const LIMIT=60;
+      const preview = val.length>LIMIT ? val.slice(0,LIMIT)+'…' : val;
       const wrap = document.createElement('div');
-      wrap.style.cssText = 'display:flex;align-items:flex-start;gap:4px';
+      wrap.style.cssText='display:flex;align-items:flex-start;gap:4px';
       const span = document.createElement('span');
-      span.style.cssText = 'font-size:12px;color:var(--ink-3);line-height:1.4';
-      span.textContent = preview;
+      span.style.cssText='font-size:12px;color:var(--ink-3);line-height:1.4';
+      span.textContent=preview;
       wrap.appendChild(span);
-      if (val.length > LIMIT) {
-        const btn = document.createElement('button');
-        btn.style.cssText = 'flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--brand);font-size:10px;padding:0;margin-top:1px;white-space:nowrap';
-        btn.textContent = '展开';
-        btn.addEventListener('click', () => openModal('详情', val));
+      if (val.length>LIMIT) {
+        const btn=document.createElement('button');
+        btn.className='expand-btn';btn.textContent='展开';
+        btn.addEventListener('click',()=>openModal(p.name,val));
         wrap.appendChild(btn);
       }
-      td.appendChild(wrap);
-      return td;
+      td.appendChild(wrap); return td;
     };
 
-    tr.appendChild(makeTd(String(p.id||'').slice(-6), 'color:var(--ink-4);font-size:12px'));
-    // Name bold
-    const tdName = document.createElement('td');
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'patient-name';
-    nameSpan.textContent = p.name||'';
-    tdName.appendChild(nameSpan);
-    tr.appendChild(tdName);
-    tr.appendChild(makeTd(p.phone||'', 'color:var(--ink-3)'));
-    tr.appendChild(makeTd(p.age||'', 'color:var(--ink-3)'));
-    tr.appendChild(makeTd(p.gender||'', 'color:var(--ink-3)'));
-    tr.appendChild(makeTd(p.detected_languages||'', 'color:var(--ink-3);font-size:12px'));
-    tr.appendChild(makeWrapTd(p.complaint, 140));
-    tr.appendChild(makeWrapTd(p.notes, 140));
+    tr.appendChild(makeTd(String(p.id||'').slice(-6),'color:var(--ink-4);font-size:12px'));
+    const tdName=document.createElement('td');
+    const ns=document.createElement('span');ns.className='patient-name';ns.textContent=p.name||'';
+    tdName.appendChild(ns);tr.appendChild(tdName);
+    tr.appendChild(makeTd(p.submittedBy||'','color:var(--ink-3);font-size:12px'));
+    tr.appendChild(makeTd(p.phone||'','color:var(--ink-3)'));
+    tr.appendChild(makeTd(p.age||'','color:var(--ink-3)'));
+    tr.appendChild(makeTd(p.gender||'','color:var(--ink-3)'));
+    tr.appendChild(makeTd(p.detected_languages||'','color:var(--ink-3);font-size:12px'));
+    tr.appendChild(makeWrapTd(p.complaint));
+    tr.appendChild(makeWrapTd(p.notes));
 
     // VHS Score
-    const vScore = p.vhs_score || 0;
-    const vColor = vScore >= 90 ? '#059669' : vScore >= 75 ? '#2563eb' : vScore >= 60 ? '#b45309' : vScore >= 40 ? '#dc2626' : '#7f1d1d';
-    const vLabel = p.vhs_label || (vScore >= 90 ? 'Excellent' : vScore >= 75 ? 'Good' : vScore >= 60 ? 'Fair' : vScore >= 40 ? 'Needs Attention' : vScore > 0 ? 'Poor' : '—');
-    tr.appendChild(makeTdHtml('<strong style="font-size:15px;color:' + vColor + '">' + (vScore||'—') + '</strong> <span style="font-size:11px;color:' + vColor + ';font-weight:600">' + vLabel + '</span>'));
+    const vScore=p.vhs_score||0;
+    const vColor=scoreColor(vScore);
+    const tdV=document.createElement('td');
+    tdV.innerHTML=`<strong style="font-size:15px;color:${vColor}">${vScore||'—'}</strong> <span style="font-size:11px;color:${vColor};font-weight:600">${vhsLabel(vScore)}</span>`;
+    tr.appendChild(tdV);
 
-    tr.appendChild(makeWrapTd(p.key_health_concerns, 180));
+    tr.appendChild(makeWrapTd(p.key_health_concerns));
 
     // Risk scores
-    ['risk_cardiovascular','risk_metabolic','risk_liver','risk_kidney','risk_inflammation'].forEach(k => {
-      const s = p[k] || 0;
-      tr.appendChild(makeTdHtml(s ? '<span style="color:' + riskColor(s) + ';font-weight:600">' + s + ' <span style=\'font-size:10px\'>' + riskLabel(s) + '</span></span>' : '—'));
+    const riskLabel=s=>['','Very Low','Low','Moderate','High','Very High'][s||0]||'—';
+    const riskColor=s=>['','#059669','#65a30d','#b45309','#dc2626','#7f1d1d'][s||0]||'var(--ink-4)';
+    ['risk_cardiovascular','risk_metabolic','risk_liver','risk_kidney','risk_inflammation'].forEach(k=>{
+      const s=p[k]||0;
+      const td=document.createElement('td');
+      td.innerHTML=s?`<span style="color:${riskColor(s)};font-weight:600">${s}</span>`:'-';
+      tr.appendChild(td);
     });
 
-    tr.appendChild(makeWrapTd(p.nutrition, 150));
-    tr.appendChild(makeWrapTd(p.lifestyle, 150));
-    tr.appendChild(makeWrapTd(p.supplements, 150));
-    tr.appendChild(makeWrapTd(p.monitoring_plan, 150));
+    tr.appendChild(makeWrapTd(p.nutrition));
+    tr.appendChild(makeWrapTd(p.lifestyle));
+    tr.appendChild(makeWrapTd(p.supplements));
+    tr.appendChild(makeWrapTd(p.monitoring_plan));
 
-    // Summary — use DOM, never HTML string with patient data
-    const tdSum = document.createElement('td');
-    if (p.summary) {
-      const btn = document.createElement('button');
-      btn.className = 'summary-btn';
-      btn.addEventListener('click', () => openModal(p.name, p.summary));
-
-      const preview = document.createElement('span');
-      preview.className = 'summary-preview';
-      preview.textContent = p.summary; // textContent — no XSS possible
-
-      const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-      svg.setAttribute('class','expand-ico');
-      svg.setAttribute('width','11');svg.setAttribute('height','11');
-      svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','none');
-      svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','2.5');
-      svg.setAttribute('stroke-linecap','round');
-      svg.innerHTML = '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>';
-
-      btn.appendChild(preview);
-      btn.appendChild(svg);
-      tdSum.appendChild(btn);
-    } else {
-      const dash = document.createElement('span');
-      dash.style.color = 'var(--ink-4)';
-      dash.textContent = '—';
-      tdSum.appendChild(dash);
-    }
+    // Summary
+    const tdSum=document.createElement('td');
+    if(p.summary){
+      const btn=document.createElement('button');btn.className='summary-btn';
+      btn.addEventListener('click',()=>openModal(p.name,p.summary));
+      const prev=document.createElement('span');prev.className='summary-preview';prev.textContent=p.summary;
+      btn.appendChild(prev);tdSum.appendChild(btn);
+    } else {tdSum.textContent='—';tdSum.style.color='var(--ink-4)';}
     tr.appendChild(tdSum);
 
     // Date
-    const tdDate = document.createElement('td');
-    tdDate.style.cssText = 'color:var(--ink-4);font-size:12px;white-space:nowrap';
-    tdDate.textContent = new Date(p.created_at).toLocaleString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const tdDate=document.createElement('td');
+    tdDate.style.cssText='color:var(--ink-4);font-size:12px;white-space:nowrap';
+    tdDate.textContent=new Date(p.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
     tr.appendChild(tdDate);
 
     tbody.appendChild(tr);
   });
 }
 
-// Filter
 function filterTable(q) {
   q = q.toLowerCase().trim();
   document.querySelectorAll('#records-body tr').forEach(row => {
@@ -422,7 +714,16 @@ function filterTable(q) {
   });
 }
 
-// Select all
+// ── View toggle ────────────────────────────────────────────────
+function setView(view) {
+  currentView = view;
+  document.getElementById('view-grouped').style.display = view==='grouped' ? '' : 'none';
+  document.getElementById('view-all').style.display = view==='all' ? '' : 'none';
+  document.getElementById('btn-grouped').classList.toggle('active', view==='grouped');
+  document.getElementById('btn-all').classList.toggle('active', view==='all');
+}
+
+// ── Selection ──────────────────────────────────────────────────
 function toggleAll(checked) {
   document.querySelectorAll('.row-check').forEach(cb => {
     if (cb.closest('tr').style.display !== 'none') cb.checked = checked;
@@ -433,103 +734,78 @@ function updateSelectionBar() {
   const all = document.querySelectorAll('.row-check');
   const checked = document.querySelectorAll('.row-check:checked');
   const cb = document.getElementById('select-all-check');
-  cb.indeterminate = checked.length > 0 && checked.length < all.length;
-  cb.checked = all.length > 0 && checked.length === all.length;
-  // Enable/disable delete button
+  if (cb) { cb.indeterminate = checked.length>0&&checked.length<all.length; cb.checked = all.length>0&&checked.length===all.length; }
   const delBtn = document.getElementById('del-btn');
-  if (delBtn) delBtn.disabled = checked.length === 0;
+  if (delBtn) delBtn.disabled = checked.length===0;
 }
 
-// Summary modal
-function openModal(name, summary) {
+// ── Modals ─────────────────────────────────────────────────────
+function openModal(name, text) {
   document.getElementById('modal-patient').textContent = name;
-  document.getElementById('modal-body').textContent = summary;
-  const overlay = document.getElementById('modal-overlay');
-  overlay.classList.add('open');
-  overlay.querySelector('.modal-close').focus();
+  document.getElementById('modal-body').textContent = text;
+  document.getElementById('modal-overlay').classList.add('open');
 }
 function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 
-// Download panel
 function openDownloadPanel() {
-  const visibleRows = document.querySelectorAll('#records-body tr:not([style*="display: none"])');
-  const selected = document.querySelectorAll('.row-check:checked');
-  document.getElementById('dl-all-count').textContent = visibleRows.length + ' record' + (visibleRows.length !== 1 ? 's' : '');
-  document.getElementById('dl-sel-count').textContent = selected.length + ' record' + (selected.length !== 1 ? 's' : '') + ' selected';
+  const visible = document.querySelectorAll('#records-body tr:not([style*="display: none"])');
+  const sel = document.querySelectorAll('.row-check:checked');
+  document.getElementById('dl-all-count').textContent = visible.length + ' record' + (visible.length!==1?'s':'');
+  document.getElementById('dl-sel-count').textContent = sel.length + ' record' + (sel.length!==1?'s':'') + ' selected';
   const selBtn = document.getElementById('dl-sel-btn');
-  selBtn.disabled = selected.length === 0;
+  selBtn.disabled = sel.length === 0;
   document.getElementById('dl-overlay').classList.add('open');
 }
 function closeDL() { document.getElementById('dl-overlay').classList.remove('open'); }
 
 function doDownload(mode) {
-  const headers = ['ID','Name','Phone','Age','Gender','Complaint','Severity','Summary','Date'];
+  const headers = ['ID','Name','SubmittedBy','Phone','Age','Gender','Language','Complaint','Notes','VHS Score','Key Concerns','CV','Met','Liver','Kidney','Inflam','Nutrition','Lifestyle','Supplements','Monitoring','Summary','Date'];
   let rows;
-  if (mode === 'all') {
-    rows = Array.from(document.querySelectorAll('#records-body tr:not([style*="display: none"])'));
-  } else {
-    rows = Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.closest('tr'));
-  }
-  const csvLines = [headers.map(h => '"' + h + '"').join(',')];
+  if (mode==='all') rows = document.querySelectorAll('#records-body tr:not([style*="display: none"])');
+  else rows = Array.from(document.querySelectorAll('.row-check:checked')).map(cb=>cb.closest('tr'));
+  const csvLines = [headers.map(h=>'"'+h+'"').join(',')];
   rows.forEach(row => {
     const cells = Array.from(row.querySelectorAll('td')).slice(1);
-    csvLines.push(cells.map(td => '"' + td.textContent.replace(/\s+/g,' ').trim().replace(/"/g,'""') + '"').join(','));
+    csvLines.push(cells.map(td=>'"'+td.textContent.replace(/\s+/g,' ').trim().replace(/"/g,'""')+'"').join(','));
   });
-  const blob = new Blob([csvLines.join('\n')], {type:'text/csv'});
+  const blob = new Blob([csvLines.join('\n')],{type:'text/csv'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'bloodrx-' + mode + '-' + new Date().toISOString().slice(0,10) + '.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-  closeDL();
+  const a = document.createElement('a'); a.href=url; a.download='vandlvhs-'+mode+'-'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+  URL.revokeObjectURL(url); closeDL();
 }
 
-document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDL();closeDeleteConfirm();} });
-
-// ── Delete records ──
 function openDeleteConfirm() {
   const checked = document.querySelectorAll('.row-check:checked');
-  if (checked.length === 0) return;
-  document.getElementById('del-confirm-msg').textContent =
-    'Are you sure you want to permanently delete ' + checked.length + ' record' + (checked.length !== 1 ? 's' : '') + '? This cannot be undone.';
+  if (!checked.length) return;
+  document.getElementById('del-confirm-msg').textContent = 'Are you sure you want to permanently delete ' + checked.length + ' record' + (checked.length!==1?'s':'') + '? This cannot be undone.';
   document.getElementById('del-overlay').classList.add('open');
 }
-function closeDeleteConfirm() {
-  document.getElementById('del-overlay').classList.remove('open');
-}
+function closeDeleteConfirm() { document.getElementById('del-overlay').classList.remove('open'); }
 
 async function doDelete() {
   closeDeleteConfirm();
   const checked = Array.from(document.querySelectorAll('.row-check:checked'));
-  // Get record IDs from the row data
-  const ids = checked.map(cb => {
-    const row = cb.closest('tr');
-    return row ? row.dataset.id : null;
-  }).filter(Boolean);
-
-  if (ids.length === 0) return;
-
+  const ids = checked.map(cb => cb.closest('tr').dataset.id).filter(Boolean);
+  if (!ids.length) return;
   try {
-    const resp = await fetch('/api/admin/patients/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ids })
-    });
+    const resp = await adminFetch('/api/admin/patients/delete', { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Token':_adminToken}, body:JSON.stringify({ids}) });
     const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error || 'Delete failed');
-    // Remove deleted rows from table
+    if (!resp.ok) throw new Error(data.error||'Delete failed');
     checked.forEach(cb => cb.closest('tr').remove());
-    // Update stats
     const remaining = document.querySelectorAll('#records-body tr').length;
-    document.getElementById('record-count').textContent = remaining + ' record' + (remaining !== 1 ? 's' : '');
+    document.getElementById('record-count').textContent = remaining + ' record' + (remaining!==1?'s':'');
     updateSelectionBar();
-  } catch(e) {
-    alert('Delete failed: ' + e.message);
-  }
+    // Reload grouped view
+    allPatients = allPatients.filter(p => !ids.includes(String(p.id)));
+    renderStats(); renderGrouped();
+  } catch(e) { alert('Delete failed: ' + e.message); }
 }
 
-// Load on page ready
+// ── Escape HTML ────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDL();closeDeleteConfirm();closeProfile();} });
+
 loadPatients();
 </script>
 </body>
