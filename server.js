@@ -316,8 +316,11 @@ app.post("/api/auth/register", authLimit, async (req, res) => {
     };
     await db.collection("users").insertOne(user);
 
-    const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: "30d" });
-    res.cookie("vhs_token", token, { httpOnly: true, secure: true, sameSite: "lax", maxAge: 30*24*60*60*1000 });
+    const rememberMe = req.body.rememberMe !== false;
+    const expiresIn = rememberMe ? "30d" : "1d";
+    const maxAge = rememberMe ? 30*24*60*60*1000 : 24*60*60*1000;
+    const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn });
+    res.cookie("vhs_token", token, { httpOnly: true, secure: true, sameSite: "lax", maxAge });
     res.json({ ok: true, user: { username: user.username, email: user.email } });
   } catch(e) {
     console.error("Register error:", e.message);
@@ -338,8 +341,11 @@ app.post("/api/auth/login", authLimit, async (req, res) => {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) return res.status(401).json({ error: "Invalid email or password." });
 
-    const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn: "30d" });
-    res.cookie("vhs_token", token, { httpOnly: true, secure: true, sameSite: "lax", maxAge: 30*24*60*60*1000 });
+    const rememberMe = req.body.rememberMe !== false;
+    const expiresIn = rememberMe ? "30d" : "1d";
+    const maxAge = rememberMe ? 30*24*60*60*1000 : 24*60*60*1000;
+    const token = jwt.sign({ id: user.id, username: user.username, email: user.email }, JWT_SECRET, { expiresIn });
+    res.cookie("vhs_token", token, { httpOnly: true, secure: true, sameSite: "lax", maxAge });
     res.json({ ok: true, user: { username: user.username, email: user.email } });
   } catch(e) {
     console.error("Login error:", e.message);
