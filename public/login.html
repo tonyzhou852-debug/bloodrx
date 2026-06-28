@@ -86,6 +86,9 @@ input::placeholder{color:var(--ink-4)}
 
 .footer-note{text-align:center;font-size:12px;color:var(--ink-4);margin-top:20px}
 .footer-note a{color:var(--ink-3)}
+.remember-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;margin-top:-4px}
+.remember-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:pointer;flex-shrink:0}
+.remember-row label{font-size:13px;color:var(--ink-3);cursor:pointer;margin:0;font-weight:400}
 </style>
 </head>
 <body>
@@ -116,6 +119,10 @@ input::placeholder{color:var(--ink-4)}
       <div class="form-group">
         <label for="login-password">Password</label>
         <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div class="remember-row">
+        <input type="checkbox" id="remember-me" checked>
+        <label for="remember-me">Remember me for 30 days</label>
       </div>
       <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
 
@@ -206,7 +213,7 @@ async function doLogin() {
     const resp = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe: document.getElementById('remember-me').checked }),
       credentials: 'include',
     });
     const data = await resp.json();
