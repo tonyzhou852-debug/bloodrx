@@ -269,7 +269,11 @@ tbody tr:hover td{background:#fafafa}
       <button class="modal-close" onclick="closeProfile()">&#x2715;</button>
     </div>
     <div class="modal-body" id="profile-body"></div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn-danger" id="profile-del-btn" onclick="deletePatientProfile()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="margin-right:5px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        Delete All Records for This Patient
+      </button>
       <button class="btn-cancel" onclick="closeProfile()">Close</button>
     </div>
   </div>
@@ -527,6 +531,7 @@ function filterPatients(q) {
 
 // ── Patient profile modal ──────────────────────────────────────
 function openProfile(patientKey) {
+  _currentProfileKey = patientKey;
   const visits = patientGroups.get(patientKey);
   if (!visits || visits.length === 0) return;
   const latest = visits[visits.length-1];
@@ -605,6 +610,33 @@ function scoreColor(s) {
 }
 
 function closeProfile() { document.getElementById('profile-overlay').classList.remove('open'); }
+
+// Track which patient is currently open
+let _currentProfileKey = null;
+
+function deletePatientProfile() {
+  if (!_currentProfileKey || !patientGroups.has(_currentProfileKey)) return;
+  const visits = patientGroups.get(_currentProfileKey);
+  const name = visits[visits.length-1].name || 'Unknown';
+  if (!confirm('Permanently delete ALL ' + visits.length + ' record(s) for ' + name + '? This cannot be undone.')) return;
+  const ids = visits.map(v => String(v.id)).filter(Boolean);
+  adminFetch('/api/admin/patients/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': _adminToken },
+    body: JSON.stringify({ ids })
+  }).then(r => r.json()).then(data => {
+    if (data.deleted !== undefined) {
+      // Remove from allPatients and re-render
+      allPatients = allPatients.filter(p => !ids.includes(String(p.id)));
+      closeProfile();
+      renderStats();
+      renderGrouped();
+      renderTable();
+    } else {
+      alert('Delete failed: ' + (data.error || 'Unknown error'));
+    }
+  }).catch(e => alert('Delete failed: ' + e.message));
+}
 
 // ── Flat table view ────────────────────────────────────────────
 function renderTable() {
