@@ -383,27 +383,59 @@ app.get("/auth/google/callback",
 );
 
 // ══════════════════════════════════════════════════════════════
-// ANALYSIS (requires login)
+// ANALYSIS with SSE streaming (requires login)
 // ══════════════════════════════════════════════════════════════
 app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalysis, async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(500).json({ error:"Server configuration error." });
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{ "Content-Type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01" },
       body: JSON.stringify({
-        model:"claude-sonnet-4-6", max_tokens:8096,
-        system:"You are a corporate health and wellness analyst. Return ONLY a valid JSON object. Keep findings to 10 most important markers. Keep all text fields under 200 characters. Never truncate JSON. Do NOT include medication names, antibiotic recommendations, or prescriptions.",
+        model:"claude-sonnet-4-6", max_tokens:8000, stream:true,
+        system:"You are a health wellness analyst. Return ONLY a single complete valid JSON object. Include all findings. Keep text fields under 200 chars each. Never truncate JSON. No medication names or prescriptions.",
         messages:req.body.messages,
       }),
     });
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error:"Analysis service error." });
-    // Save to DB
-    const text = data.content.map(b=>b.text||"").join("");
+    if (!upstream.ok) {
+      const err = await upstream.json().catch(()=>({}));
+      return res.status(upstream.status).json({ error:"Analysis service error." });
+    }
+    // Set up SSE streaming
+    res.setHeader("Content-Type","text/event-stream");
+    res.setHeader("Cache-Control","no-cache");
+    res.setHeader("Connection","keep-alive");
+    res.setHeader("X-Accel-Buffering","no");
+    res.flushHeaders();
+
+    let fullText = "";
+    const reader = upstream.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream:true });
+      for (const line of chunk.split("\n")) {
+        if (!line.startsWith("data:")) continue;
+        const raw = line.slice(5).trim();
+        if (raw === "[DONE]") continue;
+        try {
+          const ev = JSON.parse(raw);
+          if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") {
+            fullText += ev.delta.text;
+            res.write("data:" + JSON.stringify({ t: ev.delta.text }) + "\n\n");
+          } else if (ev.type === "message_stop") {
+            res.write("data:" + JSON.stringify({ done: true }) + "\n\n");
+          }
+        } catch(e) { /* skip */ }
+      }
+    }
+
+    // Non-blocking DB save after streaming finishes
     try {
-      const result = JSON.parse(text.replace(/```json|```/g,"").trim());
+      const result = JSON.parse(fullText.replace(/```json|```/g,"").trim());
       const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
       const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
       const record = {
@@ -427,11 +459,15 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
         monitoring_plan: sanitize(result.monitoring_plan),
         ip: req.ip||"", created_at: new Date().toISOString(),
       };
-      const db = await getDB();
-      await db.collection("patients").insertOne(record);
-    } catch(e) { console.log("DB save error:", e.message); }
-    res.json(data);
-  } catch(e) { console.error("Analysis error:", e.message); res.status(500).json({ error:"Server error." }); }
+      getDB().then(db => db.collection("patients").insertOne(record)).catch(e => console.log("DB save error:", e.message));
+    } catch(e) { console.log("DB parse error:", e.message); }
+
+    res.end();
+  } catch(e) {
+    console.error("Analysis error:", e.message);
+    if (!res.headersSent) res.status(500).json({ error:"Server error." });
+    else res.end();
+  }
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -526,7 +562,7 @@ app.post("/api/translate", requireAuth, globalLimit, translateLimit, async (req,
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{ "Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01" },
-      body:JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:3000, system:"You are a professional medical translator. Return ONLY valid JSON with same keys. Keep medical marker names in English.", messages:[{ role:"user", content:"Translate all values to "+targetLang+". Return only valid JSON:\n"+JSON.stringify(safe) }] }),
+      body:JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:1500, system:"Medical translator. Return ONLY valid JSON same keys. Keep marker names in English.", messages:[{ role:"user", content:"Translate all values to "+targetLang+". Return only valid JSON:\n"+JSON.stringify(safe) }] }),
     });
     const data = await r.json();
     if (!r.ok) return res.status(500).json({ error:"Translation failed." });
