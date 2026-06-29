@@ -193,6 +193,10 @@ tbody tr:hover td{background:#fafafa}
 .chart-legend-item{display:flex;align-items:center;gap:5px}
 .chart-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 
+/* Clickable table rows */
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:#fef7f7}
+
 /* Compact table row cells */
 #records-table td{padding:8px 12px}
 #records-table th{padding:8px 12px}
@@ -666,7 +670,18 @@ function renderVisitCard(v, visitNum, totalVisits) {
     </div>`;
 }
 
-// ── Delete a single visit ──────────────────────────────────────
+// ── Open profile from a single record (fallback if groups not built) ──
+function openSingleRecordProfile(rec) {
+  const key = (rec.name || 'Unknown').toLowerCase().trim();
+  // Build a temporary group just for this patient using allPatients
+  const visits = allPatients
+    .filter(p => (p.name||'Unknown').toLowerCase().trim() === key)
+    .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  if (!patientGroups.has(key)) patientGroups.set(key, visits);
+  openProfile(key);
+}
+
+
 async function deleteVisit(visitId, visitNum, patientKey) {
   if (!confirm(`Delete Visit ${visitNum}? This cannot be undone.`)) return;
 
@@ -808,7 +823,10 @@ function renderTable() {
     tr.appendChild(makeTd(String(p.id||'').slice(-6),'color:var(--ink-4);font-size:12px'));
     const tdName=document.createElement('td');
     const ns=document.createElement('span');ns.className='patient-name';ns.textContent=p.name||'';
-    tdName.appendChild(ns);tr.appendChild(tdName);
+    const hint=document.createElement('span');
+    hint.style.cssText='display:block;font-size:10px;color:var(--ink-4);font-weight:400;margin-top:1px';
+    hint.textContent='Click to view profile';
+    tdName.appendChild(ns);tdName.appendChild(hint);tr.appendChild(tdName);
     tr.appendChild(makeTd(p.submittedBy||'','color:var(--ink-3);font-size:12px'));
     tr.appendChild(makeTd(p.phone||'','color:var(--ink-3)'));
     tr.appendChild(makeTd(p.age||'','color:var(--ink-3)'));
@@ -854,6 +872,22 @@ function renderTable() {
     tr.appendChild(tdDate);
 
     tbody.appendChild(tr);
+
+    // Click row to open patient profile (but not when clicking the checkbox)
+    tr.addEventListener('click', (e) => {
+      if (e.target.type === 'checkbox') return;
+      const rec = allPatients.find(p => String(p.id) === tr.dataset.id);
+      if (!rec) return;
+      const key = (rec.name || 'Unknown').toLowerCase().trim();
+      // Ensure patientGroups is populated (it is if grouped view was rendered)
+      if (patientGroups.size === 0) patientGroups = groupByPatient(allPatients);
+      if (patientGroups.has(key)) {
+        openProfile(key);
+      } else {
+        // Fallback: open a single-record profile for this exact record
+        openSingleRecordProfile(rec);
+      }
+    });
   });
 }
 
