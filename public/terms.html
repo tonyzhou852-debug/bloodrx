@@ -416,11 +416,17 @@ ul li{margin-bottom:6px;line-height:1.65}
 </main>
 
 <!-- Google Translate -->
-<div id="google_translate_element" style="display:none"></div>
+<div id="translate-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#b91c1c;border-radius:50%;animation:spin .7s linear infinite"></div>
+  <p style="font-size:14px;color:#6b7280;font-weight:500" id="translate-overlay-msg">Translating...</p>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
 <script>
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'google_translate_element');
-}
+// Store original page HTML for resetting to English
+let _origHTML = null;
+let _transCache = {};
+let _currentLang = 'en';
 
 function toggleLangMenu() {
   const toggle = document.getElementById('lang-toggle');
@@ -430,42 +436,124 @@ function toggleLangMenu() {
   toggle.setAttribute('aria-expanded', isOpen);
 }
 
-function switchLang(lang, label) {
-  // Update display
-  document.getElementById('lang-current').textContent = label || 'English';
-  document.querySelectorAll('.lang-option').forEach(b => b.classList.remove('active'));
+async function switchLang(lang, label) {
   // Close dropdown
+  document.querySelectorAll('.lang-option').forEach(b => b.classList.remove('active'));
   document.getElementById('lang-dropdown').classList.remove('open');
   document.getElementById('lang-toggle').classList.remove('open');
   document.getElementById('lang-toggle').setAttribute('aria-expanded', 'false');
+  document.getElementById('lang-current').textContent = label;
 
+  if (lang === _currentLang) return;
+
+  // Reset to English
   if (lang === 'en') {
-    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + location.hostname;
-    window.location.reload();
+    if (_origHTML) {
+      document.getElementById('main-content').innerHTML = _origHTML;
+      // Re-attach accordion listeners
+      document.querySelectorAll('.acc-trigger').forEach(t => {
+        t.onclick = function() { toggleAcc(this); };
+      });
+    }
+    _currentLang = 'en';
     return;
   }
-  const select = document.querySelector('select.goog-te-combo');
-  if (select) {
-    select.value = lang;
-    select.dispatchEvent(new Event('change'));
-  } else {
-    document.cookie = 'googtrans=/en/' + lang + '; path=/';
-    document.cookie = 'googtrans=/en/' + lang + '; path=/; domain=.' + location.hostname;
-    window.location.reload();
+
+  // Use cache if available
+  if (_transCache[lang]) {
+    if (!_origHTML) _origHTML = document.getElementById('main-content').innerHTML;
+    document.getElementById('main-content').innerHTML = _transCache[lang];
+    document.querySelectorAll('.acc-trigger').forEach(t => { t.onclick = function() { toggleAcc(this); }; });
+    _currentLang = lang;
+    return;
+  }
+
+  // Save original before first translation
+  if (!_origHTML) _origHTML = document.getElementById('main-content').innerHTML;
+
+  // Show overlay
+  const overlay = document.getElementById('translate-overlay');
+  document.getElementById('translate-overlay-msg').textContent = 'Translating to ' + label + '...';
+  overlay.style.display = 'flex';
+
+  const langNames = {
+    'zh-CN':'Simplified Chinese','zh-TW':'Traditional Chinese',
+    'es':'Spanish','fr':'French','de':'German','it':'Italian',
+    'pt':'Portuguese','ru':'Russian','nl':'Dutch','pl':'Polish',
+    'tr':'Turkish','ar':'Arabic','hi':'Hindi','ja':'Japanese',
+    'ko':'Korean','ms':'Malay','id':'Indonesian','th':'Thai','vi':'Vietnamese'
+  };
+
+  try {
+    // Collect all text nodes from main content (skip buttons/nav)
+    const main = document.getElementById('main-content');
+    const nodes = [];
+    const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const p = node.parentElement;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        const tag = p.tagName.toLowerCase();
+        if (['script','style','button'].includes(tag)) return NodeFilter.FILTER_REJECT;
+        if (p.closest('.lang-wrap') || p.closest('.acc-trigger')) return NodeFilter.FILTER_REJECT;
+        if (node.nodeValue.trim().length < 2) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    let n; while (n = walker.nextNode()) nodes.push({ node: n, orig: n.nodeValue });
+
+    // Batch into chunks ~800 chars each
+    const SEP = ' ||||| ';
+    const chunks = [];
+    let chunk = [], len = 0;
+    for (const item of nodes) {
+      const t = item.orig.trim();
+      if (len + t.length > 800 && chunk.length) { chunks.push(chunk); chunk = [item]; len = t.length; }
+      else { chunk.push(item); len += t.length + SEP.length; }
+    }
+    if (chunk.length) chunks.push(chunk);
+
+    // Translate each chunk
+    for (const grp of chunks) {
+      const query = grp.map(i => i.orig.trim()).join(SEP);
+      const url = 'https://api.mymemory.translated.net/get?q='
+        + encodeURIComponent(query.slice(0, 1800))
+        + '&langpair=en|' + lang
+        + '&de=vandlvhs@health.com';
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) continue;
+        const data = await resp.json();
+        if (data.responseStatus !== 200) continue;
+        const parts = data.responseData.translatedText.split(SEP);
+        grp.forEach((item, i) => {
+          if (parts[i] && parts[i].trim()) item.node.nodeValue = parts[i];
+        });
+      } catch(e) { /* skip failed chunk */ }
+    }
+
+    // Cache result
+    _transCache[lang] = document.getElementById('main-content').innerHTML;
+    _currentLang = lang;
+
+    // Re-attach accordion listeners
+    document.querySelectorAll('.acc-trigger').forEach(t => { t.onclick = function() { toggleAcc(this); }; });
+
+  } catch(e) {
+    console.error('Translation error:', e);
+  } finally {
+    overlay.style.display = 'none';
   }
 }
 
 // Close dropdown when clicking outside
 document.addEventListener('click', e => {
-  if (!document.getElementById('lang-wrap').contains(e.target)) {
+  const wrap = document.getElementById('lang-wrap');
+  if (wrap && !wrap.contains(e.target)) {
     document.getElementById('lang-dropdown').classList.remove('open');
     document.getElementById('lang-toggle').classList.remove('open');
     document.getElementById('lang-toggle').setAttribute('aria-expanded', 'false');
   }
 });
-
-// Close on Escape
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.getElementById('lang-dropdown').classList.remove('open');
@@ -473,13 +561,6 @@ document.addEventListener('keydown', e => {
   }
 });
 </script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" defer></script>
-<style>
-/* Hide Google Translate toolbar */
-.goog-te-banner-frame, .skiptranslate { display: none !important; }
-body { top: 0 !important; }
-.goog-te-gadget { display: none !important; }
-</style>
 
 
 <script>
