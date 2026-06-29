@@ -137,6 +137,18 @@ tbody tr:hover td{background:#fafafa}
 .risk-chip.r4,.risk-chip.r5{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
 .risk-chip.r3{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd)}
 
+/* Per-visit delete button */
+.visit-del-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:var(--radius-sm);
+  background:none;border:1px solid var(--border);
+  font-size:11px;font-weight:500;font-family:inherit;
+  color:var(--ink-3);cursor:pointer;transition:all .15s;
+  white-space:nowrap;flex-shrink:0;
+}
+.visit-del-btn:hover{background:var(--red-bg);border-color:var(--red-bd);color:var(--red)}
+.visit-del-btn:disabled{opacity:.4;cursor:not-allowed}
+
 /* Chart */
 .sparkline-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px}
 .sparkline-title{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
@@ -331,20 +343,11 @@ tbody tr:hover td{background:#fafafa}
 let allPatients = [];
 let currentView = 'grouped';
 
-// ── Load data ──────────────────────────────────────────────────
-// Admin token — exchanged on page load from the Basic Auth session
-// The browser already authenticated with Basic Auth to load this page,
-// so we get a short-lived token for subsequent API calls (no prompts needed)
 let _adminToken = sessionStorage.getItem('vhs_admin_token') || '';
 
 async function getAdminToken() {
-  // Try to get a fresh token using the browser's cached Basic Auth credentials
   const res = await fetch('/api/admin/token', { credentials: 'include' });
-  if (!res.ok) {
-    // Force browser to re-ask for Basic Auth by redirecting
-    window.location.href = '/admin';
-    return;
-  }
+  if (!res.ok) { window.location.href = '/admin'; return; }
   const data = await res.json();
   _adminToken = data.token;
   sessionStorage.setItem('vhs_admin_token', _adminToken);
@@ -365,12 +368,9 @@ async function adminFetch(url, opts = {}) {
 }
 
 async function loadPatients() {
-  // First get admin token, then load data
   try {
     if (!_adminToken) await getAdminToken();
-  } catch(e) {
-    return; // getAdminToken redirects on failure
-  }
+  } catch(e) { return; }
   try {
     const res = await adminFetch('/api/admin/patients');
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -382,7 +382,6 @@ async function loadPatients() {
     console.error('Load error:', e);
     document.getElementById('patients-grid').innerHTML =
       '<div class="empty-state"><p style="color:var(--brand)">Failed to load records: ' + e.message + '. Please refresh the page.</p></div>';
-    // Reset stats to show 0
     ['st-patients','st-total','st-today','st-avg','st-attention'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.textContent = 'Error';
@@ -397,8 +396,6 @@ function renderStats() {
   const scores = allPatients.filter(p => p.vhs_score > 0).map(p => p.vhs_score);
   const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
   const attention = allPatients.filter(p => p.vhs_score > 0 && p.vhs_score < 60).length;
-
-  // Unique patients by name
   const uniqueNames = new Set(allPatients.map(p => (p.name||'').toLowerCase().trim()));
   document.getElementById('st-patients').textContent = uniqueNames.size;
   document.getElementById('st-total').textContent = total;
@@ -415,8 +412,7 @@ function groupByPatient(records) {
     if (!map.has(key)) map.set(key, []);
     map.get(key).push(p);
   });
-  // Sort each patient's visits by date ascending
-  map.forEach((visits, key) => {
+  map.forEach((visits) => {
     visits.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
   });
   return map;
@@ -549,8 +545,6 @@ function openProfile(patientKey) {
     (latest.phone ? ' · ' + latest.phone : '');
 
   const body = document.getElementById('profile-body');
-
-  // Summary stats
   const avgScore = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
   let progressMsg = '';
   if (scores.length >= 2) {
@@ -568,33 +562,108 @@ function openProfile(patientKey) {
     </div>
     ${progressMsg ? `<div style="font-size:13px;color:var(--ink-3);margin-bottom:14px;padding:10px 14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)">${progressMsg}</div>` : ''}
     ${scores.length >= 2 ? `<div class="sparkline-wrap"><div class="sparkline-title">VHS Score Over Time</div>${makeSVGSparkline(visits)}</div>` : ''}
-    <div class="visits-list">
-      ${[...visits].reverse().map((v, i) => `
-        <div class="visit-card">
-          <div class="visit-header">
-            <div>
-              <span style="font-weight:600;font-size:13px">Visit ${visits.length - i}</span>
-              <span class="visit-date"> · ${new Date(v.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
-              ${v.submittedBy ? '<span style="font-size:11px;color:var(--ink-4);margin-left:6px">by ' + esc(v.submittedBy) + '</span>' : ''}
-            </div>
-            <div class="visit-score">
-              <strong style="font-size:16px;color:${scoreColor(v.vhs_score)}">${v.vhs_score||'—'}</strong>
-              <span class="vhs-badge ${vhsClass(v.vhs_score)}">${vhsLabel(v.vhs_score)}</span>
-            </div>
-          </div>
-          ${v.summary ? `<div class="visit-body">${esc(v.summary)}</div>` : ''}
-          ${v.key_health_concerns ? `<div style="font-size:12px;color:var(--ink-3);margin-top:6px"><strong>Key concerns:</strong> ${esc(v.key_health_concerns)}</div>` : ''}
-          <div class="visit-risks">
-            ${riskChip('CV', v.risk_cardiovascular)}
-            ${riskChip('Met', v.risk_metabolic)}
-            ${riskChip('Liver', v.risk_liver)}
-            ${riskChip('Kidney', v.risk_kidney)}
-            ${riskChip('Inflam', v.risk_inflammation)}
-          </div>
-        </div>`).join('')}
+    <div class="visits-list" id="visits-list-${esc(patientKey.replace(/\s/g,'_'))}">
+      ${[...visits].reverse().map((v, i) => renderVisitCard(v, visits.length - i, visits.length)).join('')}
     </div>
   `;
+
+  // Attach delete handlers for each visit
+  body.querySelectorAll('.visit-del-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const visitId = Number(btn.dataset.visitId);
+      const visitNum = btn.dataset.visitNum;
+      deleteVisit(visitId, visitNum, patientKey);
+    });
+  });
+
   document.getElementById('profile-overlay').classList.add('open');
+}
+
+function renderVisitCard(v, visitNum, totalVisits) {
+  return `
+    <div class="visit-card" id="visit-card-${v.id}">
+      <div class="visit-header">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:13px">Visit ${visitNum}</span>
+          <span class="visit-date">· ${new Date(v.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+          ${v.submittedBy ? '<span style="font-size:11px;color:var(--ink-4)">by ' + esc(v.submittedBy) + '</span>' : ''}
+        </div>
+        <div class="visit-score">
+          <strong style="font-size:16px;color:${scoreColor(v.vhs_score)}">${v.vhs_score||'—'}</strong>
+          <span class="vhs-badge ${vhsClass(v.vhs_score)}">${vhsLabel(v.vhs_score)}</span>
+          <button class="visit-del-btn" data-visit-id="${v.id}" data-visit-num="${visitNum}" title="Delete this visit">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            Delete Visit
+          </button>
+        </div>
+      </div>
+      ${v.summary ? `<div class="visit-body">${esc(v.summary)}</div>` : ''}
+      ${v.key_health_concerns ? `<div style="font-size:12px;color:var(--ink-3);margin-top:6px"><strong>Key concerns:</strong> ${esc(v.key_health_concerns)}</div>` : ''}
+      <div class="visit-risks">
+        ${riskChip('CV', v.risk_cardiovascular)}
+        ${riskChip('Met', v.risk_metabolic)}
+        ${riskChip('Liver', v.risk_liver)}
+        ${riskChip('Kidney', v.risk_kidney)}
+        ${riskChip('Inflam', v.risk_inflammation)}
+      </div>
+    </div>`;
+}
+
+// ── Delete a single visit ──────────────────────────────────────
+async function deleteVisit(visitId, visitNum, patientKey) {
+  if (!confirm(`Delete Visit ${visitNum}? This cannot be undone.`)) return;
+
+  // Disable all delete buttons while working
+  document.querySelectorAll('.visit-del-btn').forEach(b => b.disabled = true);
+
+  try {
+    const resp = await adminFetch('/api/admin/records/delete-one', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': _adminToken },
+      body: JSON.stringify({ id: visitId })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || 'Delete failed');
+
+    // Remove from allPatients
+    allPatients = allPatients.filter(p => p.id !== visitId);
+
+    // Remove the card from the DOM
+    const card = document.getElementById('visit-card-' + visitId);
+    if (card) {
+      card.style.transition = 'opacity .2s';
+      card.style.opacity = '0';
+      setTimeout(() => card.remove(), 200);
+    }
+
+    // Update the group
+    const group = patientGroups.get(patientKey);
+    if (group) {
+      const updated = group.filter(v => v.id !== visitId);
+      if (updated.length === 0) {
+        // No more visits — close modal and re-render
+        patientGroups.delete(patientKey);
+        closeProfile();
+      } else {
+        patientGroups.set(patientKey, updated);
+      }
+    }
+
+    // Re-render stats and grouped cards
+    renderStats();
+    renderGrouped();
+    renderTable();
+
+    // Re-enable remaining buttons
+    setTimeout(() => {
+      document.querySelectorAll('.visit-del-btn').forEach(b => b.disabled = false);
+    }, 300);
+
+  } catch(e) {
+    alert('Failed to delete visit: ' + e.message);
+    document.querySelectorAll('.visit-del-btn').forEach(b => b.disabled = false);
+  }
 }
 
 function riskChip(label, score) {
@@ -611,7 +680,6 @@ function scoreColor(s) {
 
 function closeProfile() { document.getElementById('profile-overlay').classList.remove('open'); }
 
-// Track which patient is currently open
 let _currentProfileKey = null;
 
 function deletePatientProfile() {
@@ -626,7 +694,6 @@ function deletePatientProfile() {
     body: JSON.stringify({ ids })
   }).then(r => r.json()).then(data => {
     if (data.deleted !== undefined) {
-      // Remove from allPatients and re-render
       allPatients = allPatients.filter(p => !ids.includes(String(p.id)));
       closeProfile();
       renderStats();
@@ -653,7 +720,6 @@ function renderTable() {
     tr.dataset.idx = idx;
     tr.dataset.id = String(p.id||'');
 
-    // Checkbox
     const tdCb = document.createElement('td');
     tdCb.style.cssText = 'width:36px;text-align:center';
     const cb = document.createElement('input');
@@ -695,7 +761,6 @@ function renderTable() {
     tr.appendChild(makeWrapTd(p.complaint));
     tr.appendChild(makeWrapTd(p.notes));
 
-    // VHS Score
     const vScore=p.vhs_score||0;
     const vColor=scoreColor(vScore);
     const tdV=document.createElement('td');
@@ -704,7 +769,6 @@ function renderTable() {
 
     tr.appendChild(makeWrapTd(p.key_health_concerns));
 
-    // Risk scores
     const riskLabel=s=>['','Very Low','Low','Moderate','High','Very High'][s||0]||'—';
     const riskColor=s=>['','#059669','#65a30d','#b45309','#dc2626','#7f1d1d'][s||0]||'var(--ink-4)';
     ['risk_cardiovascular','risk_metabolic','risk_liver','risk_kidney','risk_inflammation'].forEach(k=>{
@@ -719,7 +783,6 @@ function renderTable() {
     tr.appendChild(makeWrapTd(p.supplements));
     tr.appendChild(makeWrapTd(p.monitoring_plan));
 
-    // Summary
     const tdSum=document.createElement('td');
     if(p.summary){
       const btn=document.createElement('button');btn.className='summary-btn';
@@ -729,7 +792,6 @@ function renderTable() {
     } else {tdSum.textContent='—';tdSum.style.color='var(--ink-4)';}
     tr.appendChild(tdSum);
 
-    // Date
     const tdDate=document.createElement('td');
     tdDate.style.cssText='color:var(--ink-4);font-size:12px;white-space:nowrap';
     tdDate.textContent=new Date(p.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
@@ -827,7 +889,6 @@ async function doDelete() {
     const remaining = document.querySelectorAll('#records-body tr').length;
     document.getElementById('record-count').textContent = remaining + ' record' + (remaining!==1?'s':'');
     updateSelectionBar();
-    // Reload grouped view
     allPatients = allPatients.filter(p => !ids.includes(String(p.id)));
     renderStats(); renderGrouped();
   } catch(e) { alert('Delete failed: ' + e.message); }
