@@ -866,6 +866,7 @@ let currentLang = 'en';
 let _rawResult = null;      // current result (may be translated)
 let _rawPatient = null;     // patient info
 let _originalResult = null; // always the first result as received from Claude
+const _translationCache = {}; // lang -> translated result object (in-memory cache)
 
 function applyLang(lang) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
@@ -1299,7 +1300,7 @@ function startLoading() {
   const el = document.getElementById('loading-steps');
   el.innerHTML = STEPS.map((s,i) => `<div class="loading-step" id="lstep-${i}"><div class="step-dot"></div>${s}</div>`).join('');
   setStep(0);
-  stepTimer = setInterval(() => { stepIdx = Math.min(stepIdx+1, STEPS.length-1); setStep(stepIdx); }, 3000);
+  stepTimer = setInterval(() => { stepIdx = Math.min(stepIdx+1, STEPS.length-1); setStep(stepIdx); }, 2000);
 }
 function setStep(i) {
   STEPS.forEach((_,j) => {
@@ -1413,20 +1414,57 @@ Return ONLY valid JSON:
     const resp = await fetch('/api/analyze', {
       method:'POST',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:2000, messages:[{ role:'user', content:parts }] })
+      credentials:'include',
+      body: JSON.stringify({ messages:[{ role:'user', content:parts }] })
     });
-    stopLoading();
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error?.message || `API error ${resp.status}`);
-    const txt = data.content.map(b=>b.text||'').join('');
-    const result = JSON.parse(txt.replace(/```json|```/g,'').trim());
-    document.getElementById('loading').style.display = 'none';
-    _originalResult = null; // reset for new analysis
-    Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
-    renderResults(result, { name, age, gender, complaint, notes });
+    if (!resp.ok) {
+      const e = await resp.json().catch(()=>({}));
+      throw new Error(e.error || 'API error ' + resp.status);
+    }
+
+    // Read SSE stream with live progress indicator
+    let fullText = '';
+    let charCount = 0;
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    const loadingTitle = document.getElementById('loading-title');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data:')) continue;
+        const raw = line.slice(5).trim();
+        try {
+          const ev = JSON.parse(raw);
+          if (ev.t) {
+            fullText += ev.t;
+            charCount += ev.t.length;
+            // Show live token count so user knows it's working
+            if (loadingTitle && charCount % 50 === 0) {
+              loadingTitle.textContent = 'Generating report... ' + Math.min(99, Math.round(charCount/80)) + '%';
+            }
+          }
+          if (ev.done) {
+            stopLoading();
+            if (loadingTitle) loadingTitle.textContent = 'Processing results...';
+            const clean = fullText.replace(/```json|```/g,'').trim();
+            const result = JSON.parse(clean);
+            document.getElementById('loading').style.display = 'none';
+            _originalResult = null;
+            Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
+            renderResults(result, { name, age, gender, complaint, notes });
+          }
+        } catch(e) { /* skip bad JSON chunks */ }
+      }
+    }
   } catch(err) {
     stopLoading();
-    document.getElementById('loading').style.display  = 'none';
+    document.getElementById('loading').style.display = 'none';
     document.getElementById('form-section').style.display = 'block';
     document.getElementById('form-heading').style.display = 'block';
     showErr('Analysis failed: ' + err.message);
@@ -1883,7 +1921,7 @@ async function getBotReply() {
 
 <!-- Results page language switcher -->
 <script>
-const _translationCache = {}; // cache translated results by lang code
+// _translationCache declared above
 
 function showTranslateOverlay(msg) {
   const el = document.getElementById('translate-overlay');
