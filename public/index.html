@@ -1958,6 +1958,7 @@ async function switchResultLang(lang, label) {
     const resp = await fetch('/api/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ fields, targetLang })
     });
     if (!resp.ok) throw new Error('Server error ' + resp.status);
