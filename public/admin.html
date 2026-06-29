@@ -49,7 +49,9 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 
 /* Stats */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;box-shadow:var(--shadow-sm)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;box-shadow:var(--shadow-sm);cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s}
+.stat-card:hover{border-color:var(--brand);box-shadow:0 4px 16px rgba(185,28,28,.1);transform:translateY(-1px)}
+.stat-card:active{transform:translateY(0)}
 .stat-label{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
 .stat-value{font-size:28px;font-weight:700;letter-spacing:-.03em;color:var(--ink);line-height:1}
 .stat-card.brand .stat-value{color:var(--brand)}
@@ -168,6 +170,29 @@ tbody tr:hover td{background:#fafafa}
 @keyframes spin{to{transform:rotate(360deg)}}
 .site-footer{text-align:center;font-size:12px;color:var(--ink-4);margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)}
 
+/* Active filter banner */
+.filter-banner{
+  display:none;align-items:center;gap:10px;
+  padding:10px 16px;margin-bottom:12px;
+  background:var(--brand-bg);border:1px solid var(--brand-bd);
+  border-radius:var(--radius);font-size:13px;color:var(--brand);font-weight:500;
+}
+.filter-banner.show{display:flex}
+.filter-banner-clear{
+  margin-left:auto;padding:4px 10px;background:none;
+  border:1px solid var(--brand-bd);border-radius:var(--radius-sm);
+  font-size:12px;font-weight:600;color:var(--brand);cursor:pointer;
+  font-family:inherit;transition:all .15s;
+}
+.filter-banner-clear:hover{background:var(--brand);color:#fff}
+
+/* VHS trend chart modal */
+.chart-wrap{padding:8px 0}
+.chart-svg{width:100%;display:block}
+.chart-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px;color:var(--ink-3)}
+.chart-legend-item{display:flex;align-items:center;gap:5px}
+.chart-legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
 /* Compact table row cells */
 #records-table td{padding:8px 12px}
 #records-table th{padding:8px 12px}
@@ -204,11 +229,21 @@ tbody tr:hover td{background:#fafafa}
 
   <!-- Stats -->
   <div class="stats-grid">
-    <div class="stat-card"><div class="stat-label">Unique Patients</div><div class="stat-value" id="st-patients">—</div></div>
-    <div class="stat-card brand"><div class="stat-label">Total Visits</div><div class="stat-value" id="st-total">—</div></div>
-    <div class="stat-card green"><div class="stat-label">Today</div><div class="stat-value" id="st-today">—</div></div>
-    <div class="stat-card amber"><div class="stat-label">Avg VHS Score</div><div class="stat-value" id="st-avg">—</div></div>
-    <div class="stat-card red"><div class="stat-label">Needs Attention</div><div class="stat-value" id="st-attention">—</div></div>
+    <div class="stat-card" onclick="statClick('patients')" title="View all patients">
+      <div class="stat-label">Unique Patients</div><div class="stat-value" id="st-patients">—</div>
+    </div>
+    <div class="stat-card brand" onclick="statClick('total')" title="View all visits">
+      <div class="stat-label">Total Visits</div><div class="stat-value" id="st-total">—</div>
+    </div>
+    <div class="stat-card green" onclick="statClick('today')" title="View today's records">
+      <div class="stat-label">Today</div><div class="stat-value" id="st-today">—</div>
+    </div>
+    <div class="stat-card amber" onclick="statClick('avg')" title="View VHS score trend">
+      <div class="stat-label">Avg VHS Score</div><div class="stat-value" id="st-avg">—</div>
+    </div>
+    <div class="stat-card red" onclick="statClick('attention')" title="View records needing attention">
+      <div class="stat-label">Needs Attention</div><div class="stat-value" id="st-attention">—</div>
+    </div>
   </div>
 
   <!-- Grouped patients view -->
@@ -229,6 +264,11 @@ tbody tr:hover td{background:#fafafa}
 
   <!-- All records flat view -->
   <div id="view-all" style="display:none">
+    <div class="filter-banner" id="filter-banner">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      <span id="filter-banner-text">Filtered</span>
+      <button class="filter-banner-clear" onclick="clearFilter()">✕ Clear filter</button>
+    </div>
     <div class="table-card">
       <div class="table-card-head">
         <h2>All Assessments</h2>
@@ -265,7 +305,7 @@ tbody tr:hover td{background:#fafafa}
         </table>
       </div>
     </div>
-  </div>
+  </div><!-- /view-all -->
 
   <footer class="site-footer">VANDL Health Score (VHS) Admin &nbsp;·&nbsp; Authorized use only &nbsp;·&nbsp; All data confidential</footer>
 </main>
@@ -335,6 +375,22 @@ tbody tr:hover td{background:#fafafa}
         <button class="btn-cancel" onclick="closeDeleteConfirm()">Cancel</button>
         <button class="btn-danger" onclick="doDelete()">Delete</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- VHS Trend Chart Modal -->
+<div class="modal-overlay" id="chart-overlay" onclick="if(event.target===this)closeChart()">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">VHS Score Trend</div>
+        <div class="modal-sub" id="chart-sub">Average health score over time</div>
+      </div>
+      <button class="modal-close" onclick="closeChart()">&#x2715;</button>
+    </div>
+    <div class="modal-body">
+      <div class="chart-wrap" id="chart-content"></div>
     </div>
   </div>
 </div>
@@ -897,7 +953,167 @@ async function doDelete() {
 // ── Escape HTML ────────────────────────────────────────────────
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDL();closeDeleteConfirm();closeProfile();} });
+// ── Stat card clicks ───────────────────────────────────────────
+function statClick(type) {
+  if (type === 'patients') {
+    setView('grouped');
+    return;
+  }
+  if (type === 'avg') {
+    openChart();
+    return;
+  }
+  setView('all');
+  // Small delay so the view renders before filtering
+  setTimeout(() => {
+    if (type === 'total') {
+      clearFilter();
+    } else if (type === 'today') {
+      const todayStr = new Date().toDateString();
+      applyRowFilter(
+        row => {
+          const dateCell = row.querySelectorAll('td')[22];
+          if (!dateCell) return false;
+          // Match by checking allPatients created_at
+          const id = row.dataset.id;
+          const rec = allPatients.find(p => String(p.id) === id);
+          return rec ? new Date(rec.created_at).toDateString() === todayStr : false;
+        },
+        "Showing today's records"
+      );
+    } else if (type === 'attention') {
+      applyRowFilter(
+        row => {
+          const id = row.dataset.id;
+          const rec = allPatients.find(p => String(p.id) === id);
+          return rec ? (rec.vhs_score > 0 && rec.vhs_score < 60) : false;
+        },
+        'Showing records that need attention (VHS < 60)'
+      );
+    }
+  }, 50);
+}
+
+function applyRowFilter(predicate, bannerText) {
+  document.querySelectorAll('#records-body tr').forEach(row => {
+    if (!row.dataset.id) return;
+    row.style.display = predicate(row) ? '' : 'none';
+  });
+  const banner = document.getElementById('filter-banner');
+  document.getElementById('filter-banner-text').textContent = bannerText;
+  banner.classList.add('show');
+  // Update visible count
+  const visible = document.querySelectorAll('#records-body tr:not([style*="display: none"])').length;
+  document.getElementById('record-count').textContent = visible + ' record' + (visible!==1?'s':'') + ' (filtered)';
+}
+
+function clearFilter() {
+  document.querySelectorAll('#records-body tr').forEach(row => row.style.display = '');
+  document.getElementById('filter-banner').classList.remove('show');
+  const total = allPatients.length;
+  document.getElementById('record-count').textContent = total + ' record' + (total!==1?'s':'');
+}
+
+// ── VHS Trend Chart ────────────────────────────────────────────
+function openChart() {
+  const content = document.getElementById('chart-content');
+  const sub = document.getElementById('chart-sub');
+
+  // Group records by date, compute avg score per day
+  const byDay = {};
+  allPatients.filter(p => p.vhs_score > 0).forEach(p => {
+    const d = new Date(p.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    if (!byDay[d]) byDay[d] = { sum:0, count:0, full: new Date(p.created_at) };
+    byDay[d].sum += p.vhs_score;
+    byDay[d].count++;
+  });
+
+  const days = Object.entries(byDay)
+    .sort((a,b) => a[1].full - b[1].full)
+    .map(([label, {sum, count}]) => ({ label, avg: Math.round(sum/count) }));
+
+  if (days.length === 0) {
+    content.innerHTML = '<p style="color:var(--ink-3);text-align:center;padding:2rem">No scored records yet.</p>';
+    document.getElementById('chart-overlay').classList.add('open');
+    return;
+  }
+
+  sub.textContent = `${days.length} day${days.length!==1?'s':''} of data · ${allPatients.filter(p=>p.vhs_score>0).length} total records`;
+
+  const W = 680, H = 260, padL = 48, padR = 20, padT = 20, padB = 44;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const scores = days.map(d => d.avg);
+  const minS = Math.max(0, Math.min(...scores) - 10);
+  const maxS = Math.min(100, Math.max(...scores) + 10);
+  const range = maxS - minS || 1;
+
+  const sx = i => padL + (i / Math.max(days.length - 1, 1)) * chartW;
+  const sy = s => padT + chartH - ((s - minS) / range) * chartH;
+
+  // Grid lines at 0, 25, 50, 75, 100
+  const gridLines = [0, 25, 50, 75, 100].filter(v => v >= minS - 5 && v <= maxS + 5);
+  const gridSVG = gridLines.map(v => {
+    const y = sy(v);
+    const color = v >= 75 ? '#059669' : v >= 60 ? '#b45309' : '#dc2626';
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="${v===0?'var(--border)':'var(--border)'}" stroke-width="1" stroke-dasharray="${v===0?'0':'4,3'}"/>
+    <text x="${padL-6}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-4)">${v}</text>`;
+  }).join('');
+
+  // Colored zone fills
+  const scoreZones = [
+    { min:75, max:100, color:'rgba(5,150,105,.06)' },
+    { min:60, max:75,  color:'rgba(180,83,9,.06)' },
+    { min:0,  max:60,  color:'rgba(220,38,38,.06)' },
+  ];
+  const zoneSVG = scoreZones.map(z => {
+    const y1 = sy(Math.min(z.max, maxS + 5));
+    const y2 = sy(Math.max(z.min, minS - 5));
+    if (y1 >= y2) return '';
+    return `<rect x="${padL}" y="${y1.toFixed(1)}" width="${chartW}" height="${(y2-y1).toFixed(1)}" fill="${z.color}"/>`;
+  }).join('');
+
+  // Line path
+  const pts = days.map((d,i) => `${sx(i).toFixed(1)},${sy(d.avg).toFixed(1)}`).join(' ');
+  const dotColor = s => s >= 75 ? '#059669' : s >= 60 ? '#b45309' : '#dc2626';
+
+  // Dots + labels
+  const dotsSVG = days.map((d,i) => {
+    const x = sx(i), y = sy(d.avg);
+    const col = dotColor(d.avg);
+    // Show label every nth point to avoid crowding
+    const showLabel = days.length <= 10 || i % Math.ceil(days.length/10) === 0 || i === days.length-1;
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${col}" stroke="white" stroke-width="2"/>
+    ${showLabel ? `<text x="${x.toFixed(1)}" y="${(y-10).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="${col}">${d.avg}</text>` : ''}`;
+  }).join('');
+
+  // X-axis labels
+  const xLabelSVG = days.map((d,i) => {
+    const show = days.length <= 8 || i % Math.ceil(days.length/8) === 0 || i === days.length-1;
+    if (!show) return '';
+    return `<text x="${sx(i).toFixed(1)}" y="${(H-8).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--ink-4)">${d.label}</text>`;
+  }).join('');
+
+  content.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" class="chart-svg" style="font-family:'Inter',sans-serif">
+      ${zoneSVG}
+      ${gridSVG}
+      <polyline points="${pts}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dotsSVG}
+      ${xLabelSVG}
+    </svg>
+    <div class="chart-legend">
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#059669"></div> Excellent / Good (75–100)</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#b45309"></div> Fair (60–74)</div>
+      <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#dc2626"></div> Needs Attention / Poor (&lt;60)</div>
+    </div>
+  `;
+
+  document.getElementById('chart-overlay').classList.add('open');
+}
+function closeChart() { document.getElementById('chart-overlay').classList.remove('open'); }
+
+document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDL();closeDeleteConfirm();closeProfile();closeChart();} });
 
 loadPatients();
 </script>
