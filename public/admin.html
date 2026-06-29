@@ -1014,89 +1014,180 @@ function clearFilter() {
   document.getElementById('record-count').textContent = total + ' record' + (total!==1?'s':'');
 }
 
-// ── VHS Trend Chart ────────────────────────────────────────────
+// ── VHS Trend Chart (scales to 100k+ records) ─────────────────
 function openChart() {
   const content = document.getElementById('chart-content');
   const sub = document.getElementById('chart-sub');
 
-  // Group records by date, compute avg score per day
-  const byDay = {};
-  allPatients.filter(p => p.vhs_score > 0).forEach(p => {
-    const d = new Date(p.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-    if (!byDay[d]) byDay[d] = { sum:0, count:0, full: new Date(p.created_at) };
-    byDay[d].sum += p.vhs_score;
-    byDay[d].count++;
-  });
-
-  const days = Object.entries(byDay)
-    .sort((a,b) => a[1].full - b[1].full)
-    .map(([label, {sum, count}]) => ({ label, avg: Math.round(sum/count) }));
-
-  if (days.length === 0) {
+  const scored = allPatients.filter(p => p.vhs_score > 0 && p.created_at);
+  if (scored.length === 0) {
     content.innerHTML = '<p style="color:var(--ink-3);text-align:center;padding:2rem">No scored records yet.</p>';
     document.getElementById('chart-overlay').classList.add('open');
     return;
   }
 
-  sub.textContent = `${days.length} day${days.length!==1?'s':''} of data · ${allPatients.filter(p=>p.vhs_score>0).length} total records`;
+  // Determine date range → pick bucket size
+  const timestamps = scored.map(p => new Date(p.created_at).getTime());
+  const minTs = Math.min(...timestamps);
+  const maxTs = Math.max(...timestamps);
+  const spanDays = (maxTs - minTs) / 86400000;
 
-  const W = 680, H = 260, padL = 48, padR = 20, padT = 20, padB = 44;
+  let bucketLabel, bucketKey;
+  if (spanDays <= 1) {
+    // Same day → bucket by hour
+    bucketLabel = 'Hour';
+    bucketKey = ts => {
+      const d = new Date(ts);
+      return { key: d.toISOString().slice(0,13), label: d.getHours() + ':00' };
+    };
+  } else if (spanDays <= 14) {
+    // Up to 2 weeks → by day
+    bucketLabel = 'Day';
+    bucketKey = ts => {
+      const d = new Date(ts);
+      const label = d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+      return { key: d.toISOString().slice(0,10), label };
+    };
+  } else if (spanDays <= 90) {
+    // Up to 3 months → by week (ISO week)
+    bucketLabel = 'Week';
+    bucketKey = ts => {
+      const d = new Date(ts);
+      // Start of week (Monday)
+      const dow = (d.getDay() + 6) % 7;
+      const weekStart = new Date(d);
+      weekStart.setDate(d.getDate() - dow);
+      const key = weekStart.toISOString().slice(0,10);
+      const label = 'W/c ' + weekStart.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+      return { key, label };
+    };
+  } else if (spanDays <= 365) {
+    // Up to 1 year → by month
+    bucketLabel = 'Month';
+    bucketKey = ts => {
+      const d = new Date(ts);
+      const key = d.toISOString().slice(0,7);
+      const label = d.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+      return { key, label };
+    };
+  } else {
+    // Over 1 year → by quarter
+    bucketLabel = 'Quarter';
+    bucketKey = ts => {
+      const d = new Date(ts);
+      const q = Math.floor(d.getMonth() / 3) + 1;
+      const key = d.getFullYear() + '-Q' + q;
+      const label = 'Q' + q + ' ' + d.getFullYear();
+      return { key, label };
+    };
+  }
+
+  // Bucket records
+  const buckets = new Map();
+  scored.forEach(p => {
+    const ts = new Date(p.created_at).getTime();
+    const { key, label } = bucketKey(ts);
+    if (!buckets.has(key)) buckets.set(key, { label, sum:0, count:0, min:999, max:0 });
+    const b = buckets.get(key);
+    b.sum += p.vhs_score;
+    b.count++;
+    b.min = Math.min(b.min, p.vhs_score);
+    b.max = Math.max(b.max, p.vhs_score);
+  });
+
+  const days = [...buckets.entries()]
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .map(([, b]) => ({ label: b.label, avg: Math.round(b.sum / b.count), min: b.min, max: b.max, count: b.count }));
+
+  sub.textContent = `${scored.length.toLocaleString()} records · ${days.length} ${bucketLabel.toLowerCase()}${days.length!==1?'s':''} · grouped by ${bucketLabel.toLowerCase()}`;
+
+  const W = 680, H = 260, padL = 48, padR = 20, padT = 24, padB = 44;
   const chartW = W - padL - padR;
   const chartH = H - padT - padB;
+
   const scores = days.map(d => d.avg);
-  const minS = Math.max(0, Math.min(...scores) - 10);
-  const maxS = Math.min(100, Math.max(...scores) + 10);
+  const allVals = days.flatMap(d => [d.min, d.max]);
+  const rawMin = Math.min(...allVals);
+  const rawMax = Math.max(...allVals);
+  const minS = Math.max(0,  rawMin - Math.max(5, Math.round((rawMax - rawMin) * 0.1)));
+  const maxS = Math.min(100, rawMax + Math.max(5, Math.round((rawMax - rawMin) * 0.1)));
   const range = maxS - minS || 1;
 
-  const sx = i => padL + (i / Math.max(days.length - 1, 1)) * chartW;
+  const sx = i => padL + (days.length > 1 ? (i / (days.length - 1)) * chartW : chartW / 2);
   const sy = s => padT + chartH - ((s - minS) / range) * chartH;
 
-  // Grid lines at 0, 25, 50, 75, 100
-  const gridLines = [0, 25, 50, 75, 100].filter(v => v >= minS - 5 && v <= maxS + 5);
+  // Grid lines
+  const step = range > 40 ? 25 : range > 20 ? 10 : 5;
+  const gridStart = Math.ceil(minS / step) * step;
+  const gridLines = [];
+  for (let v = gridStart; v <= maxS; v += step) gridLines.push(v);
+
   const gridSVG = gridLines.map(v => {
     const y = sy(v);
-    const color = v >= 75 ? '#059669' : v >= 60 ? '#b45309' : '#dc2626';
-    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="${v===0?'var(--border)':'var(--border)'}" stroke-width="1" stroke-dasharray="${v===0?'0':'4,3'}"/>
+    return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--border)" stroke-width="1" stroke-dasharray="4,3"/>
     <text x="${padL-6}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-4)">${v}</text>`;
   }).join('');
 
-  // Colored zone fills
-  const scoreZones = [
-    { min:75, max:100, color:'rgba(5,150,105,.06)' },
+  // Zone fills (clipped to visible range)
+  const zoneSVG = [
+    { min:75, max:100, color:'rgba(5,150,105,.07)' },
     { min:60, max:75,  color:'rgba(180,83,9,.06)' },
     { min:0,  max:60,  color:'rgba(220,38,38,.06)' },
-  ];
-  const zoneSVG = scoreZones.map(z => {
-    const y1 = sy(Math.min(z.max, maxS + 5));
-    const y2 = sy(Math.max(z.min, minS - 5));
+  ].map(z => {
+    const y1 = sy(Math.min(z.max, maxS));
+    const y2 = sy(Math.max(z.min, minS));
     if (y1 >= y2) return '';
     return `<rect x="${padL}" y="${y1.toFixed(1)}" width="${chartW}" height="${(y2-y1).toFixed(1)}" fill="${z.color}"/>`;
   }).join('');
 
-  // Line path
+  // Min/max band (shaded area between min and max)
+  const bandPts = days.length > 1
+    ? days.map((d,i) => `${sx(i).toFixed(1)},${sy(d.max).toFixed(1)}`).join(' ') + ' ' +
+      [...days].reverse().map((d,i) => `${sx(days.length-1-i).toFixed(1)},${sy(d.min).toFixed(1)}`).join(' ')
+    : '';
+  const bandSVG = bandPts
+    ? `<polygon points="${bandPts}" fill="rgba(185,28,28,.07)" stroke="none"/>`
+    : '';
+
+  // Avg line
   const pts = days.map((d,i) => `${sx(i).toFixed(1)},${sy(d.avg).toFixed(1)}`).join(' ');
+
   const dotColor = s => s >= 75 ? '#059669' : s >= 60 ? '#b45309' : '#dc2626';
 
-  // Dots + labels
-  const dotsSVG = days.map((d,i) => {
+  // Only show dots if not too many points
+  const showDots = days.length <= 60;
+  const dotsSVG = showDots ? days.map((d,i) => {
     const x = sx(i), y = sy(d.avg);
     const col = dotColor(d.avg);
-    // Show label every nth point to avoid crowding
-    const showLabel = days.length <= 10 || i % Math.ceil(days.length/10) === 0 || i === days.length-1;
-    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="${col}" stroke="white" stroke-width="2"/>
-    ${showLabel ? `<text x="${x.toFixed(1)}" y="${(y-10).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="${col}">${d.avg}</text>` : ''}`;
-  }).join('');
+    const showLabel = days.length <= 12 || i === 0 || i === days.length-1;
+    return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${days.length > 20 ? 2.5 : 4}" fill="${col}" stroke="white" stroke-width="1.5"/>
+    ${showLabel ? `<text x="${x.toFixed(1)}" y="${(y-9).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="${col}">${d.avg}</text>` : ''}`;
+  }).join('') : '';
 
-  // X-axis labels
+  // X-axis labels — show at most ~8
+  const xStep = Math.max(1, Math.ceil(days.length / 8));
   const xLabelSVG = days.map((d,i) => {
-    const show = days.length <= 8 || i % Math.ceil(days.length/8) === 0 || i === days.length-1;
-    if (!show) return '';
+    if (i % xStep !== 0 && i !== days.length-1) return '';
     return `<text x="${sx(i).toFixed(1)}" y="${(H-8).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--ink-4)">${d.label}</text>`;
   }).join('');
 
+  // Record count annotation on last point
+  const lastD = days[days.length-1];
+  const lastX = sx(days.length-1);
+  const lastY = sy(lastD.avg);
+
   content.innerHTML = `
+    <div style="font-size:12px;color:var(--ink-3);margin-bottom:8px;display:flex;gap:16px;flex-wrap:wrap">
+      <span>📊 <strong>${scored.length.toLocaleString()}</strong> records analysed</span>
+      <span>📅 Grouped by <strong>${bucketLabel.toLowerCase()}</strong></span>
+      <span style="color:${dotColor(scores[scores.length-1])}">Latest avg: <strong>${scores[scores.length-1]}</strong></span>
+      ${scores.length > 1 ? `<span style="color:${scores[scores.length-1]>scores[0]?'var(--green)':'var(--red)'}">
+        ${scores[scores.length-1]>scores[0]?'↑':'↓'} ${Math.abs(scores[scores.length-1]-scores[0])} pts overall
+      </span>` : ''}
+    </div>
     <svg viewBox="0 0 ${W} ${H}" class="chart-svg" style="font-family:'Inter',sans-serif">
       ${zoneSVG}
+      ${bandSVG}
       ${gridSVG}
       <polyline points="${pts}" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       ${dotsSVG}
@@ -1106,6 +1197,7 @@ function openChart() {
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#059669"></div> Excellent / Good (75–100)</div>
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#b45309"></div> Fair (60–74)</div>
       <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#dc2626"></div> Needs Attention / Poor (&lt;60)</div>
+      ${days.length > 1 ? '<div class="chart-legend-item"><div class="chart-legend-dot" style="background:rgba(185,28,28,.2);border-radius:2px"></div> Min–max range band</div>' : ''}
     </div>
   `;
 
