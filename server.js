@@ -79,14 +79,13 @@ app.use((req, res, next) => {
 const APP_URL = process.env.APP_URL || "";
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // server-to-server / curl
+    if (!origin) return cb(null, true);
     if (APP_URL && origin === APP_URL) return cb(null, true);
-    // Allow in development
     if (!APP_URL) return cb(null, true);
     cb(new Error("CORS policy violation"), false);
   },
   credentials: true,
-  methods: ["GET","POST"],
+  methods: ["GET","POST","DELETE"],
   allowedHeaders: ["Content-Type","X-Admin-Token"],
 }));
 
@@ -155,7 +154,6 @@ function adminAuth(req, res, next) {
   if (idx === -1) { adminFail(req._adminIp||req.ip); res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"'); return res.status(401).send("Invalid credentials."); }
   const user = creds.slice(0,idx);
   const pass = creds.slice(idx+1);
-  // Constant-time compare
   const u1 = Buffer.from(user.padEnd(64)); const u2 = Buffer.from("admin".padEnd(64));
   const p1 = Buffer.from(pass || ""); const p2 = Buffer.from(ADMIN_PASSWORD);
   let uOk = false, pOk = false;
@@ -279,12 +277,10 @@ app.get("/api/lang", async (req, res) => {
 });
 
 // ── Static files ───────────────────────────────────────────────
-// Public pages — no auth needed
 app.get("/login",   (req, res) => res.sendFile(path.join(__dirname,"public","login.html")));
 app.get("/terms",   (req, res) => res.sendFile(path.join(__dirname,"public","terms.html")));
 app.get("/privacy", (req, res) => res.sendFile(path.join(__dirname,"public","privacy.html")));
 
-// Root — redirect to login if no valid JWT
 app.get("/", (req, res, next) => {
   const token = req.cookies?.vhs_token;
   if (!token) return res.redirect("/login");
@@ -301,7 +297,6 @@ app.use(express.static(path.join(__dirname,"public"), {
 // AUTH ROUTES
 // ══════════════════════════════════════════════════════════════
 
-// Register
 app.post("/api/auth/register", globalLimit, authLimit, async (req, res) => {
   const { username, email, password, rememberMe } = req.body || {};
   if (!username || !email || !password) return res.status(400).json({ error:"All fields required." });
@@ -311,7 +306,6 @@ app.post("/api/auth/register", globalLimit, authLimit, async (req, res) => {
     return res.status(400).json({ error:"Password must be at least 8 characters." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return res.status(400).json({ error:"Invalid email address." });
-  // Prevent script injection in username
   if (/<|>|script|javascript/i.test(username))
     return res.status(400).json({ error:"Invalid characters in username." });
   try {
@@ -332,7 +326,6 @@ app.post("/api/auth/register", globalLimit, authLimit, async (req, res) => {
   }
 });
 
-// Login
 app.post("/api/auth/login", globalLimit, authLimit, async (req, res) => {
   const { email, password, rememberMe } = req.body || {};
   if (!email || !password) return res.status(400).json({ error:"Email and password required." });
@@ -342,7 +335,6 @@ app.post("/api/auth/login", globalLimit, authLimit, async (req, res) => {
     const db = await getDB();
     const user = await db.collection("users").findOne({ email:email.toLowerCase().trim() });
     if (!user || !user.passwordHash) {
-      // Constant-time fake compare to prevent user enumeration
       await bcrypt.compare(password, "$2a$12$fakehashfakehashfakehashfakehashfakehashfakehash00000");
       return res.status(401).json({ error:"Invalid email or password." });
     }
@@ -359,18 +351,15 @@ app.post("/api/auth/login", globalLimit, authLimit, async (req, res) => {
   }
 });
 
-// Logout
 app.post("/api/auth/logout", (req, res) => {
   res.clearCookie("vhs_token", { httpOnly:true, secure:true, sameSite:"lax" });
   res.json({ ok:true });
 });
 
-// Session check
 app.get("/api/auth/me", requireAuth, (req, res) => {
   res.json({ user:{ username:req.user.username, email:req.user.email, id:req.user.id } });
 });
 
-// Google OAuth
 app.get("/auth/google", passport.authenticate("google", { scope:["profile","email"], session:false }));
 app.get("/auth/google/callback",
   passport.authenticate("google", { session:false, failureRedirect:"/login?error=google" }),
@@ -383,7 +372,7 @@ app.get("/auth/google/callback",
 );
 
 // ══════════════════════════════════════════════════════════════
-// ANALYSIS with SSE streaming (requires login)
+// ANALYSIS with SSE streaming
 // ══════════════════════════════════════════════════════════════
 app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalysis, async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
@@ -402,7 +391,6 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
       const err = await upstream.json().catch(()=>({}));
       return res.status(upstream.status).json({ error:"Analysis service error." });
     }
-    // Set up SSE streaming
     res.setHeader("Content-Type","text/event-stream");
     res.setHeader("Cache-Control","no-cache");
     res.setHeader("Connection","keep-alive");
@@ -433,7 +421,6 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
       }
     }
 
-    // Non-blocking DB save after streaming finishes
     try {
       const result = JSON.parse(fullText.replace(/```json|```/g,"").trim());
       const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
@@ -476,6 +463,7 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
 app.get("/admin", adminBruteForce, adminLimit, adminAuth, (req, res) => {
   res.sendFile(path.join(__dirname,"public","admin.html"));
 });
+
 app.get("/api/admin/patients", adminLimit, adminAuthOrToken, async (req, res) => {
   try {
     const db = await getDB();
@@ -483,6 +471,8 @@ app.get("/api/admin/patients", adminLimit, adminAuthOrToken, async (req, res) =>
     res.json(rows);
   } catch(e) { res.status(500).json({ error:"Failed to load." }); }
 });
+
+// ── Delete ALL records for a patient (bulk by ids) ─────────────
 app.post("/api/admin/patients/delete", adminLimit, adminAuthOrToken, async (req, res) => {
   const { ids } = req.body||{};
   if (!ids||!Array.isArray(ids)||!ids.length||ids.length>100) return res.status(400).json({ error:"Invalid request." });
@@ -494,6 +484,20 @@ app.post("/api/admin/patients/delete", adminLimit, adminAuthOrToken, async (req,
     res.json({ deleted:r.deletedCount });
   } catch(e) { res.status(500).json({ error:"Delete failed." }); }
 });
+
+// ── Delete a SINGLE visit record by id ────────────────────────
+app.post("/api/admin/records/delete-one", adminLimit, adminAuthOrToken, async (req, res) => {
+  const { id } = req.body || {};
+  const num = Number(id);
+  if (!Number.isFinite(num) || num <= 0) return res.status(400).json({ error: "Invalid ID." });
+  try {
+    const db = await getDB();
+    const r = await db.collection("patients").deleteOne({ id: num });
+    if (r.deletedCount === 0) return res.status(404).json({ error: "Record not found." });
+    res.json({ deleted: 1 });
+  } catch(e) { res.status(500).json({ error: "Delete failed." }); }
+});
+
 app.get("/api/admin/users", adminLimit, adminAuthOrToken, async (req, res) => {
   try {
     const db = await getDB();
@@ -528,7 +532,6 @@ app.post("/api/bot", requireAuth, globalLimit, botLimit, async (req, res) => {
   } catch(e) { res.status(500).json({ error:"Bot unavailable." }); }
 });
 
-// Public translate for legal pages (no auth required, smaller rate limit)
 app.post("/api/translate/public", globalLimit, makeRateLimiter(30, 60000, "Translation rate limit reached."), async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(500).json({ error:"Configuration error." });
@@ -573,7 +576,7 @@ app.post("/api/translate", requireAuth, globalLimit, translateLimit, async (req,
 });
 
 // ══════════════════════════════════════════════════════════════
-// CATCH-ALL — protect all routes
+// CATCH-ALL
 // ══════════════════════════════════════════════════════════════
 app.get("*", (req, res) => {
   const token = req.cookies?.vhs_token;
@@ -584,7 +587,6 @@ app.get("*", (req, res) => {
 
 // ── Global error handler ───────────────────────────────────────
 app.use((err, req, res, next) => {
-  // Never expose stack traces or internal errors
   console.error("Unhandled:", err.message);
   if (err.message?.includes("CORS")) return res.status(403).json({ error:"Forbidden." });
   res.status(500).json({ error:"An error occurred. Please try again." });
