@@ -580,152 +580,139 @@ ul li{margin-bottom:6px;line-height:1.65}
 </main>
 
 <!-- Google Translate -->
-<div id="translate-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:12px">
-  <div style="width:36px;height:36px;border:3px solid #e5e7eb;border-top-color:#b91c1c;border-radius:50%;animation:spin .7s linear infinite"></div>
-  <p style="font-size:14px;color:#6b7280;font-weight:500" id="translate-overlay-msg">Translating...</p>
+<div id="translate-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.88);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:14px">
+  <div style="width:40px;height:40px;border:3px solid #e5e7eb;border-top-color:#b91c1c;border-radius:50%;animation:_spin .75s linear infinite"></div>
+  <div style="font-size:14px;font-weight:500;color:#374151" id="tl-msg">Translating...</div>
+  <div style="font-size:12px;color:#9ca3af" id="tl-sub">This may take 10-20 seconds for a large document</div>
 </div>
-<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+<style>@keyframes _spin{to{transform:rotate(360deg)}}</style>
 
 <script>
-// Store original page HTML for resetting to English
-let _origHTML = null;
-let _transCache = {};
-let _currentLang = 'en';
+/* <![CDATA[ */
+var _origContent = null;
+var _cache = {};
+var _curLang = "en";
 
 function toggleLangMenu() {
-  const toggle = document.getElementById('lang-toggle');
-  const dropdown = document.getElementById('lang-dropdown');
-  const isOpen = dropdown.classList.toggle('open');
-  toggle.classList.toggle('open', isOpen);
-  toggle.setAttribute('aria-expanded', isOpen);
+  var toggle = document.getElementById("lang-toggle");
+  var dropdown = document.getElementById("lang-dropdown");
+  var isOpen = dropdown.classList.toggle("open");
+  toggle.classList.toggle("open", isOpen);
+  toggle.setAttribute("aria-expanded", isOpen);
 }
-
-async function switchLang(lang, label) {
-  // Close dropdown
-  document.querySelectorAll('.lang-option').forEach(b => b.classList.remove('active'));
-  document.getElementById('lang-dropdown').classList.remove('open');
-  document.getElementById('lang-toggle').classList.remove('open');
-  document.getElementById('lang-toggle').setAttribute('aria-expanded', 'false');
-  document.getElementById('lang-current').textContent = label;
-
-  if (lang === _currentLang) return;
-
-  // Reset to English
-  if (lang === 'en') {
-    if (_origHTML) {
-      document.getElementById('main-content').innerHTML = _origHTML;
-      // Re-attach accordion listeners
-      document.querySelectorAll('.acc-trigger').forEach(t => {
-        t.onclick = function() { toggleAcc(this); };
-      });
-    }
-    _currentLang = 'en';
+function _closeDropdown() {
+  document.getElementById("lang-dropdown").classList.remove("open");
+  document.getElementById("lang-toggle").classList.remove("open");
+  document.getElementById("lang-toggle").setAttribute("aria-expanded","false");
+}
+function _showOverlay(msg) {
+  document.getElementById("tl-msg").textContent = msg || "Translating...";
+  document.getElementById("translate-overlay").style.display = "flex";
+}
+function _hideOverlay() {
+  document.getElementById("translate-overlay").style.display = "none";
+}
+function _reattachAccordions() {
+  document.querySelectorAll(".acc-trigger").forEach(function(t) {
+    t.onclick = function() { toggleAcc(this); };
+  });
+}
+function switchLang(lang, label) {
+  _closeDropdown();
+  document.querySelectorAll(".lang-option").forEach(function(b) { b.classList.remove("active"); });
+  var main = document.getElementById("main-content");
+  if (!main || lang === _curLang) return;
+  if (lang === "en") {
+    if (_origContent) { main.innerHTML = _origContent; _reattachAccordions(); }
+    _curLang = "en";
+    document.getElementById("lang-current").textContent = "English";
     return;
   }
-
-  // Use cache if available
-  if (_transCache[lang]) {
-    if (!_origHTML) _origHTML = document.getElementById('main-content').innerHTML;
-    document.getElementById('main-content').innerHTML = _transCache[lang];
-    document.querySelectorAll('.acc-trigger').forEach(t => { t.onclick = function() { toggleAcc(this); }; });
-    _currentLang = lang;
+  if (_cache[lang]) {
+    if (!_origContent) _origContent = main.innerHTML;
+    main.innerHTML = _cache[lang];
+    _reattachAccordions();
+    _curLang = lang;
+    document.getElementById("lang-current").textContent = label;
     return;
   }
-
-  // Save original before first translation
-  if (!_origHTML) _origHTML = document.getElementById('main-content').innerHTML;
-
-  // Show overlay
-  const overlay = document.getElementById('translate-overlay');
-  document.getElementById('translate-overlay-msg').textContent = 'Translating to ' + label + '...';
-  overlay.style.display = 'flex';
-
-  const langNames = {
-    'zh-CN':'Simplified Chinese','zh-TW':'Traditional Chinese',
-    'es':'Spanish','fr':'French','de':'German','it':'Italian',
-    'pt':'Portuguese','ru':'Russian','nl':'Dutch','pl':'Polish',
-    'tr':'Turkish','ar':'Arabic','hi':'Hindi','ja':'Japanese',
-    'ko':'Korean','ms':'Malay','id':'Indonesian','th':'Thai','vi':'Vietnamese'
-  };
-
-  try {
-    // Collect all text nodes from main content (skip buttons/nav)
-    const main = document.getElementById('main-content');
-    const nodes = [];
-    const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
-      acceptNode(node) {
-        const p = node.parentElement;
-        if (!p) return NodeFilter.FILTER_REJECT;
-        const tag = p.tagName.toLowerCase();
-        if (['script','style','button'].includes(tag)) return NodeFilter.FILTER_REJECT;
-        if (p.closest('.lang-wrap') || p.closest('.acc-trigger')) return NodeFilter.FILTER_REJECT;
-        if (node.nodeValue.trim().length < 2) return NodeFilter.FILTER_REJECT;
-        return NodeFilter.FILTER_ACCEPT;
-      }
-    });
-    let n; while (n = walker.nextNode()) nodes.push({ node: n, orig: n.nodeValue });
-
-    // Batch into chunks ~800 chars each
-    const SEP = ' ||||| ';
-    const chunks = [];
-    let chunk = [], len = 0;
-    for (const item of nodes) {
-      const t = item.orig.trim();
-      if (len + t.length > 800 && chunk.length) { chunks.push(chunk); chunk = [item]; len = t.length; }
-      else { chunk.push(item); len += t.length + SEP.length; }
+  if (!_origContent) _origContent = main.innerHTML;
+  _showOverlay("Translating to " + label + "... (20-40 seconds)");
+  var langNames = {"zh-CN":"Simplified Chinese","zh-TW":"Traditional Chinese","es":"Spanish","fr":"French","de":"German","it":"Italian","pt":"Portuguese","ru":"Russian","nl":"Dutch","pl":"Polish","tr":"Turkish","ar":"Arabic","hi":"Hindi","ja":"Japanese","ko":"Korean","ms":"Malay","id":"Indonesian","th":"Thai","vi":"Vietnamese"};
+  var targetLang = langNames[lang] || lang;
+  var nodes = [];
+  var walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(node) {
+      var p = node.parentElement;
+      if (!p) return NodeFilter.FILTER_REJECT;
+      var tag = p.tagName.toLowerCase();
+      if (tag === "script" || tag === "style") return NodeFilter.FILTER_REJECT;
+      if (p.closest(".lang-wrap")) return NodeFilter.FILTER_REJECT;
+      if (node.nodeValue.trim().length < 2) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
     }
-    if (chunk.length) chunks.push(chunk);
-
-    // Translate each chunk
-    for (const grp of chunks) {
-      const query = grp.map(i => i.orig.trim()).join(SEP);
-      const url = 'https://api.mymemory.translated.net/get?q='
-        + encodeURIComponent(query.slice(0, 1800))
-        + '&langpair=en|' + lang
-        + '&de=vandlvhs@health.com';
-      try {
-        const resp = await fetch(url);
-        if (!resp.ok) continue;
-        const data = await resp.json();
-        if (data.responseStatus !== 200) continue;
-        const parts = data.responseData.translatedText.split(SEP);
-        grp.forEach((item, i) => {
-          if (parts[i] && parts[i].trim()) item.node.nodeValue = parts[i];
+  });
+  var n; while (n = walker.nextNode()) nodes.push(n);
+  var SEP = "|||SPLIT|||";
+  var batches = [];
+  var batch = [];
+  var blen = 0;
+  for (var i = 0; i < nodes.length; i++) {
+    var t = nodes[i].nodeValue.trim();
+    if (blen + t.length > 3500 && batch.length > 0) {
+      batches.push(batch); batch = [nodes[i]]; blen = t.length;
+    } else { batch.push(nodes[i]); blen += t.length + SEP.length; }
+  }
+  if (batch.length) batches.push(batch);
+  var total = batches.length;
+  var done = 0;
+  function processBatch(idx) {
+    if (idx >= total) {
+      _cache[lang] = main.innerHTML;
+      _reattachAccordions();
+      _curLang = lang;
+      document.getElementById("lang-current").textContent = label;
+      _hideOverlay();
+      return;
+    }
+    var grp = batches[idx];
+    var combined = grp.map(function(node) { return node.nodeValue.trim(); }).join(SEP);
+    document.getElementById("tl-msg").textContent = "Translating... " + Math.round(((done+1)/total)*100) + "%";
+    fetch("/api/translate/public", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({text: combined, targetLang: targetLang})
+    }).then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function(data) {
+      if (data && data.translated) {
+        var parts = data.translated.split(SEP);
+        grp.forEach(function(node, j) {
+          if (parts[j] !== undefined && parts[j].trim().length > 0) {
+            node.nodeValue = parts[j].trim();
+          }
         });
-      } catch(e) { /* skip failed chunk */ }
-    }
-
-    // Cache result
-    _transCache[lang] = document.getElementById('main-content').innerHTML;
-    _currentLang = lang;
-
-    // Re-attach accordion listeners
-    document.querySelectorAll('.acc-trigger').forEach(t => { t.onclick = function() { toggleAcc(this); }; });
-
-  } catch(e) {
-    console.error('Translation error:', e);
-  } finally {
-    overlay.style.display = 'none';
+      }
+      done++;
+      processBatch(idx + 1);
+    }).catch(function(e) {
+      console.warn("Batch", idx, "failed:", e.message);
+      done++;
+      processBatch(idx + 1);
+    });
   }
+  processBatch(0);
 }
-
-// Close dropdown when clicking outside
-document.addEventListener('click', e => {
-  const wrap = document.getElementById('lang-wrap');
-  if (wrap && !wrap.contains(e.target)) {
-    document.getElementById('lang-dropdown').classList.remove('open');
-    document.getElementById('lang-toggle').classList.remove('open');
-    document.getElementById('lang-toggle').setAttribute('aria-expanded', 'false');
-  }
+document.addEventListener("click", function(e) {
+  var wrap = document.getElementById("lang-wrap");
+  if (wrap && !wrap.contains(e.target)) _closeDropdown();
 });
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    document.getElementById('lang-dropdown').classList.remove('open');
-    document.getElementById('lang-toggle').classList.remove('open');
-  }
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") _closeDropdown();
 });
+/* ]]> */
 </script>
-
 
 <script>
 function toggleAcc(trigger) {
@@ -735,6 +722,7 @@ function toggleAcc(trigger) {
   trigger.setAttribute('aria-expanded', isOpen);
 }
 </script>
+
 
 </body>
 </html>
