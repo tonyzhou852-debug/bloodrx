@@ -20,13 +20,11 @@
   --bg:         #f7f8f9;
   --bg-2:       #f3f4f6;
 
-  /* Brand — deep clinical red */
   --brand:      #b91c1c;
   --brand-dark: #991b1b;
   --brand-bg:   #fff1f1;
   --brand-bd:   #fecaca;
 
-  /* Semantic */
   --green:      #059669;
   --green-bg:   #ecfdf5;
   --green-bd:   #a7f3d0;
@@ -50,18 +48,15 @@
   --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
   --shadow:     0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
 
-  /* Animation tokens — §7 */
   --t-fast: 150ms;
   --t-mid:  250ms;
   --ease-out: cubic-bezier(0,0,.2,1);
 }
 
-/* §7: reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-/* §1: skip link */
 .skip-link {
   position: absolute; top: -100px; left: 12px;
   background: var(--brand); color: #fff;
@@ -78,7 +73,6 @@ body {
   min-height: 100dvh; -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Nav ───────────────────────────────────────────────────── */
 .topbar {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -105,6 +99,17 @@ body {
   border: 1px solid var(--brand-bd); border-radius: 4px;
   padding: 2px 8px; text-transform: uppercase;
 }
+
+.view-toggle{display:flex;gap:4px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px;margin-left:8px}
+.view-toggle a{
+  padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;
+  text-decoration:none;cursor:pointer;transition:all .15s;color:var(--ink-3);
+  display:flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.view-toggle a.active{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-sm)}
+.view-toggle a:hover:not(.active){color:var(--ink)}
+.view-toggle svg{width:14px;height:14px;flex-shrink:0}
+
 .topbar-right {
   margin-left: auto; display: flex; align-items: center; gap: 10px;
   font-size: 12px; color: var(--ink-3);
@@ -119,7 +124,6 @@ body {
   background: var(--green); display: inline-block;
 }
 
-/* ─── Hero ──────────────────────────────────────────────────── */
 .hero {
   background: var(--ink);
   padding: 48px 24px 44px; text-align: center;
@@ -149,15 +153,12 @@ body {
 }
 .chip svg { width: 12px; height: 12px; flex-shrink: 0; }
 
-/* ─── Page layout ───────────────────────────────────────────── */
 .page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
 
-/* ─── Page heading (shown above form) ──────────────────────── */
 .page-heading { margin-bottom: 1.75rem; }
 .page-heading h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; color: var(--ink); }
 .page-heading p  { font-size: 14px; color: var(--ink-3); margin-top: 4px; }
 
-/* ─── Section cards ─────────────────────────────────────────── */
 .section-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -189,11 +190,9 @@ body {
 .section-header p  { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
 .section-body { padding: 1.5rem; }
 
-/* ─── Form fields ───────────────────────────────────────────── */
 .field-group { margin-bottom: 1.1rem; }
 .field-group:last-child { margin-bottom: 0; }
 
-/* §8: visible labels with for= attribute in HTML */
 .field-label {
   display: flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 600;
@@ -202,7 +201,6 @@ body {
 }
 .field-hint { font-size: 12px; color: var(--ink-4); margin-bottom: 7px; line-height: 1.5; }
 
-/* §2: min-height 44px touch targets; §6: 16px base font */
 input[type=text], input[type=number], select, textarea {
   width: 100%; padding: 10px 12px; min-height: 44px;
   border: 1px solid var(--border-2); border-radius: var(--radius-sm);
@@ -210,9 +208,8 @@ input[type=text], input[type=number], select, textarea {
   background: var(--surface);
   transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
   box-shadow: var(--shadow-sm);
-  touch-action: manipulation; /* §2 tap-delay */
+  touch-action: manipulation;
 }
-/* §1: focus-states — 3px visible ring */
 input:focus, select:focus, textarea:focus {
   outline: none; border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(185,28,28,.12);
@@ -227,7 +224,6 @@ select {
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
-/* ─── Language row ──────────────────────────────────────────── */
 .lang-row {
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 1.25rem; padding-bottom: 1.25rem;
@@ -240,7 +236,6 @@ select {
 }
 .lang-row select { flex: 1; min-height: 36px; height: 36px; }
 
-/* ─── Drop zone ─────────────────────────────────────────────── */
 .drop-zone {
   border: 1.5px dashed var(--border-2);
   border-radius: var(--radius-lg); padding: 2.25rem 1rem;
@@ -251,7 +246,6 @@ select {
 .drop-zone:hover, .drop-zone.over {
   border-color: var(--brand); background: var(--brand-bg);
 }
-/* §1: focus-within for keyboard nav */
 .drop-zone:focus-within { box-shadow: 0 0 0 3px rgba(185,28,28,.12); }
 .drop-zone.has-files {
   border-color: var(--green); border-style: solid; background: var(--green-bg);
@@ -269,7 +263,6 @@ select {
 .dz-sub { font-size: 12px; color: var(--ink-4); margin-top: 4px; font-weight: 400 !important; }
 input[type=file] { display: none; }
 
-/* ─── File list ─────────────────────────────────────────────── */
 .file-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .file-item {
   display: flex; align-items: center; gap: 10px;
@@ -282,12 +275,10 @@ input[type=file] { display: none; }
   width: 36px; height: 36px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-/* §4: SVG icons not emoji — set via inline svg in JS below */
 .file-info { flex: 1; min-width: 0; }
 .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .file-meta { font-size: 11px; color: var(--ink-4); margin-top: 1px; }
 
-/* §2: remove button ≥44px tap area */
 .file-remove {
   background: none; border: none; cursor: pointer;
   color: var(--ink-4); font-size: 14px;
@@ -306,7 +297,6 @@ input[type=file] { display: none; }
 .fb-text  { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-bd); }
 .fb-other { background: var(--bg-2);      color: var(--ink-3);  border: 1px solid var(--border); }
 
-/* §2: add-more touch target */
 .add-more-btn {
   margin-top: 8px; width: 100%; padding: 10px;
   min-height: 44px; touch-action: manipulation;
@@ -318,12 +308,10 @@ input[type=file] { display: none; }
 }
 .add-more-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-bg); }
 
-/* ─── Consent box ───────────────────────────────────────────── */
 .consent-box {
   background: var(--amber-bg); border: 1px solid var(--amber-bd);
   border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 0.75rem;
 }
-/* §2: checkbox label = 44px tap area */
 .consent-label {
   display: flex; align-items: flex-start; gap: 10px;
   cursor: pointer; font-size: 14px; color: var(--ink-2); line-height: 1.6;
@@ -336,8 +324,6 @@ input[type=file] { display: none; }
 .consent-label a { color: var(--brand); }
 .consent-label a:hover { text-decoration: underline; }
 
-/* ─── Primary button ────────────────────────────────────────── */
-/* §2: min-height 44px, touch-action, press feedback; §4: one primary CTA */
 .analyze-btn {
   width: 100%; padding: 14px; min-height: 52px;
   background: var(--brand); color: #fff;
@@ -350,13 +336,11 @@ input[type=file] { display: none; }
   touch-action: manipulation;
 }
 .analyze-btn:hover:not(:disabled) { background: var(--brand-dark); }
-.analyze-btn:active:not(:disabled) { transform: scale(0.98); } /* §2: press-feedback */
-/* §1: focus-visible ring */
+.analyze-btn:active:not(:disabled) { transform: scale(0.98); }
 .analyze-btn:focus-visible { box-shadow: 0 0 0 3px rgba(185,28,28,.3); outline: none; }
 .analyze-btn:disabled { background: var(--ink-4); cursor: not-allowed; transform: none; }
 .analyze-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 
-/* ─── Disclaimer ────────────────────────────────────────────── */
 .disclaimer {
   display: flex; gap: 10px; align-items: flex-start;
   font-size: 12px; color: var(--ink-3); padding: 12px 14px;
@@ -365,7 +349,6 @@ input[type=file] { display: none; }
 }
 .disclaimer svg { flex-shrink: 0; margin-top: 1px; }
 
-/* ─── Error ─────────────────────────────────────────────────── */
 .error-box {
   display: flex; gap: 10px; align-items: flex-start;
   background: var(--red-bg); border: 1px solid var(--red-bd);
@@ -373,9 +356,7 @@ input[type=file] { display: none; }
   color: #7f1d1d; font-size: 14px; margin-top: 1rem; line-height: 1.6;
 }
 
-/* ─── Loading ───────────────────────────────────────────────── */
 #loading { display: none; text-align: center; padding: 5rem 1rem; }
-/* §3: progress bar instead of blocking spinner */
 .loading-progress-track {
   width: 220px; height: 4px; background: var(--bg-2);
   border-radius: 2px; margin: 0 auto 1.5rem; overflow: hidden;
@@ -392,7 +373,6 @@ input[type=file] { display: none; }
 .loading-step.active { color: var(--brand); font-weight: 500; }
 .step-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
-/* ─── Results ───────────────────────────────────────────────── */
 #results { display: none; }
 .result-topbar {
   display: flex; align-items: center; justify-content: space-between;
@@ -409,7 +389,6 @@ input[type=file] { display: none; }
 }
 .new-analysis-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-bg); }
 
-/* Patient card */
 .patient-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-xl); padding: 1.25rem 1.5rem;
@@ -426,7 +405,6 @@ input[type=file] { display: none; }
 .patient-info p  { font-size: 13px; color: var(--ink-3); margin-top: 2px; }
 .patient-right { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 
-/* Severity badge */
 .sev-badge {
   font-size: 11px; font-weight: 700; padding: 4px 12px;
   border-radius: 20px; text-transform: uppercase; letter-spacing: .06em;
@@ -435,7 +413,6 @@ input[type=file] { display: none; }
 .sev-moderate { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
 .sev-severe, .sev-critical { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
 
-/* Info banners */
 .info-banner {
   display: flex; gap: 10px; align-items: flex-start;
   border-radius: var(--radius); padding: 10px 14px;
@@ -445,7 +422,6 @@ input[type=file] { display: none; }
 .banner-amber  { background: var(--amber-bg); border: 1px solid var(--amber-bd); color: #78350f; }
 .banner-green  { background: var(--green-bg); border: 1px solid var(--green-bd); color: #064e3b; }
 
-/* Result sections */
 .result-section { margin-bottom: 1rem; }
 .result-section-title {
   font-size: 11px; font-weight: 700; color: var(--ink-3);
@@ -454,7 +430,6 @@ input[type=file] { display: none; }
 }
 .result-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-/* Summary */
 .summary-block {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 1.1rem 1.4rem;
@@ -465,7 +440,6 @@ input[type=file] { display: none; }
   margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
 }
 
-/* Findings table */
 .findings-table {
   width: 100%; border-collapse: collapse; background: var(--surface);
   border-radius: var(--radius-lg); overflow: hidden;
@@ -492,7 +466,6 @@ input[type=file] { display: none; }
 .val-critical { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
 .interp-text  { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
 
-/* Antibiotic cards */
 .ab-grid { display: flex; flex-direction: column; gap: 10px; }
 .ab-card {
   background: var(--surface); border: 1px solid var(--border);
@@ -521,14 +494,12 @@ input[type=file] { display: none; }
   padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--amber-bd);
 }
 
-/* Monitoring */
 .monitoring-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: 1.1rem 1.4rem;
   font-size: 14px; line-height: 1.8; box-shadow: var(--shadow-sm);
 }
 
-/* Sources */
 .sources-row {
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
   font-size: 12px; color: var(--ink-3); margin-bottom: 1rem;
@@ -539,7 +510,6 @@ input[type=file] { display: none; }
   border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 500;
 }
 
-/* ─── Footer ────────────────────────────────────────────────── */
 .site-footer {
   max-width: 860px; margin: 0 auto;
   padding: 1.5rem; text-align: center;
@@ -549,13 +519,10 @@ input[type=file] { display: none; }
 .site-footer a { color: var(--ink-3); text-decoration: none; }
 .site-footer a:hover { color: var(--brand); }
 
-
-/* VHS Score badge */
 .vhs-score-badge { border:2px solid; border-radius:12px; padding:8px 14px; text-align:center; min-width:80px; }
 .vhs-score-num { font-size:28px; font-weight:700; letter-spacing:-.03em; line-height:1; }
 .vhs-score-label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin-top:2px; }
 
-/* Risk profile */
 .risk-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
 .risk-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow-sm); }
 .risk-label { font-size:12px; font-weight:600; color:var(--ink-2); margin-bottom:8px; text-transform:capitalize; }
@@ -565,13 +532,10 @@ input[type=file] { display: none; }
 .risk-badge { font-size:11px; font-weight:600; padding:2px 8px; border-radius:20px; }
 .risk-note { font-size:12px; color:var(--ink-3); line-height:1.5; }
 
-/* Recommendations */
 .rec-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.25rem; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:10px; }
 .rec-item { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:var(--ink-2); line-height:1.6; }
 .rec-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
 
-
-/* ── Help Bot ────────────────────────────────────────────────── */
 .bot-trigger {
   background: none; border: none; cursor: pointer;
   font-family: inherit; font-size: 12px; color: var(--ink-3);
@@ -689,8 +653,6 @@ input[type=file] { display: none; }
 }
 .bot-chip:hover { background: var(--brand); color: #fff; }
 
-
-/* ── Age Gate ─────────────────────────────────────────────────── */
 .age-gate-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(17,24,39,.92); z-index: 9999;
@@ -728,8 +690,6 @@ input[type=file] { display: none; }
 .age-gate-legal { font-size: 11px; color: var(--ink-4); margin-top: 16px; line-height: 1.5; }
 .age-gate-legal a { color: var(--ink-3); }
 
-
-/* Results page language switcher */
 .translate-overlay {
   display: none; position: fixed; inset: 0;
   background: rgba(255,255,255,0.85); z-index: 500;
@@ -779,17 +739,16 @@ input[type=file] { display: none; }
 .result-lang-opt:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 .result-lang-divider { height: 1px; background: var(--border); margin: 3px 0; }
 
-/* §5: responsive */
 @media (max-width: 600px) {
   .topbar-right { display: none; }
+  .view-toggle a span { display: none; }
+  .view-toggle a { padding: 8px; }
   .hero { padding: 36px 16px 32px; }
   .page { padding: 1.5rem 1rem 3rem; }
   .section-body, .section-header { padding: 1.1rem; }
 }
 </style>
-
 <script>
-// ── Auto language detection ────────────────────────────────────
 const TRANSLATIONS = {
   en: {
     pageTitle: 'VHS Wellness Assessment',
@@ -809,74 +768,78 @@ const TRANSLATIONS = {
     notesHint: 'Allergies, current medications, comorbidities — any language. Include known drug allergies; this directly influences antibiotic selection.',
     docLang: 'Document language',
     uploadTitle: 'Click to select files, or drag &amp; drop here',
-    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; Multiple files &nbsp;·&nbsp; Max 20 MB each',
+    uploadSub: 'PDF &nbsp;\u00b7&nbsp; JPG &nbsp;\u00b7&nbsp; PNG &nbsp;\u00b7&nbsp; TXT &nbsp;\u00b7&nbsp; CSV &nbsp;\u00b7&nbsp; Multiple files &nbsp;\u00b7&nbsp; Max 20 MB each',
     consent: 'I confirm that I am a <strong>licensed healthcare professional</strong> and I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>. I understand that all AI-generated results are for clinical decision <strong>support only</strong> and must be validated by a licensed physician before any prescribing decision.',
     analyze: 'Generate Health Assessment',
     disclaimer: 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
+    navNew: 'New Assessment',
+    navHistory: 'My History',
   },
   'zh-CN': {
-    pageTitle: 'VHS健康评估',
-    heroTitle: 'VANDL健康评分 &amp;<br><em>企业健康管理平台</em>',
-    heroSub: '上传任意格式或语言的健康文档，获取全面的VHS健康评分和wellness建议。',
-    formHeading: 'VHS健康评估',
-    formSub: '上传任意格式或语言的健康文档，获取全面的VANDL健康评分和wellness建议。',
-    patientName: '姓名',
-    phone: '电话号码',
-    age: '年龄',
-    gender: '性别',
-    genderSelect: '请选择',
-    genderM: '男', genderF: '女', genderO: '其他 / 不愿透露',
-    complaint: '主诉 / 症状',
-    complaintHint: '可用任何语言填写 — 系统将自动翻译进行分析',
-    notes: '健康备注',
-    notesHint: '过敏史、当前用药、合并症等 — 可用任何语言填写',
-    docLang: '文件语言',
-    uploadTitle: '点击选择文件，或拖拽至此处',
-    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; 支持多文件 &nbsp;·&nbsp; 每个最大20MB',
-    consent: '本人确认为<strong>持牌医疗专业人员</strong>，同意<a href="/terms">服务条款</a>及<a href="/privacy">隐私政策</a>。本人理解所有AI生成结果仅供临床决策<strong>参考</strong>，任何处方决定前须经持牌医师验证。',
-    analyze: '生成健康评估报告',
-    disclaimer: '本报告仅供健康教育和健康管理目的，不构成医疗诊断、治疗建议或处方。用户在作出医疗决策前应咨询持牌医生。',
+    pageTitle: 'VHS\u5065\u5eb7\u8bc4\u4f30',
+    heroTitle: 'VANDL\u5065\u5eb7\u8bc4\u5206 &amp;<br><em>\u4f01\u4e1a\u5065\u5eb7\u7ba1\u7406\u5e73\u53f0</em>',
+    heroSub: '\u4e0a\u4f20\u4efb\u610f\u683c\u5f0f\u6216\u8bed\u8a00\u7684\u5065\u5eb7\u6587\u6863\uff0c\u83b7\u53d6\u5168\u9762\u7684VHS\u5065\u5eb7\u8bc4\u5206\u548cwellness\u5efa\u8bae\u3002',
+    formHeading: 'VHS\u5065\u5eb7\u8bc4\u4f30',
+    formSub: '\u4e0a\u4f20\u4efb\u610f\u683c\u5f0f\u6216\u8bed\u8a00\u7684\u5065\u5eb7\u6587\u6863\uff0c\u83b7\u53d6\u5168\u9762\u7684VANDL\u5065\u5eb7\u8bc4\u5206\u548cwellness\u5efa\u8bae\u3002',
+    patientName: '\u59d3\u540d',
+    phone: '\u7535\u8bdd\u53f7\u7801',
+    age: '\u5e74\u9f84',
+    gender: '\u6027\u522b',
+    genderSelect: '\u8bf7\u9009\u62e9',
+    genderM: '\u7537', genderF: '\u5973', genderO: '\u5176\u4ed6 / \u4e0d\u613f\u900f\u9732',
+    complaint: '\u4e3b\u8bc9 / \u75c7\u72b6',
+    complaintHint: '\u53ef\u7528\u4efb\u4f55\u8bed\u8a00\u586b\u5199 \u2014 \u7cfb\u7edf\u5c06\u81ea\u52a8\u7ffb\u8bd1\u8fdb\u884c\u5206\u6790',
+    notes: '\u5065\u5eb7\u5907\u6ce8',
+    notesHint: '\u8fc7\u654f\u53f2\u3001\u5f53\u524d\u7528\u836f\u3001\u5408\u5e76\u75c7\u7b49 \u2014 \u53ef\u7528\u4efb\u4f55\u8bed\u8a00\u586b\u5199',
+    docLang: '\u6587\u4ef6\u8bed\u8a00',
+    uploadTitle: '\u70b9\u51fb\u9009\u62e9\u6587\u4ef6\uff0c\u6216\u62d6\u62fd\u81f3\u6b64\u5904',
+    uploadSub: 'PDF &nbsp;\u00b7&nbsp; JPG &nbsp;\u00b7&nbsp; PNG &nbsp;\u00b7&nbsp; TXT &nbsp;\u00b7&nbsp; CSV &nbsp;\u00b7&nbsp; \u652f\u6301\u591a\u6587\u4ef6 &nbsp;\u00b7&nbsp; \u6bcf\u4e2a\u6700\u592020MB',
+    consent: '\u672c\u4eba\u786e\u8ba4\u4e3a<strong>\u6301\u724c\u533b\u7597\u4e13\u4e1a\u4eba\u5458</strong>\uff0c\u540c\u610f<a href="/terms">\u670d\u52a1\u6761\u6b3e</a>\u53ca<a href="/privacy">\u9690\u79c1\u653f\u7b56</a>\u3002\u672c\u4eba\u7406\u89e3\u6240\u6709AI\u751f\u6210\u7ed3\u679c\u4ec5\u4f9b\u4e34\u5e8a\u51b3\u7b56<strong>\u53c2\u8003</strong>\uff0c\u4efb\u4f55\u5904\u65b9\u51b3\u5b9a\u524d\u987b\u7ecf\u6301\u724c\u533b\u5e08\u9a8c\u8bc1\u3002',
+    analyze: '\u751f\u6210\u5065\u5eb7\u8bc4\u4f30\u62a5\u544a',
+    disclaimer: '\u672c\u62a5\u544a\u4ec5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u6784\u6210\u533b\u7597\u8bca\u65ad\u3001\u6cbb\u7597\u5efa\u8bae\u6216\u5904\u65b9\u3002\u7528\u6237\u5728\u4f5c\u51fa\u533b\u7597\u51b3\u7b56\u524d\u5e94\u54a8\u8be2\u6301\u724c\u533b\u751f\u3002',
+    navNew: '\u65b0\u5efa\u8bc4\u4f30',
+    navHistory: '\u6211\u7684\u8bb0\u5f55',
   },
   'zh-TW': {
-    pageTitle: 'VHS健康評估',
-    heroTitle: 'VANDL健康評分 &amp;<br><em>企業健康管理平台</em>',
-    heroSub: '上傳任意格式或語言的健康文件，獲取全面的VHS健康評分和wellness建議。',
-    formHeading: 'VHS健康評估',
-    formSub: '上傳任意格式或語言的健康文件，獲取全面的VANDL健康評分和wellness建議。',
-    patientName: '姓名',
-    phone: '電話號碼',
-    age: '年齡',
-    gender: '性別',
-    genderSelect: '請選擇',
-    genderM: '男', genderF: '女', genderO: '其他 / 不願透露',
-    complaint: '主訴 / 症狀',
-    complaintHint: '可用任何語言填寫 — 系統將自動翻譯進行分析',
-    notes: '健康備註',
-    notesHint: '過敏史、當前用藥、合併症等 — 可用任何語言填寫',
-    docLang: '文件語言',
-    uploadTitle: '點擊選擇文件，或拖曳至此處',
-    uploadSub: 'PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; 支援多文件 &nbsp;·&nbsp; 每個最大20MB',
-    consent: '本人確認為<strong>持牌醫療專業人員</strong>，同意<a href="/terms">服務條款</a>及<a href="/privacy">隱私政策</a>。本人理解所有AI生成結果僅供臨床決策<strong>參考</strong>，任何處方決定前須經持牌醫師驗證。',
-    analyze: '生成健康評估報告',
-    disclaimer: '本報告僅供健康教育和健康管理目的，不構成醫療診斷、治療建議或處方。用戶在作出醫療決策前應諮詢持牌醫生。',
+    pageTitle: 'VHS\u5065\u5eb7\u8a55\u4f30',
+    heroTitle: 'VANDL\u5065\u5eb7\u8a55\u5206 &amp;<br><em>\u4f01\u696d\u5065\u5eb7\u7ba1\u7406\u5e73\u53f0</em>',
+    heroSub: '\u4e0a\u50b3\u4efb\u610f\u683c\u5f0f\u6216\u8a9e\u8a00\u7684\u5065\u5eb7\u6587\u4ef6\uff0c\u7372\u5f97\u5168\u9762\u7684VHS\u5065\u5eb7\u8a55\u5206\u548cwellness\u5efa\u8b70\u3002',
+    formHeading: 'VHS\u5065\u5eb7\u8a55\u4f30',
+    formSub: '\u4e0a\u50b3\u4efb\u610f\u683c\u5f0f\u6216\u8a9e\u8a00\u7684\u5065\u5eb7\u6587\u4ef6\uff0c\u7372\u5f97\u5168\u9762\u7684VANDL\u5065\u5eb7\u8a55\u5206\u548cwellness\u5efa\u8b70\u3002',
+    patientName: '\u59d3\u540d',
+    phone: '\u96fb\u8a71\u865f\u78bc',
+    age: '\u5e74\u9f61',
+    gender: '\u6027\u5225',
+    genderSelect: '\u8acb\u9078\u64c7',
+    genderM: '\u7537', genderF: '\u5973', genderO: '\u5176\u4ed6 / \u4e0d\u9858\u900f\u9732',
+    complaint: '\u4e3b\u8a34 / \u75c7\u72c0',
+    complaintHint: '\u53ef\u7528\u4efb\u4f55\u8a9e\u8a00\u586b\u5beb \u2014 \u7cfb\u7d71\u5c07\u81ea\u52d5\u7ffb\u8b6f\u9032\u884c\u5206\u6790',
+    notes: '\u5065\u5eb7\u5099\u8a3b',
+    notesHint: '\u904e\u654f\u53f2\u3001\u7576\u524d\u7528\u85e5\u3001\u5408\u4f75\u75c7\u7b49 \u2014 \u53ef\u7528\u4efb\u4f55\u8a9e\u8a00\u586b\u5beb',
+    docLang: '\u6587\u4ef6\u8a9e\u8a00',
+    uploadTitle: '\u9ede\u64ca\u9078\u64c7\u6587\u4ef6\uff0c\u6216\u62d6\u66f3\u81f3\u6b64\u8655',
+    uploadSub: 'PDF &nbsp;\u00b7&nbsp; JPG &nbsp;\u00b7&nbsp; PNG &nbsp;\u00b7&nbsp; TXT &nbsp;\u00b7&nbsp; CSV &nbsp;\u00b7&nbsp; \u652f\u63f4\u591a\u6587\u4ef6 &nbsp;\u00b7&nbsp; \u6bcf\u500b\u6700\u592020MB',
+    consent: '\u672c\u4eba\u78ba\u8a8d\u70ba<strong>\u6301\u7247\u91ab\u7642\u5c08\u696d\u4eba\u54e1</strong>\uff0c\u540c\u610f<a href="/terms">\u670d\u52d9\u689d\u6b3e</a>\u53ca<a href="/privacy">\u96b1\u79c1\u653f\u7b56</a>\u3002\u672c\u4eba\u7406\u89e3\u6240\u6709AI\u751f\u6210\u7d50\u679c\u50c5\u4f9b\u81e8\u5e8a\u6c7a\u7b56<strong>\u53c3\u8003</strong>\uff0c\u4efb\u4f55\u8655\u65b9\u6c7a\u5b9a\u524d\u9808\u7d93\u6301\u7247\u91ab\u5e2b\u9a57\u8b49\u3002',
+    analyze: '\u751f\u6210\u5065\u5eb7\u8a55\u4f30\u5831\u544a',
+    disclaimer: '\u672c\u5831\u544a\u50c5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u69cb\u6210\u91ab\u7642\u8a3a\u65b7\u3001\u6cbb\u7642\u5efa\u8b70\u6216\u8655\u65b9\u3002\u7528\u6236\u5728\u4f5c\u51fa\u91ab\u7642\u6c7a\u5b9a\u524d\u61c9\u8af8\u8a62\u6301\u7247\u91ab\u751f\u3002',
+    navNew: '\u65b0\u5efa\u8a55\u4f30',
+    navHistory: '\u6211\u7684\u8a18\u9304',
   }
 };
 
 let currentLang = 'en';
-let _rawResult = null;      // current result (may be translated)
-let _rawPatient = null;     // patient info
-let _originalResult = null; // always the first result as received from Claude
-const _translationCache = {}; // lang -> translated result object (in-memory cache)
+let _rawResult = null;
+let _rawPatient = null;
+let _originalResult = null;
+const _translationCache = {};
 
 function applyLang(lang) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
   currentLang = lang;
   document.documentElement.lang = lang === 'zh-CN' ? 'zh-Hans' : lang === 'zh-TW' ? 'zh-Hant' : 'en';
 
-  // Labels
   const set = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
   const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-  const setPlaceholder = (id, val) => { const el = document.getElementById(id); if(el) el.placeholder = val; };
 
   set('hero-title', t.heroTitle);
   set('hero-sub', t.heroSub);
@@ -896,8 +859,9 @@ function applyLang(lang) {
   set('consent-text', t.consent);
   setText('analyze-label', t.analyze);
   document.querySelectorAll('.disclaimer span').forEach(el => el.textContent = t.disclaimer);
+  setText('nav-new-text', t.navNew);
+  setText('nav-history-text', t.navHistory);
 
-  // Gender options
   const gSel = document.getElementById('p-gender');
   if (gSel) {
     gSel.options[0].text = t.genderSelect;
@@ -922,10 +886,8 @@ document.addEventListener('DOMContentLoaded', detectLang);
 </head>
 <body>
 
-<!-- §1: skip link -->
 <a href="#main-form" class="skip-link">Skip to main form</a>
 
-<!-- Nav -->
 <nav class="topbar" aria-label="Site navigation">
   <div class="topbar-inner">
     <a href="#" class="logo" aria-label="VANDL VHS home">
@@ -935,6 +897,18 @@ document.addEventListener('DOMContentLoaded', detectLang);
       <span class="logo-text">VANDL<em>VHS</em></span>
     </a>
     <span class="topbar-tag">Clinical AI</span>
+
+    <div class="view-toggle" id="view-toggle">
+      <a href="/" class="active" id="nav-new">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span id="nav-new-text">New Assessment</span>
+      </a>
+      <a href="/my-records" id="nav-history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>
+        <span id="nav-history-text">My History</span>
+      </a>
+    </div>
+
     <div class="topbar-right">
       <div class="user-badge" id="user-badge" style="display:none">
         <div class="user-avatar" id="user-avatar">?</div>
@@ -945,7 +919,6 @@ document.addEventListener('DOMContentLoaded', detectLang);
   </div>
 </nav>
 
-<!-- Hero -->
 <div class="hero" role="banner">
   <div class="hero-eyebrow" aria-hidden="true">
     <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
@@ -968,7 +941,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
       TXT / CSV Files
     </span>
     <span class="chip" role="listitem">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a1 1 0 110 2 1 1 0 010-2zm0 3a1 1 0 011 1v4a1 1 0 11-2 0V7a1 1 0 011-1z"/></svg>
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2c.9 0 1.76.2 2.53.55L3.55 10.53A5 5 0 018 3zm0 10a5 5 0 01-2.53-.55l7-7A5 5 0 018 13z"/></svg>
       Multiple files at once
     </span>
     <span class="chip" role="listitem">
@@ -980,16 +953,13 @@ document.addEventListener('DOMContentLoaded', detectLang);
 
 <main class="page" id="main-form">
 
-  <!-- Page heading -->
   <div class="page-heading" id="form-heading">
     <h1 id="form-heading-h1">VHS Wellness Assessment</h1>
     <p id="form-heading-p">Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.</p>
   </div>
 
-  <!-- FORM SECTION -->
   <div id="form-section">
 
-    <!-- Patient information -->
     <div class="section-card" role="region" aria-labelledby="patient-heading">
       <div class="section-header">
         <div class="icon-wrap icon-blue" aria-hidden="true">
@@ -1008,30 +978,30 @@ document.addEventListener('DOMContentLoaded', detectLang);
           <select id="report-lang" name="report-lang">
             <option value="auto">Auto-detect (recommended)</option>
             <option value="English">English</option>
-            <option value="Arabic">Arabic / العربية</option>
-            <option value="French">French / Français</option>
-            <option value="Spanish">Spanish / Español</option>
+            <option value="Arabic">Arabic / \u0627\u0644\u0639\u0631\u0628\u064a\u0629</option>
+            <option value="French">French / Fran\u00e7ais</option>
+            <option value="Spanish">Spanish / Espa\u00f1ol</option>
             <option value="German">German / Deutsch</option>
-            <option value="Chinese (Simplified)">Chinese Simplified / 简体中文</option>
-            <option value="Chinese (Traditional)">Chinese Traditional / 繁體中文</option>
-            <option value="Hindi">Hindi / हिन्दी</option>
-            <option value="Urdu">Urdu / اردو</option>
-            <option value="Portuguese">Portuguese / Português</option>
-            <option value="Russian">Russian / Русский</option>
-            <option value="Japanese">Japanese / 日本語</option>
-            <option value="Korean">Korean / 한국어</option>
-            <option value="Turkish">Turkish / Türkçe</option>
-            <option value="Persian">Persian / فارسی</option>
-            <option value="Bengali">Bengali / বাংলা</option>
+            <option value="Chinese (Simplified)">Chinese Simplified / \u7b80\u4f53\u4e2d\u6587</option>
+            <option value="Chinese (Traditional)">Chinese Traditional / \u7e41\u9ad4\u4e2d\u6587</option>
+            <option value="Hindi">Hindi / \u0939\u093f\u0928\u094d\u0926\u0940</option>
+            <option value="Urdu">Urdu / \u0627\u0631\u062f\u0648</option>
+            <option value="Portuguese">Portuguese / Portugu\u00eas</option>
+            <option value="Russian">Russian / \u0420\u0443\u0441\u0441\u043a\u0438\u0439</option>
+            <option value="Japanese">Japanese / \u65e5\u672c\u8a9e</option>
+            <option value="Korean">Korean / \ud55c\uad6d\uc5b4</option>
+            <option value="Turkish">Turkish / T\u00fcrk\u00e7e</option>
+            <option value="Persian">Persian / \u0641\u0627\u0631\u0633\u06cc</option>
+            <option value="Bengali">Bengali / \u09ac\u09be\u0982\u09b2\u09be</option>
             <option value="Indonesian">Indonesian / Bahasa Indonesia</option>
             <option value="Italian">Italian / Italiano</option>
             <option value="Dutch">Dutch / Nederlands</option>
             <option value="Polish">Polish / Polski</option>
-            <option value="Thai">Thai / ภาษาไทย</option>
-            <option value="Vietnamese">Vietnamese / Tiếng Việt</option>
+            <option value="Thai">Thai / \u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22</option>
+            <option value="Vietnamese">Vietnamese / Ti\u1ebfng Vi\u1ec7t</option>
             <option value="Swahili">Swahili / Kiswahili</option>
             <option value="Hausa">Hausa</option>
-            <option value="Amharic">Amharic / አማርኛ</option>
+            <option value="Amharic">Amharic / \u12a0\u121b\u122d\u129b</option>
           </select>
         </div>
 
@@ -1043,7 +1013,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
           </div>
           <div>
             <label class="field-label" for="p-phone" id="label-phone">Phone number</label>
-            <div class="field-hint">Optional — for follow-up</div>
+            <div class="field-hint">Optional \u2014 for follow-up</div>
             <input type="tel" id="p-phone" name="p-phone" placeholder="e.g. +1 555 000 0000" autocomplete="tel" />
           </div>
         </div>
@@ -1066,21 +1036,19 @@ document.addEventListener('DOMContentLoaded', detectLang);
 
         <div class="field-group">
           <label class="field-label" for="p-complaint" id="label-complaint">Chief Complaint / Symptoms</label>
-          <div class="field-hint">Write in any language — automatically translated for analysis</div>
-          <textarea id="p-complaint" name="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough · حمى وسعال · Fièvre et toux · 发烧咳嗽 · Fieber und Husten"></textarea>
+          <div class="field-hint">Write in any language \u2014 automatically translated for analysis</div>
+          <textarea id="p-complaint" name="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough"></textarea>
         </div>
 
         <div class="field-group">
           <label class="field-label" for="p-notes" id="label-notes">Clinical Notes</label>
-          <!-- §8: helper text — explains what to include, especially drug allergies -->
-          <div class="field-hint">Allergies, current medications, comorbidities — any language. Include known drug allergies; this directly influences antibiotic selection.</div>
-          <textarea id="p-notes" name="p-notes" rows="3" dir="auto" placeholder="e.g. Penicillin allergy, Type 2 diabetes, on Metformin · حساسية للبنسلين · Allergie à la pénicilline · 青霉素过敏"></textarea>
+          <div class="field-hint">Allergies, current medications, comorbidities \u2014 any language. Include known drug allergies; this directly influences antibiotic selection.</div>
+          <textarea id="p-notes" name="p-notes" rows="3" dir="auto" placeholder="e.g. Penicillin allergy, Type 2 diabetes, on Metformin"></textarea>
         </div>
 
       </div>
     </div>
 
-    <!-- Document upload -->
     <div class="section-card" role="region" aria-labelledby="docs-heading">
       <div class="section-header">
         <div class="icon-wrap icon-green" aria-hidden="true">
@@ -1093,7 +1061,6 @@ document.addEventListener('DOMContentLoaded', detectLang);
       </div>
       <div class="section-body">
 
-        <!-- §1: keyboard-accessible upload zone -->
         <div class="drop-zone" id="drop-zone"
           role="button" tabindex="0"
           aria-label="Upload files. Click or press Enter to browse, or drag and drop files here."
@@ -1103,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
             <svg id="dz-svg" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
           </div>
           <p id="dz-text">Click to select files, or drag &amp; drop here</p>
-          <p class="dz-sub">PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; Multiple files &nbsp;·&nbsp; Max 20 MB each</p>
+          <p class="dz-sub">PDF &nbsp;\u00b7&nbsp; JPG &nbsp;\u00b7&nbsp; PNG &nbsp;\u00b7&nbsp; TXT &nbsp;\u00b7&nbsp; CSV &nbsp;\u00b7&nbsp; Multiple files &nbsp;\u00b7&nbsp; Max 20 MB each</p>
           <label for="file-in" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Choose files to upload</label>
           <input type="file" id="file-in" multiple
             accept=".pdf,.jpg,.jpeg,.png,.txt,.csv,application/pdf,image/jpeg,image/png,text/plain,text/csv"
@@ -1118,21 +1085,18 @@ document.addEventListener('DOMContentLoaded', detectLang);
           + Add more files
         </button>
 
-        <!-- §8: error-placement — below the related control -->
         <div id="err-box" class="error-box" style="display:none" role="alert">
           <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
           <span id="err-msg"></span>
         </div>
 
-        <!-- Consent checkbox -->
         <div id="consent-box" class="consent-box">
           <label class="consent-label" for="consent-check">
             <input type="checkbox" id="consent-check" onchange="updateAnalyzeBtn()">
-            <span id="consent-text">I am 18 years or older and agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this platform uses AI to generate wellness assessments for <strong>educational purposes only</strong> — not medical diagnosis or prescription. I consent to my data being processed as described in the Privacy Policy.</span>
+            <span id="consent-text">I am 18 years or older and agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this platform uses AI to generate wellness assessments for <strong>educational purposes only</strong> \u2014 not medical diagnosis or prescription. I consent to my data being processed as described in the Privacy Policy.</span>
           </label>
         </div>
 
-        <!-- §4: single primary CTA per screen -->
         <button class="analyze-btn" id="analyze-btn" onclick="analyze()" disabled type="button"
           aria-describedby="analyze-disclaimer">
           <svg width="17" height="17" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>
@@ -1147,23 +1111,20 @@ document.addEventListener('DOMContentLoaded', detectLang);
       <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.</span>
     </div>
 
-  </div><!-- /form-section -->
+  </div>
 
-  <!-- LOADING — §3: progress bar; §7: aria-live -->
   <div id="loading" aria-live="polite" aria-atomic="true" role="status">
     <div class="loading-progress-track">
       <div class="loading-progress-bar" id="progress-bar"></div>
     </div>
-    <h3 id="loading-title">Analyzing documents…</h3>
-    <p id="loading-sub">This typically takes 15–30 seconds</p>
+    <h3 id="loading-title">Analyzing documents\u2026</h3>
+    <p id="loading-sub">This typically takes 15\u201330 seconds</p>
     <div class="loading-steps" id="loading-steps"></div>
   </div>
 
-  <!-- RESULTS -->
   <div id="results"></div>
 
 </main>
-
 <script>
 let uploadedFiles = [];
 
@@ -1175,7 +1136,6 @@ const TYPE_MAP = {
   'text/csv':        { cat:'text',  icon:'csv',   badge:'fb-text',  label:'CSV'   },
 };
 
-/* SVG icons for file types — §4: no emoji */
 const FILE_ICONS = {
   pdf:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`,
   image: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
@@ -1261,7 +1221,7 @@ function renderFileList() {
       </div>
       <div class="file-info">
         <div class="file-name">${escHtml(f.name)}</div>
-        <div class="file-meta">${fmtSize(f.size)}${f.base64===null?' &nbsp;·&nbsp; <em>loading…</em>':''}</div>
+        <div class="file-meta">${fmtSize(f.size)}${f.base64===null?' &nbsp;\u00b7&nbsp; <em>loading\u2026</em>':''}</div>
       </div>
       <span class="ftype-badge ${f.badgeCls}">${f.label}</span>
       <button class="file-remove" onclick="removeFile(${i})" type="button"
@@ -1278,20 +1238,19 @@ function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'
 function showErr(msg) { document.getElementById('err-msg').textContent = msg; document.getElementById('err-box').style.display = 'flex'; }
 function hideErr() { document.getElementById('err-box').style.display = 'none'; }
 
-/* ── Loading steps UI ── */
 const STEPS_EN = [
   'Reading and parsing documents',
-  'Detecting language — translating markers',
+  'Detecting language \u2014 translating markers',
   'Extracting and normalising lab values',
   'Calculating VHS Health Score',
   'Generating wellness recommendations',
 ];
 const STEPS_ZH = [
-  '正在读取和解析文档',
-  '正在检测语言并翻译指标',
-  '正在提取和标准化检验值',
-  '正在计算VHS健康评分',
-  '正在生成健康建议',
+  '\u6b63\u5728\u8bfb\u53d6\u548c\u89e3\u6790\u6587\u6863',
+  '\u6b63\u5728\u68c0\u6d4b\u8bed\u8a00\u5e76\u7ffb\u8bd1\u6307\u6807',
+  '\u6b63\u5728\u63d0\u53d6\u548c\u6807\u51c6\u5316\u68c0\u9a8c\u503c',
+  '\u6b63\u5728\u8ba1\u7b97VHS\u5065\u5eb7\u8bc4\u5206',
+  '\u6b63\u5728\u751f\u6210\u5065\u5eb7\u5efa\u8bae',
 ];
 const STEPS = (currentLang === 'zh-CN' || currentLang === 'zh-TW') ? STEPS_ZH : STEPS_EN;
 let stepTimer, stepIdx = 0;
@@ -1307,11 +1266,10 @@ function setStep(i) {
     const el = document.getElementById('lstep-'+j);
     if (el) el.className = 'loading-step' + (j===i?' active':'');
   });
-  document.getElementById('loading-title').textContent = STEPS[i] + '…';
+  document.getElementById('loading-title').textContent = STEPS[i] + '\u2026';
 }
 function stopLoading() { clearInterval(stepTimer); }
 
-/* ── Build content parts ── */
 function buildContentParts() {
   return uploadedFiles.filter(f => f.base64).map(f => {
     if (f.category === 'pdf')
@@ -1326,7 +1284,6 @@ function buildContentParts() {
   });
 }
 
-/* ── Main analysis ── */
 async function analyze() {
   if (!uploadedFiles.length || !uploadedFiles.every(f=>f.base64)) { showErr('Please wait for all files to finish loading.'); return; }
 
@@ -1344,11 +1301,10 @@ async function analyze() {
   document.getElementById('results').style.display        = 'none';
   startLoading();
 
-  // Determine output language based on IP-detected language
   const outputLangMap = {
     'en': 'English',
-    'zh-CN': 'Simplified Chinese (简体中文)',
-    'zh-TW': 'Traditional Chinese (繁體中文)'
+    'zh-CN': 'Simplified Chinese (\u7b80\u4f53\u4e2d\u6587)',
+    'zh-TW': 'Traditional Chinese (\u7e41\u9ad4\u4e2d\u6587)'
   };
   const outputLang = outputLangMap[currentLang] || 'English';
 
@@ -1422,7 +1378,6 @@ Return ONLY valid JSON:
       throw new Error(e.error || 'API error ' + resp.status);
     }
 
-    // Read SSE stream with live progress indicator
     let fullText = '';
     let charCount = 0;
     const reader = resp.body.getReader();
@@ -1444,7 +1399,6 @@ Return ONLY valid JSON:
           if (ev.t) {
             fullText += ev.t;
             charCount += ev.t.length;
-            // Show live token count so user knows it's working
             if (loadingTitle && charCount % 50 === 0) {
               loadingTitle.textContent = 'Generating report... ' + Math.min(99, Math.round(charCount/80)) + '%';
             }
@@ -1471,39 +1425,35 @@ Return ONLY valid JSON:
   }
 }
 
-
-/* ── UI label translations ── */
 function uiT(key) {
   const isChinese = currentLang === 'zh-CN' || currentLang === 'zh-TW';
   const trad = currentLang === 'zh-TW';
   const labels = {
-    reportTitle:     isChinese ? 'VHS健康报告' : 'VHS Wellness Report',
-    healthAssessment:isChinese ? (trad?'健康評估摘要':'健康评估摘要') : 'Health Assessment Summary',
-    keyConcerns:     isChinese ? (trad?'主要健康問題':'主要健康问题') : 'Key Health Concerns',
-    riskProfile:     isChinese ? (trad?'風險評估':'风险评估') : 'Risk Profile',
-    labFindings:     isChinese ? (trad?'檢驗結果':'检验结果') : 'Laboratory Findings',
-    nutrition:       isChinese ? (trad?'營養建議':'营养建议') : 'Nutrition Recommendations',
-    lifestyle:       isChinese ? (trad?'生活方式建議':'生活方式建议') : 'Lifestyle Recommendations',
-    supplements:     isChinese ? (trad?'營養補充建議':'营养补充建议') : 'Suggested Nutritional Support',
-    monitoring:      isChinese ? (trad?'監測計劃':'监测计划') : 'Monitoring Plan',
-    vhsScore:        isChinese ? 'VHS评分' : 'VHS Score',
-    newAssessment:   isChinese ? (trad?'← 新評估':'← 新评估') : '← New Assessment',
-    aiGenerated:     isChinese ? 'AI生成内容' : 'AI-Generated Content',
-    disclaimer:      isChinese ? (trad?'本報告由AI生成，僅供健康教育和健康管理目的，不構成醫療診斷、治療建議或處方。作出醫療決定前請諮詢合資格醫生。':'本报告由AI生成，仅供健康教育和健康管理目的，不构成医疗诊断、治疗建议或处方。在作出医疗决定前请咨询合资格医生。') : 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
-    detectedLang:    isChinese ? '检测语言' : 'Detected language',
-    translated:      isChinese ? '所有数值已翻译为中文进行分析' : 'all values translated to English for analysis',
+    reportTitle:     isChinese ? 'VHS\u5065\u5eb7\u62a5\u544a' : 'VHS Wellness Report',
+    healthAssessment:isChinese ? (trad?'\u5065\u5eb7\u8a55\u4f30\u6458\u8981':'\u5065\u5eb7\u8bc4\u4f30\u6458\u8981') : 'Health Assessment Summary',
+    keyConcerns:     isChinese ? (trad?'\u4e3b\u8981\u5065\u5eb7\u554f\u984c':'\u4e3b\u8981\u5065\u5eb7\u95ee\u9898') : 'Key Health Concerns',
+    riskProfile:     isChinese ? (trad?'\u98a8\u96aa\u8a55\u4f30':'\u98ce\u9669\u8bc4\u4f30') : 'Risk Profile',
+    labFindings:     isChinese ? (trad?'\u6aa2\u9a57\u7d50\u679c':'\u68c0\u9a8c\u7ed3\u679c') : 'Laboratory Findings',
+    nutrition:       isChinese ? (trad?'\u71df\u990a\u5efa\u8b70':'\u8425\u517b\u5efa\u8bae') : 'Nutrition Recommendations',
+    lifestyle:       isChinese ? (trad?'\u751f\u6d3b\u65b9\u5f0f\u5efa\u8b70':'\u751f\u6d3b\u65b9\u5f0f\u5efa\u8bae') : 'Lifestyle Recommendations',
+    supplements:     isChinese ? (trad?'\u71df\u990a\u88dc\u5145\u5efa\u8b70':'\u8425\u517b\u8865\u5145\u5efa\u8bae') : 'Suggested Nutritional Support',
+    monitoring:      isChinese ? (trad?'\u76e3\u6e2c\u8a08\u5283':'\u76d1\u6d4b\u8ba1\u5212') : 'Monitoring Plan',
+    vhsScore:        isChinese ? 'VHS\u8bc4\u5206' : 'VHS Score',
+    newAssessment:   isChinese ? (trad?'\u2190 \u65b0\u8a55\u4f30':'\u2190 \u65b0\u8bc4\u4f30') : '\u2190 New Assessment',
+    aiGenerated:     isChinese ? 'AI\u751f\u6210\u5185\u5bb9' : 'AI-Generated Content',
+    disclaimer:      isChinese ? (trad?'\u672c\u5831\u544a\u7531AI\u751f\u6210\uff0c\u50c5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u69cb\u6210\u91ab\u7642\u8a3a\u65b7\u3001\u6cbb\u7642\u5efa\u8b70\u6216\u8655\u65b9\u3002\u4f5c\u51fa\u91ab\u7642\u6c7a\u5b9a\u524d\u8acb\u8af8\u8a62\u5408\u8cc7\u683c\u91ab\u751f\u3002':'\u672c\u62a5\u544a\u7531AI\u751f\u6210\uff0c\u4ec5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u6784\u6210\u533b\u7597\u8bca\u65ad\u3001\u6cbb\u7597\u5efa\u8bae\u6216\u5904\u65b9\u3002\u5728\u4f5c\u51fa\u533b\u7597\u51b3\u5b9a\u524d\u8bf7\u54a8\u8be2\u5408\u8d44\u683c\u533b\u751f\u3002') : 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
+    detectedLang:    isChinese ? '\u68c0\u6d4b\u8bed\u8a00' : 'Detected language',
+    translated:      isChinese ? '\u6240\u6709\u6570\u503c\u5df2\u7ffb\u8bd1\u4e3a\u4e2d\u6587\u8fdb\u884c\u5206\u6790' : 'all values translated to English for analysis',
   };
   return labels[key] || key;
 }
 
-/* ── Render results ── */
 function renderResults(r, p) {
-  // Store raw data for language switching
   _rawResult = r;
   _rawPatient = p;
   if (!_originalResult) {
-    _originalResult = JSON.parse(JSON.stringify(r)); // save original once
-    _translationCache[currentLang] = _originalResult; // cache original under its lang
+    _originalResult = JSON.parse(JSON.stringify(r));
+    _translationCache[currentLang] = _originalResult;
   }
 
   const initials = p.name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || 'P';
@@ -1517,18 +1467,16 @@ function renderResults(r, p) {
   const langHtml = r.detected_languages ? `
     <div class="info-banner banner-blue" role="note">
       <strong>Detected language${r.detected_languages.includes(',')?' (multiple)':''}:</strong>&nbsp;
-      ${escHtml(r.detected_languages)} — all values translated to English for analysis.
+      ${escHtml(r.detected_languages)} \u2014 all values translated to English for analysis.
       ${r.documents_analysed ? `<br><span style="opacity:.8">${escHtml(r.documents_analysed)}</span>` : ''}
     </div>` : '';
 
   const valCls = { normal:'val-normal', high:'val-high', low:'val-low', critical:'val-critical' };
-  const valIco = { normal:'↔', high:'↑', low:'↓', critical:'⚠' };
+  const valIco = { normal:'\u2194', high:'\u2191', low:'\u2193', critical:'\u26a0' };
 
-  // VHS Score colour
   const score = r.vhs_score || 0;
   const scoreColor = score >= 90 ? '#059669' : score >= 75 ? '#2563eb' : score >= 60 ? '#b45309' : score >= 40 ? '#dc2626' : '#7f1d1d';
 
-  // Risk profile
   const riskColors = ['#059669','#65a30d','#b45309','#dc2626','#7f1d1d'];
   const riskHtml = r.risk_profile ? Object.entries(r.risk_profile).map(([key, val]) => `
     <div class="risk-card">
@@ -1573,29 +1521,29 @@ function renderResults(r, p) {
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
           <div class="result-lang-dropdown" id="result-lang-dropdown" role="listbox">
-            <button class="result-lang-opt active" onclick="switchResultLang('en','English')">🇬🇧 English</button>
+            <button class="result-lang-opt active" onclick="switchResultLang('en','English')">English</button>
             <div class="result-lang-divider"></div>
-            <button class="result-lang-opt" onclick="switchResultLang('zh-CN','简体中文')">🇨🇳 简体中文</button>
-            <button class="result-lang-opt" onclick="switchResultLang('zh-TW','繁體中文')">🇹🇼 繁體中文</button>
+            <button class="result-lang-opt" onclick="switchResultLang('zh-CN','\u7b80\u4f53\u4e2d\u6587')">\u7b80\u4f53\u4e2d\u6587</button>
+            <button class="result-lang-opt" onclick="switchResultLang('zh-TW','\u7e41\u9ad4\u4e2d\u6587')">\u7e41\u9ad4\u4e2d\u6587</button>
             <div class="result-lang-divider"></div>
-            <button class="result-lang-opt" onclick="switchResultLang('es','Español')">🇪🇸 Español</button>
-            <button class="result-lang-opt" onclick="switchResultLang('fr','Français')">🇫🇷 Français</button>
-            <button class="result-lang-opt" onclick="switchResultLang('de','Deutsch')">🇩🇪 Deutsch</button>
-            <button class="result-lang-opt" onclick="switchResultLang('it','Italiano')">🇮🇹 Italiano</button>
-            <button class="result-lang-opt" onclick="switchResultLang('pt','Português')">🇵🇹 Português</button>
-            <button class="result-lang-opt" onclick="switchResultLang('ru','Русский')">🇷🇺 Русский</button>
-            <button class="result-lang-opt" onclick="switchResultLang('nl','Nederlands')">🇳🇱 Nederlands</button>
-            <button class="result-lang-opt" onclick="switchResultLang('pl','Polski')">🇵🇱 Polski</button>
-            <button class="result-lang-opt" onclick="switchResultLang('tr','Türkçe')">🇹🇷 Türkçe</button>
+            <button class="result-lang-opt" onclick="switchResultLang('es','Espa\u00f1ol')">Espa\u00f1ol</button>
+            <button class="result-lang-opt" onclick="switchResultLang('fr','Fran\u00e7ais')">Fran\u00e7ais</button>
+            <button class="result-lang-opt" onclick="switchResultLang('de','Deutsch')">Deutsch</button>
+            <button class="result-lang-opt" onclick="switchResultLang('it','Italiano')">Italiano</button>
+            <button class="result-lang-opt" onclick="switchResultLang('pt','Portugu\u00eas')">Portugu\u00eas</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ru','\u0420\u0443\u0441\u0441\u043a\u0438\u0439')">\u0420\u0443\u0441\u0441\u043a\u0438\u0439</button>
+            <button class="result-lang-opt" onclick="switchResultLang('nl','Nederlands')">Nederlands</button>
+            <button class="result-lang-opt" onclick="switchResultLang('pl','Polski')">Polski</button>
+            <button class="result-lang-opt" onclick="switchResultLang('tr','T\u00fcrk\u00e7e')">T\u00fcrk\u00e7e</button>
             <div class="result-lang-divider"></div>
-            <button class="result-lang-opt" onclick="switchResultLang('ar','العربية')">🇸🇦 العربية</button>
-            <button class="result-lang-opt" onclick="switchResultLang('hi','हिन्दी')">🇮🇳 हिन्दी</button>
-            <button class="result-lang-opt" onclick="switchResultLang('ja','日本語')">🇯🇵 日本語</button>
-            <button class="result-lang-opt" onclick="switchResultLang('ko','한국어')">🇰🇷 한국어</button>
-            <button class="result-lang-opt" onclick="switchResultLang('ms','Bahasa Melayu')">🇲🇾 Bahasa Melayu</button>
-            <button class="result-lang-opt" onclick="switchResultLang('id','Bahasa Indonesia')">🇮🇩 Bahasa Indonesia</button>
-            <button class="result-lang-opt" onclick="switchResultLang('th','ภาษาไทย')">🇹🇭 ภาษาไทย</button>
-            <button class="result-lang-opt" onclick="switchResultLang('vi','Tiếng Việt')">🇻🇳 Tiếng Việt</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ar','\u0627\u0644\u0639\u0631\u0628\u064a\u0629')">\u0627\u0644\u0639\u0631\u0628\u064a\u0629</button>
+            <button class="result-lang-opt" onclick="switchResultLang('hi','\u0939\u093f\u0928\u094d\u0926\u0940')">\u0939\u093f\u0928\u094d\u0926\u0940</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ja','\u65e5\u672c\u8a9e')">\u65e5\u672c\u8a9e</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ko','\ud55c\uad6d\uc5b4')">\ud55c\uad6d\uc5b4</button>
+            <button class="result-lang-opt" onclick="switchResultLang('ms','Bahasa Melayu')">Bahasa Melayu</button>
+            <button class="result-lang-opt" onclick="switchResultLang('id','Bahasa Indonesia')">Bahasa Indonesia</button>
+            <button class="result-lang-opt" onclick="switchResultLang('th','\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22')">\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22</button>
+            <button class="result-lang-opt" onclick="switchResultLang('vi','Ti\u1ebfng Vi\u1ec7t')">Ti\u1ebfng Vi\u1ec7t</button>
           </div>
         </div>
         <button class="new-analysis-btn" onclick="resetForm()" type="button">${uiT("newAssessment")}</button>
@@ -1608,7 +1556,7 @@ function renderResults(r, p) {
       <div class="patient-avatar" aria-hidden="true">${escHtml(initials)}</div>
       <div class="patient-info">
         <h3>${escHtml(p.name)}</h3>
-        <p>${[p.age&&p.age+' years', p.gender].filter(Boolean).map(escHtml).join(' &nbsp;·&nbsp; ')}</p>
+        <p>${[p.age&&p.age+' years', p.gender].filter(Boolean).map(escHtml).join(' &nbsp;\u00b7&nbsp; ')}</p>
       </div>
       <div class="patient-right">
         <div class="vhs-score-badge" style="border-color:${scoreColor}">
@@ -1641,19 +1589,19 @@ function renderResults(r, p) {
     ${(r.nutrition_recommendations||[]).length ? `
     <div class="result-section" role="region" aria-label="Nutrition recommendations">
       <div class="result-section-title">${uiT("nutrition")}</div>
-      <div class="rec-card">${listHtml(r.nutrition_recommendations,'🥗')}</div>
+      <div class="rec-card">${listHtml(r.nutrition_recommendations,'\ud83e\udd57')}</div>
     </div>` : ''}
 
     ${(r.lifestyle_recommendations||[]).length ? `
     <div class="result-section" role="region" aria-label="Lifestyle recommendations">
       <div class="result-section-title">${uiT("lifestyle")}</div>
-      <div class="rec-card">${listHtml(r.lifestyle_recommendations,'🏃')}</div>
+      <div class="rec-card">${listHtml(r.lifestyle_recommendations,'\ud83c\udfc3')}</div>
     </div>` : ''}
 
     ${(r.nutritional_support||[]).length ? `
     <div class="result-section" role="region" aria-label="Nutritional support">
       <div class="result-section-title">${uiT("supplements")}</div>
-      <div class="rec-card">${listHtml(r.nutritional_support,'💊')}</div>
+      <div class="rec-card">${listHtml(r.nutritional_support,'\ud83d\udc8a')}</div>
     </div>` : ''}
 
     ${r.monitoring_plan ? `
@@ -1671,17 +1619,16 @@ function renderResults(r, p) {
   document.getElementById('results').style.display = 'block';
   window.scrollTo(0,0);
 
-  // Update language button label to show current language
   const langLabelEl = document.getElementById('result-lang-current');
   if (langLabelEl) {
     const langDisplayMap = {
-      'en': 'English', 'zh-CN': '简体中文', 'zh-TW': '繁體中文',
-      'es': 'Español', 'fr': 'Français', 'de': 'Deutsch',
-      'it': 'Italiano', 'pt': 'Português', 'ru': 'Русский',
-      'nl': 'Nederlands', 'pl': 'Polski', 'tr': 'Türkçe',
-      'ar': 'العربية', 'hi': 'हिन्दी', 'ja': '日本語',
-      'ko': '한국어', 'ms': 'Bahasa Melayu', 'id': 'Bahasa Indonesia',
-      'th': 'ภาษาไทย', 'vi': 'Tiếng Việt'
+      'en': 'English', 'zh-CN': '\u7b80\u4f53\u4e2d\u6587', 'zh-TW': '\u7e41\u9ad4\u4e2d\u6587',
+      'es': 'Espa\u00f1ol', 'fr': 'Fran\u00e7ais', 'de': 'Deutsch',
+      'it': 'Italiano', 'pt': 'Portugu\u00eas', 'ru': '\u0420\u0443\u0441\u0441\u043a\u0438\u0439',
+      'nl': 'Nederlands', 'pl': 'Polski', 'tr': 'T\u00fcrk\u00e7e',
+      'ar': '\u0627\u0644\u0639\u0631\u0628\u064a\u0629', 'hi': '\u0939\u093f\u0928\u094d\u0926\u0940', 'ja': '\u65e5\u672c\u8a9e',
+      'ko': '\ud55c\uad6d\uc5b4', 'ms': 'Bahasa Melayu', 'id': 'Bahasa Indonesia',
+      'th': '\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22', 'vi': 'Ti\u1ebfng Vi\u1ec7t'
     };
     langLabelEl.textContent = langDisplayMap[currentLang] || 'Language';
   }
@@ -1704,15 +1651,14 @@ function resetForm() {
 </script>
 
 <footer class="site-footer">
-  <p>VANDL Health Score (VHS) &nbsp;·&nbsp;
-    <a href="/terms">Terms of Service</a> &nbsp;·&nbsp;
-    <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp;
+  <p>VANDL Health Score (VHS) &nbsp;\u00b7&nbsp;
+    <a href="/terms">Terms of Service</a> &nbsp;\u00b7&nbsp;
+    <a href="/privacy">Privacy Policy</a> &nbsp;\u00b7&nbsp;
     <button class="bot-trigger" onclick="openBot()">&#x1F4AC; Help</button>
   </p>
   <p style="margin-top:6px">This report is for health education and wellness management only. Not a medical diagnosis or prescription.</p>
 </footer>
 
-<!-- Help Bot -->
 <div class="bot-overlay" id="bot-overlay" onclick="if(event.target===this)closeBot()">
   <div class="bot-window" role="dialog" aria-label="VHS Help Assistant" aria-modal="true">
     <div class="bot-head">
@@ -1721,7 +1667,7 @@ function resetForm() {
       </div>
       <div class="bot-head-text">
         <div class="bot-head-name">VHS Help Assistant</div>
-        <div class="bot-head-status">AI Assistant · Not a human</div>
+        <div class="bot-head-status">AI Assistant \u00b7 Not a human</div>
       </div>
       <button class="bot-close" onclick="closeBot()" aria-label="Close help">&#x2715;</button>
     </div>
@@ -1740,7 +1686,7 @@ function resetForm() {
     </div>
 
     <div class="bot-input-row">
-      <textarea class="bot-input" id="bot-input" placeholder="Ask about submitting your report…" rows="1"
+      <textarea class="bot-input" id="bot-input" placeholder="Ask about submitting your report\u2026" rows="1"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendBot()}"
         oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
       <button class="bot-send" id="bot-send-btn" onclick="sendBot()" aria-label="Send">
@@ -1749,19 +1695,17 @@ function resetForm() {
     </div>
   </div>
 </div>
-
 <script>
-/* ── VHS Help Bot ─────────────────────────────────────────────── */
 const BOT_SYSTEM = `You are the VHS Help Assistant for VANDL Health Score platform. Your ONLY job is to help users understand how to submit their health report and interpret their VHS wellness results on this page.
 
 You are STRICTLY LIMITED to these topics:
 1. How to fill in the patient information form (name, phone, age, gender, complaint, notes)
-2. How to upload files (accepted formats: PDF, JPG, PNG, TXT, CSV — max 20MB each, multiple files supported)
+2. How to upload files (accepted formats: PDF, JPG, PNG, TXT, CSV \u2014 max 20MB each, multiple files supported)
 3. How to select the document language
 4. What the consent checkbox means
 5. How to click "Generate Health Assessment"
 6. What the VHS Health Score (0-100) means: 90-100 Excellent, 75-89 Good, 60-74 Fair, 40-59 Needs Attention, 0-39 Poor
-7. What the 5 risk categories mean: Cardiovascular, Metabolic, Liver, Kidney, Inflammation — each scored 1-5
+7. What the 5 risk categories mean: Cardiovascular, Metabolic, Liver, Kidney, Inflammation \u2014 each scored 1-5
 8. What Nutrition Recommendations, Lifestyle Recommendations, Suggested Nutritional Support, and Monitoring Plan sections mean
 9. Why results are in English (translation happens automatically)
 10. How to start a new assessment
@@ -1818,7 +1762,6 @@ function hideTyping() {
 
 async function askBot(question) {
   if (botLoading) return;
-  // Hide suggestions after first interaction
   document.getElementById('bot-suggestions').style.display = 'none';
   document.getElementById('bot-input').value = '';
   appendMsg('user', question);
@@ -1866,8 +1809,6 @@ async function getBotReply() {
 }
 </script>
 
-
-<!-- Age Gate -->
 <div class="age-gate-overlay" id="age-gate" role="dialog" aria-modal="true" aria-labelledby="age-gate-title">
   <div class="age-gate-box">
     <div class="age-gate-icon">
@@ -1876,25 +1817,24 @@ async function getBotReply() {
     <h2 id="age-gate-title">Age Verification Required</h2>
     <p>VANDL Health Score (VHS) is intended for use by adults aged 18 and over. By continuing, you confirm that you are at least 18 years old and agree to our Terms of Service and Privacy Policy.</p>
     <div class="age-gate-btns">
-      <button class="age-gate-confirm" onclick="confirmAge()">I am 18 years or older — Continue</button>
-      <button class="age-gate-deny" onclick="denyAge()">I am under 18 — Exit</button>
+      <button class="age-gate-confirm" onclick="confirmAge()">I am 18 years or older \u2014 Continue</button>
+      <button class="age-gate-deny" onclick="denyAge()">I am under 18 \u2014 Exit</button>
     </div>
     <p class="age-gate-legal">By clicking continue you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>. We do not knowingly collect data from individuals under 18.</p>
   </div>
 </div>
 
 <script>
-/* ── Age Gate ─────────────────────────────────────────────────── */
 (function() {
   const CONSENT_KEY = 'vhs_age_confirmed';
-  const CONSENT_EXPIRY = 30 * 24 * 60 * 60 * 1000; // 30 days
+  const CONSENT_EXPIRY = 30 * 24 * 60 * 60 * 1000;
 
   function checkAgeGate() {
     try {
       const stored = localStorage.getItem(CONSENT_KEY);
       if (stored) {
         const { timestamp } = JSON.parse(stored);
-        if (Date.now() - timestamp < CONSENT_EXPIRY) return; // valid consent
+        if (Date.now() - timestamp < CONSENT_EXPIRY) return;
       }
     } catch(e) {}
     document.getElementById('age-gate').classList.add('show');
@@ -1913,16 +1853,11 @@ async function getBotReply() {
     window.location.href = 'https://www.google.com';
   };
 
-  // Run on load
   document.addEventListener('DOMContentLoaded', checkAgeGate);
 })();
 </script>
 
-
-<!-- Results page language switcher -->
 <script>
-// _translationCache declared above
-
 function showTranslateOverlay(msg) {
   const el = document.getElementById('translate-overlay');
   document.getElementById('translate-overlay-msg').textContent = msg || 'Translating report...';
@@ -1942,14 +1877,12 @@ function toggleResultLang() {
 }
 
 async function switchResultLang(lang, label) {
-  // Close dropdown
   document.getElementById('result-lang-dropdown').classList.remove('open');
   document.getElementById('result-lang-toggle').classList.remove('open');
   document.getElementById('result-lang-toggle').setAttribute('aria-expanded', 'false');
 
   if (!_originalResult || !_rawPatient) return;
 
-  // If we have a cached translation, use it instantly
   if (_translationCache[lang]) {
     currentLang = lang;
     const saved = _originalResult;
@@ -1959,10 +1892,8 @@ async function switchResultLang(lang, label) {
     return;
   }
 
-  // Show loading overlay
   showTranslateOverlay('Translating to ' + label + '...');
 
-  // Build fields to translate from original
   const src = _originalResult;
   const fields = {};
   if (src.health_assessment) fields.health_assessment = src.health_assessment;
@@ -2004,7 +1935,6 @@ async function switchResultLang(lang, label) {
     if (!data.translated) throw new Error('No translation in response');
     const t = data.translated;
 
-    // Build translated result from original
     const tr = JSON.parse(JSON.stringify(src));
     if (t.health_assessment) tr.health_assessment = t.health_assessment;
     if (t.key_health_concerns) tr.key_health_concerns = t.key_health_concerns;
@@ -2025,7 +1955,6 @@ async function switchResultLang(lang, label) {
       tr.findings.forEach((f, i) => { if (parts[i]) f.interpretation = parts[i].trim(); });
     }
 
-    // Cache and render
     _translationCache[lang] = tr;
     currentLang = lang;
     const saved = _originalResult;
@@ -2035,7 +1964,6 @@ async function switchResultLang(lang, label) {
 
   } catch(e) {
     console.error('Translation failed:', e.message);
-    // Restore original label
     document.getElementById('result-lang-current').textContent =
       _translationCache['_currentLabel'] || 'Language';
   } finally {
@@ -2043,7 +1971,6 @@ async function switchResultLang(lang, label) {
   }
 }
 
-// Close dropdown when clicking outside
 document.addEventListener('click', e => {
   const wrap = document.getElementById('result-lang-wrap');
   if (wrap && !wrap.contains(e.target)) {
@@ -2061,7 +1988,6 @@ document.addEventListener('click', e => {
 </div>
 
 <script>
-// ── Auth: load user and show in navbar ─────────────────────────
 async function loadUser() {
   try {
     const resp = await fetch('/api/auth/me', { credentials: 'include' });
