@@ -281,6 +281,14 @@ app.get("/login",   (req, res) => res.sendFile(path.join(__dirname,"public","log
 app.get("/terms",   (req, res) => res.sendFile(path.join(__dirname,"public","terms.html")));
 app.get("/privacy", (req, res) => res.sendFile(path.join(__dirname,"public","privacy.html")));
 
+// My Records — for a logged-in regular user to see only their own submitted data
+app.get("/my-records", (req, res) => {
+  const token = req.cookies?.vhs_token;
+  if (!token) return res.redirect("/login");
+  try { jwt.verify(token, JWT_SECRET); res.sendFile(path.join(__dirname,"public","my-records.html")); }
+  catch { res.clearCookie("vhs_token"); res.redirect("/login"); }
+});
+
 app.get("/", (req, res, next) => {
   const token = req.cookies?.vhs_token;
   if (!token) return res.redirect("/login");
@@ -504,6 +512,34 @@ app.get("/api/admin/users", adminLimit, adminAuthOrToken, async (req, res) => {
     const users = await db.collection("users").find({},{ projection:{_id:0,passwordHash:0} }).sort({id:-1}).limit(500).toArray();
     res.json(users);
   } catch(e) { res.status(500).json({ error:"Failed." }); }
+});
+
+// ══════════════════════════════════════════════════════════════
+// MY RECORDS — regular logged-in user, scoped to their own data
+// ══════════════════════════════════════════════════════════════
+app.get("/api/my/records", requireAuth, globalLimit, async (req, res) => {
+  try {
+    const db = await getDB();
+    const rows = await db.collection("patients")
+      .find({ userId: req.user.id }, { projection:{ _id:0, ip:0, userId:0 } })
+      .sort({ id:-1 })
+      .limit(500)
+      .toArray();
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error:"Failed to load records." }); }
+});
+
+app.post("/api/my/records/delete", requireAuth, globalLimit, async (req, res) => {
+  const { id } = req.body || {};
+  const num = Number(id);
+  if (!Number.isFinite(num) || num <= 0) return res.status(400).json({ error:"Invalid ID." });
+  try {
+    const db = await getDB();
+    // Only allow deleting records owned by this user
+    const r = await db.collection("patients").deleteOne({ id: num, userId: req.user.id });
+    if (r.deletedCount === 0) return res.status(404).json({ error:"Record not found or not yours." });
+    res.json({ deleted: 1 });
+  } catch(e) { res.status(500).json({ error:"Delete failed." }); }
 });
 
 // ══════════════════════════════════════════════════════════════
