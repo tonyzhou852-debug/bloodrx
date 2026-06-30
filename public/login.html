@@ -103,8 +103,8 @@ input::placeholder{color:var(--ink-4)}
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showPanel('login')">Sign In</button>
-    <button class="tab" onclick="showPanel('register')">Create Account</button>
+    <button class="tab active" id="tab-login" onclick="showPanel('login')">Sign In</button>
+    <button class="tab" id="tab-register" onclick="showPanel('register')">Create Account</button>
   </div>
 
   <div class="card-body">
@@ -113,28 +113,28 @@ input::placeholder{color:var(--ink-4)}
     <div class="panel active" id="panel-login">
       <div class="error-msg" id="login-error"></div>
       <div class="form-group">
-        <label for="login-email">Email</label>
+        <label for="login-email" id="label-login-email">Email</label>
         <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
       </div>
       <div class="form-group">
-        <label for="login-password">Password</label>
+        <label for="login-password" id="label-login-password">Password</label>
         <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <div class="remember-row">
         <input type="checkbox" id="remember-me" checked>
-        <label for="remember-me">Remember me for 30 days</label>
+        <label for="remember-me" id="label-remember">Remember me for 30 days</label>
       </div>
       <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
 
-      <div class="divider">or</div>
-      <button class="btn-google" onclick="googleLogin()">
+      <div class="divider" id="divider-login">or</div>
+      <button class="btn-google" id="google-login-btn" onclick="googleLogin()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
         </svg>
-        Continue with Google
+        <span id="google-login-text">Continue with Google</span>
       </button>
     </div>
 
@@ -143,28 +143,28 @@ input::placeholder{color:var(--ink-4)}
       <div class="error-msg" id="register-error"></div>
       <div class="success-msg" id="register-success"></div>
       <div class="form-group">
-        <label for="reg-username">Full Name / Username</label>
+        <label for="reg-username" id="label-reg-username">Full Name / Username</label>
         <input type="text" id="reg-username" placeholder="Your name" autocomplete="name">
       </div>
       <div class="form-group">
-        <label for="reg-email">Email</label>
+        <label for="reg-email" id="label-reg-email">Email</label>
         <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email">
       </div>
       <div class="form-group">
-        <label for="reg-password">Password</label>
+        <label for="reg-password" id="label-reg-password">Password</label>
         <input type="password" id="reg-password" placeholder="Min. 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
       </div>
       <button class="btn-primary" id="register-btn" onclick="doRegister()">Create Account</button>
 
-      <div class="divider">or</div>
-      <button class="btn-google" onclick="googleLogin()">
+      <div class="divider" id="divider-register">or</div>
+      <button class="btn-google" id="google-register-btn" onclick="googleLogin()">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
           <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
           <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
         </svg>
-        Sign up with Google
+        <span id="google-register-text">Sign up with Google</span>
       </button>
     </div>
 
@@ -172,11 +172,98 @@ input::placeholder{color:var(--ink-4)}
 </div>
 
 <script>
-// Check for error param
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('error') === 'google') {
-  document.getElementById('login-error').textContent = 'Google login failed. Please try again.';
-  document.getElementById('login-error').classList.add('show');
+const LOGIN_I18N = {
+  en: {
+    welcomeBack:'Welcome back', signInSub:'Sign in to your VHS account',
+    createAccount:'Create account', createSub:'Get started with VANDL Health Score',
+    signIn:'Sign In', signUp:'Create Account',
+    email:'Email', password:'Password', rememberMe:'Remember me for 30 days',
+    or:'or', continueGoogle:'Continue with Google', signUpGoogle:'Sign up with Google',
+    fullNameUsername:'Full Name / Username',
+    enterCreds:'Please enter your email and password.',
+    signingIn:'Signing in...',
+    allFieldsRequired:'All fields are required.',
+    pwTooShort:'Password must be at least 8 characters.',
+    creatingAccount:'Creating account...',
+    networkError:'Network error. Please try again.',
+    googleFailed:'Google login failed. Please try again.',
+    loginFailed:'Login failed.',
+    registerFailed:'Registration failed.',
+  },
+  'zh-CN': {
+    welcomeBack:'\u6b22\u8fce\u56de\u6765', signInSub:'\u767b\u5f55\u60a8\u7684VHS\u8d26\u6237',
+    createAccount:'\u521b\u5efa\u8d26\u6237', createSub:'\u5f00\u59cb\u4f7f\u7528VANDL\u5065\u5eb7\u8bc4\u5206',
+    signIn:'\u767b\u5f55', signUp:'\u521b\u5efa\u8d26\u6237',
+    email:'\u90ae\u7bb1', password:'\u5bc6\u7801', rememberMe:'30\u5929\u5185\u8bb0\u4f4f\u6211',
+    or:'\u6216', continueGoogle:'\u4f7f\u7528Google\u7ee7\u7eed', signUpGoogle:'\u4f7f\u7528Google\u6ce8\u518c',
+    fullNameUsername:'\u59d3\u540d / \u7528\u6237\u540d',
+    enterCreds:'\u8bf7\u8f93\u5165\u60a8\u7684\u90ae\u7bb1\u548c\u5bc6\u7801\u3002',
+    signingIn:'\u6b63\u5728\u767b\u5f55...',
+    allFieldsRequired:'\u6240\u6709\u5b57\u6bb5\u90fd\u662f\u5fc5\u586b\u7684\u3002',
+    pwTooShort:'\u5bc6\u7801\u81f3\u5c11\u9700\u898b8\u4e2a\u5b57\u7b26\u3002',
+    creatingAccount:'\u6b63\u5728\u521b\u5efa\u8d26\u6237...',
+    networkError:'\u7f51\u7edc\u9519\u8bef\uff0c\u8bf7\u91cd\u8bd5\u3002',
+    googleFailed:'Google\u767b\u5f55\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002',
+    loginFailed:'\u767b\u5f55\u5931\u8d25\u3002',
+    registerFailed:'\u6ce8\u518c\u5931\u8d25\u3002',
+  },
+  'zh-TW': {
+    welcomeBack:'\u6b61\u8fce\u56de\u4f86', signInSub:'\u767b\u5165\u60a8\u7684VHS\u5e33\u6236',
+    createAccount:'\u5efa\u7acb\u5e33\u6236', createSub:'\u958b\u59cb\u4f7f\u7528VANDL\u5065\u5eb7\u8a55\u5206',
+    signIn:'\u767b\u5165', signUp:'\u5efa\u7acb\u5e33\u6236',
+    email:'\u96fb\u5b50\u90f5\u4ef6', password:'\u5bc6\u78bc', rememberMe:'30\u5929\u5167\u8a18\u4f4f\u6211',
+    or:'\u6216', continueGoogle:'\u4f7f\u7528Google\u7e7c\u7e8c', signUpGoogle:'\u4f7f\u7528Google\u8a3b\u518a',
+    fullNameUsername:'\u59d3\u540d / \u7528\u6236\u540d',
+    enterCreds:'\u8acb\u8f38\u5165\u60a8\u7684\u96fb\u5b50\u90f5\u4ef6\u548c\u5bc6\u78bc\u3002',
+    signingIn:'\u6b63\u5728\u767b\u5165...',
+    allFieldsRequired:'\u6240\u6709\u6b04\u4f4d\u90fd\u662f\u5fc5\u586b\u7684\u3002',
+    pwTooShort:'\u5bc6\u78bc\u81f3\u5c11\u9700\u898b8\u500b\u5b57\u7b26\u3002',
+    creatingAccount:'\u6b63\u5728\u5efa\u7acb\u5e33\u6236...',
+    networkError:'\u7db2\u8def\u932f\u8aa4\uff0c\u8acb\u91cd\u8a66\u3002',
+    googleFailed:'Google\u767b\u5165\u5931\u6557\uff0c\u8acb\u91cd\u8a66\u3002',
+    loginFailed:'\u767b\u5165\u5931\u6557\u3002',
+    registerFailed:'\u8a3b\u518a\u5931\u6557\u3002',
+  },
+};
+let LOGIN_LANG = 'en';
+let LT = LOGIN_I18N.en;
+
+function applyLoginI18n() {
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setText('card-title', LT.welcomeBack);
+  setText('card-sub', LT.signInSub);
+  setText('tab-login', LT.signIn);
+  setText('tab-register', LT.signUp);
+  setText('label-login-email', LT.email);
+  setText('label-login-password', LT.password);
+  setText('label-remember', LT.rememberMe);
+  setText('login-btn', LT.signIn);
+  setText('divider-login', LT.or);
+  setText('google-login-text', LT.continueGoogle);
+  setText('label-reg-username', LT.fullNameUsername);
+  setText('label-reg-email', LT.email);
+  setText('label-reg-password', LT.password);
+  setText('register-btn', LT.signUp);
+  setText('divider-register', LT.or);
+  setText('google-register-text', LT.signUpGoogle);
+  document.documentElement.lang = LOGIN_LANG === 'zh-CN' ? 'zh-Hans' : LOGIN_LANG === 'zh-TW' ? 'zh-Hant' : 'en';
+}
+
+async function detectLoginLang() {
+  try {
+    const res = await fetch('/api/lang');
+    const data = await res.json();
+    LOGIN_LANG = data.lang || 'en';
+  } catch(e) { LOGIN_LANG = 'en'; }
+  LT = LOGIN_I18N[LOGIN_LANG] || LOGIN_I18N.en;
+  applyLoginI18n();
+
+  // Apply error param translation after language is known
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('error') === 'google') {
+    document.getElementById('login-error').textContent = LT.googleFailed;
+    document.getElementById('login-error').classList.add('show');
+  }
 }
 
 function showPanel(panel) {
@@ -185,11 +272,11 @@ function showPanel(panel) {
   document.getElementById('panel-' + panel).classList.add('active');
   document.querySelectorAll('.tab')[panel === 'login' ? 0 : 1].classList.add('active');
   if (panel === 'login') {
-    document.getElementById('card-title').textContent = 'Welcome back';
-    document.getElementById('card-sub').textContent = 'Sign in to your VHS account';
+    document.getElementById('card-title').textContent = LT.welcomeBack;
+    document.getElementById('card-sub').textContent = LT.signInSub;
   } else {
-    document.getElementById('card-title').textContent = 'Create account';
-    document.getElementById('card-sub').textContent = 'Get started with VANDL Health Score';
+    document.getElementById('card-title').textContent = LT.createAccount;
+    document.getElementById('card-sub').textContent = LT.createSub;
   }
 }
 
@@ -206,9 +293,9 @@ async function doLogin() {
   hideError('login-error');
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
-  if (!email || !password) return showError('login-error', 'Please enter your email and password.');
+  if (!email || !password) return showError('login-error', LT.enterCreds);
   const btn = document.getElementById('login-btn');
-  btn.disabled = true; btn.textContent = 'Signing in...';
+  btn.disabled = true; btn.textContent = LT.signingIn;
   try {
     const resp = await fetch('/api/auth/login', {
       method: 'POST',
@@ -217,12 +304,12 @@ async function doLogin() {
       credentials: 'include',
     });
     const data = await resp.json();
-    if (!resp.ok) { showError('login-error', data.error || 'Login failed.'); return; }
+    if (!resp.ok) { showError('login-error', data.error || LT.loginFailed); return; }
     window.location.href = '/';
   } catch(e) {
-    showError('login-error', 'Network error. Please try again.');
+    showError('login-error', LT.networkError);
   } finally {
-    btn.disabled = false; btn.textContent = 'Sign In';
+    btn.disabled = false; btn.textContent = LT.signIn;
   }
 }
 
@@ -232,10 +319,10 @@ async function doRegister() {
   const username = document.getElementById('reg-username').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
-  if (!username || !email || !password) return showError('register-error', 'All fields are required.');
-  if (password.length < 8) return showError('register-error', 'Password must be at least 8 characters.');
+  if (!username || !email || !password) return showError('register-error', LT.allFieldsRequired);
+  if (password.length < 8) return showError('register-error', LT.pwTooShort);
   const btn = document.getElementById('register-btn');
-  btn.disabled = true; btn.textContent = 'Creating account...';
+  btn.disabled = true; btn.textContent = LT.creatingAccount;
   try {
     const resp = await fetch('/api/auth/register', {
       method: 'POST',
@@ -244,18 +331,20 @@ async function doRegister() {
       credentials: 'include',
     });
     const data = await resp.json();
-    if (!resp.ok) { showError('register-error', data.error || 'Registration failed.'); return; }
+    if (!resp.ok) { showError('register-error', data.error || LT.registerFailed); return; }
     window.location.href = '/';
   } catch(e) {
-    showError('register-error', 'Network error. Please try again.');
+    showError('register-error', LT.networkError);
   } finally {
-    btn.disabled = false; btn.textContent = 'Create Account';
+    btn.disabled = false; btn.textContent = LT.signUp;
   }
 }
 
 function googleLogin() {
   window.location.href = '/auth/google';
 }
+
+detectLoginLang();
 </script>
 </body>
 </html>
