@@ -222,31 +222,31 @@ tbody tr:hover td{background:#fef7f7}
 <main class="page">
   <div class="page-header">
     <div>
-      <h1>Health Assessment Records</h1>
-      <p>All VHS wellness assessments submitted through VANDL VHS</p>
+      <h1 id="page-title">Health Assessment Records</h1>
+      <p id="page-sub">All VHS wellness assessments submitted through VANDL VHS</p>
     </div>
     <div class="view-toggle">
-      <button class="view-btn active" id="btn-grouped" onclick="setView('grouped')">&#128100; Patients</button>
-      <button class="view-btn" id="btn-all" onclick="setView('all')">&#128203; All Records</button>
+      <button class="view-btn active" id="btn-grouped" onclick="setView('grouped')"><span id="tab-patients-label">&#128100; Patients</span></button>
+      <button class="view-btn" id="btn-all" onclick="setView('all')"><span id="tab-allrecords-label">&#128203; All Records</span></button>
     </div>
   </div>
 
   <!-- Stats -->
   <div class="stats-grid">
     <div class="stat-card" onclick="statClick('patients')" title="View all patients">
-      <div class="stat-label">Unique Patients</div><div class="stat-value" id="st-patients">—</div>
+      <div class="stat-label" id="lbl-unique">Unique Patients</div><div class="stat-value" id="st-patients">—</div>
     </div>
     <div class="stat-card brand" onclick="statClick('total')" title="View all visits">
-      <div class="stat-label">Total Visits</div><div class="stat-value" id="st-total">—</div>
+      <div class="stat-label" id="lbl-total">Total Visits</div><div class="stat-value" id="st-total">—</div>
     </div>
     <div class="stat-card green" onclick="statClick('today')" title="View today's records">
-      <div class="stat-label">Today</div><div class="stat-value" id="st-today">—</div>
+      <div class="stat-label" id="lbl-today">Today</div><div class="stat-value" id="st-today">—</div>
     </div>
     <div class="stat-card amber" onclick="statClick('avg')" title="View VHS score trend">
-      <div class="stat-label">Avg VHS Score</div><div class="stat-value" id="st-avg">—</div>
+      <div class="stat-label" id="lbl-avg">Avg VHS Score</div><div class="stat-value" id="st-avg">—</div>
     </div>
     <div class="stat-card red" onclick="statClick('attention')" title="View records needing attention">
-      <div class="stat-label">Needs Attention</div><div class="stat-value" id="st-attention">—</div>
+      <div class="stat-label" id="lbl-attention">Needs Attention</div><div class="stat-value" id="st-attention">—</div>
     </div>
   </div>
 
@@ -254,7 +254,7 @@ tbody tr:hover td{background:#fef7f7}
   <div id="view-grouped">
     <div class="table-card">
       <div class="table-card-head">
-        <h2>Patient Profiles</h2>
+        <h2 id="hdr-patient-profiles">Patient Profiles</h2>
         <div class="head-right">
           <span class="record-count" id="patient-count">Loading…</span>
           <input type="search" class="search-input" id="search-patients" placeholder="Search patients…" oninput="filterPatients(this.value)">
@@ -275,17 +275,17 @@ tbody tr:hover td{background:#fef7f7}
     </div>
     <div class="table-card">
       <div class="table-card-head">
-        <h2>All Assessments</h2>
+        <h2 id="hdr-all-assessments">All Assessments</h2>
         <div class="head-right">
           <span class="record-count" id="record-count">Loading…</span>
           <input type="search" class="search-input" id="search-records" placeholder="Filter records…" oninput="filterTable(this.value)">
           <button class="csv-btn" onclick="openDownloadPanel()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download CSV
+            <span id="btn-download-csv">Download CSV</span>
           </button>
           <button class="del-btn" id="del-btn" onclick="openDeleteConfirm()" disabled>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            Delete Selected
+            <span id="btn-delete-selected">Delete Selected</span>
           </button>
         </div>
       </div>
@@ -1241,6 +1241,72 @@ function closeChart() { document.getElementById('chart-overlay').classList.remov
 
 document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDL();closeDeleteConfirm();closeProfile();closeChart();} });
 
+// ── Admin i18n (IP-based) ───────────────────────────────────────
+const ADMIN_I18N = {
+  en: {
+    pageTitle:'Health Assessment Records', pageSub:'All VHS wellness assessments submitted through VANDL VHS',
+    tabPatients:'\ud83d\udc64 Patients', tabAllRecords:'\ud83d\udccb All Records',
+    lblUnique:'Unique Patients', lblTotal:'Total Visits', lblToday:'Today', lblAvg:'Avg VHS Score', lblAttention:'Needs Attention',
+    hdrPatientProfiles:'Patient Profiles', hdrAllAssessments:'All Assessments',
+    searchPatients:'Search patients\u2026', filterRecords:'Filter records\u2026',
+    btnDownloadCsv:'Download CSV', btnDeleteSelected:'Delete Selected',
+    loading:'Loading\u2026',
+  },
+  'zh-CN': {
+    pageTitle:'\u5065\u5eb7\u8bc4\u4f30\u8bb0\u5f55', pageSub:'\u901a\u8fc7VANDL VHS\u63d0\u4ea4\u7684\u6240\u6709VHS\u5065\u5eb7\u8bc4\u4f30',
+    tabPatients:'\ud83d\udc64 \u60a3\u8005', tabAllRecords:'\ud83d\udccb \u6240\u6709\u8bb0\u5f55',
+    lblUnique:'\u72ec\u7279\u60a3\u8005\u6570', lblTotal:'\u603b\u8bbf\u95ee\u91cf', lblToday:'\u4eca\u65e5', lblAvg:'\u5e73\u5747VHS\u8bc4\u5206', lblAttention:'\u9700\u8981\u5173\u6ce8',
+    hdrPatientProfiles:'\u60a3\u8005\u6863\u6848', hdrAllAssessments:'\u6240\u6709\u8bc4\u4f30',
+    searchPatients:'\u641c\u7d22\u60a3\u8005\u2026', filterRecords:'\u7b5b\u9009\u8bb0\u5f55\u2026',
+    btnDownloadCsv:'\u4e0b\u8f7dCSV', btnDeleteSelected:'\u5220\u9664\u6240\u9009',
+    loading:'\u52a0\u8f7d\u4e2d\u2026',
+  },
+  'zh-TW': {
+    pageTitle:'\u5065\u5eb7\u8a55\u4f30\u8a18\u9304', pageSub:'\u901a\u904eVANDL VHS\u63d0\u4ea4\u7684\u6240\u6709VHS\u5065\u5eb7\u8a55\u4f30',
+    tabPatients:'\ud83d\udc64 \u60a3\u8005', tabAllRecords:'\ud83d\udccb \u6240\u6709\u8a18\u9304',
+    lblUnique:'\u7368\u7279\u60a3\u8005\u6578', lblTotal:'\u7e3d\u8a2a\u554f\u91cf', lblToday:'\u4eca\u65e5', lblAvg:'\u5e73\u5747VHS\u8a55\u5206', lblAttention:'\u9700\u8981\u95dc\u6ce8',
+    hdrPatientProfiles:'\u60a3\u8005\u6a94\u6848', hdrAllAssessments:'\u6240\u6709\u8a55\u4f30',
+    searchPatients:'\u641c\u5c0b\u60a3\u8005\u2026', filterRecords:'\u7be9\u9078\u8a18\u9304\u2026',
+    btnDownloadCsv:'\u4e0b\u8f09CSV', btnDeleteSelected:'\u522a\u9664\u6240\u9078',
+    loading:'\u8f09\u5165\u4e2d\u2026',
+  },
+};
+let ADMIN_LANG = 'en';
+let AT = ADMIN_I18N.en;
+
+function applyAdminI18n() {
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  setText('page-title', AT.pageTitle);
+  setText('page-sub', AT.pageSub);
+  setText('tab-patients-label', AT.tabPatients);
+  setText('tab-allrecords-label', AT.tabAllRecords);
+  setText('lbl-unique', AT.lblUnique);
+  setText('lbl-total', AT.lblTotal);
+  setText('lbl-today', AT.lblToday);
+  setText('lbl-avg', AT.lblAvg);
+  setText('lbl-attention', AT.lblAttention);
+  setText('hdr-patient-profiles', AT.hdrPatientProfiles);
+  setText('hdr-all-assessments', AT.hdrAllAssessments);
+  setText('btn-download-csv', AT.btnDownloadCsv);
+  setText('btn-delete-selected', AT.btnDeleteSelected);
+  const searchP = document.getElementById('search-patients');
+  if (searchP) searchP.placeholder = AT.searchPatients;
+  const searchR = document.getElementById('search-records');
+  if (searchR) searchR.placeholder = AT.filterRecords;
+  document.documentElement.lang = ADMIN_LANG === 'zh-CN' ? 'zh-Hans' : ADMIN_LANG === 'zh-TW' ? 'zh-Hant' : 'en';
+}
+
+async function detectAdminLang() {
+  try {
+    const res = await fetch('/api/lang');
+    const data = await res.json();
+    ADMIN_LANG = data.lang || 'en';
+  } catch(e) { ADMIN_LANG = 'en'; }
+  AT = ADMIN_I18N[ADMIN_LANG] || ADMIN_I18N.en;
+  applyAdminI18n();
+}
+
+detectAdminLang();
 loadPatients();
 </script>
 </body>
