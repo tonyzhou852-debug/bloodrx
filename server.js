@@ -502,14 +502,14 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
   if (!key) return res.status(500).json({ error:"Server configuration error." });
   try {
     const abortCtrl = new AbortController();
-    const apiTimeout = setTimeout(() => abortCtrl.abort(), 55000); // 55s — just under Render's 60s limit
+    const apiTimeout = setTimeout(() => abortCtrl.abort(), 90000); // 90s on paid plan
 
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{ "Content-Type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01" },
       signal: abortCtrl.signal,
       body: JSON.stringify({
-        model:"claude-sonnet-4-6", max_tokens:4000, stream:true,
+        model:"claude-sonnet-4-6", max_tokens:6000, stream:true,
         system:"You are a health wellness analyst. Return ONLY a single complete valid JSON object. Include all findings. Keep text fields under 200 chars each. Never truncate JSON. No medication names or prescriptions.",
         messages:req.body.messages,
       }),
@@ -562,7 +562,18 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
     }
 
     try {
-      const result = JSON.parse(fullText.replace(/```json|```/g,"").trim());
+      // Clean and repair potentially truncated JSON
+      let cleaned = fullText.replace(/```json|```/g,"").trim();
+      // Remove control characters that break JSON parsing
+      cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+      // If JSON is truncated (unterminated), try to close it
+      if (!cleaned.endsWith("}")) {
+        // Find the last complete key-value pair and close the object
+        const lastBrace = cleaned.lastIndexOf(",");
+        if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace) + "}";
+        else cleaned = cleaned + "}";
+      }
+      const result = JSON.parse(cleaned);
       const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
       const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
       const record = {
