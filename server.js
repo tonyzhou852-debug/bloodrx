@@ -500,46 +500,72 @@ app.get("/auth/google/callback",
 app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalysis, async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(500).json({ error:"Server configuration error." });
+
+  // Set up SSE immediately so client knows we're alive
+  res.setHeader("Content-Type","text/event-stream");
+  res.setHeader("Cache-Control","no-cache");
+  res.setHeader("Connection","keep-alive");
+  res.setHeader("X-Accel-Buffering","no");
+  res.flushHeaders();
+
+  // Keepalive ping every 10s to prevent proxy/browser dropping the connection
+  const keepalive = setInterval(() => {
+    try { res.write(": ping\n\n"); } catch(e) { clearInterval(keepalive); }
+  }, 10000);
+
+  const sendEvent = (obj) => {
+    try { res.write("data:" + JSON.stringify(obj) + "\n\n"); } catch(e) {}
+  };
+
+  let fullText = "";
+
   try {
     const abortCtrl = new AbortController();
-    const apiTimeout = setTimeout(() => abortCtrl.abort(), 90000); // 90s on paid plan
+    // 120s total timeout for the entire stream
+    const streamTimeout = setTimeout(() => {
+      abortCtrl.abort();
+    }, 120000);
 
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{ "Content-Type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01" },
       signal: abortCtrl.signal,
       body: JSON.stringify({
-        model:"claude-sonnet-4-6", max_tokens:6000, stream:true,
-        system:"You are a health wellness analyst. Return ONLY a single complete valid JSON object. Include all findings. Keep text fields under 200 chars each. Never truncate JSON. No medication names or prescriptions.",
+        model:"claude-sonnet-4-6", max_tokens:8000, stream:true,
+        system:"You are a health wellness analyst. Return ONLY a single complete valid JSON object. STRICT LIMITS: max 5 findings, all text fields under 120 chars, recommendations max 3 items each under 100 chars, monitoring_plan under 200 chars. Always close the JSON object completely. No medication names or prescriptions.",
         messages:req.body.messages,
       }),
     });
-    clearTimeout(apiTimeout);
+
     if (!upstream.ok) {
+      clearTimeout(streamTimeout);
       const err = await upstream.json().catch(()=>({}));
-      return res.status(upstream.status).json({ error:"Analysis service error." });
+      console.error("Anthropic API error:", upstream.status, err);
+      sendEvent({ error:"Analysis service error. Please try again." });
+      clearInterval(keepalive);
+      res.end();
+      return;
     }
-    res.setHeader("Content-Type","text/event-stream");
-    res.setHeader("Cache-Control","no-cache");
-    res.setHeader("Connection","keep-alive");
-    res.setHeader("X-Accel-Buffering","no");
-    res.flushHeaders();
 
-    // Keepalive ping every 15s to prevent connection dropping on free tier
-    const keepalive = setInterval(() => {
-      try { res.write(": ping\n\n"); } catch(e) { clearInterval(keepalive); }
-    }, 15000);
-
-    let fullText = "";
     const reader = upstream.body.getReader();
     const decoder = new TextDecoder();
+    let buf = "";
 
-    try {
     while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunk = decoder.decode(value, { stream:true });
-      for (const line of chunk.split("\n")) {
+      let chunk;
+      try {
+        chunk = await reader.read();
+      } catch(readErr) {
+        console.error("Stream read error:", readErr.message);
+        break;
+      }
+      if (chunk.done) break;
+
+      buf += decoder.decode(chunk.value, { stream:true });
+      const lines = buf.split("\n");
+      buf = lines.pop(); // keep incomplete line in buffer
+
+      for (const line of lines) {
         if (!line.startsWith("data:")) continue;
         const raw = line.slice(5).trim();
         if (raw === "[DONE]") continue;
@@ -547,65 +573,67 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
           const ev = JSON.parse(raw);
           if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") {
             fullText += ev.delta.text;
-            res.write("data:" + JSON.stringify({ t: ev.delta.text }) + "\n\n");
-          } else if (ev.type === "message_stop") {
-            res.write("data:" + JSON.stringify({ done: true }) + "\n\n");
+            sendEvent({ t: ev.delta.text });
           }
-        } catch(e) { /* skip */ }
+        } catch(e) { /* skip malformed SSE line */ }
       }
     }
-    } catch(streamErr) {
-      console.error("Stream error:", streamErr.message);
-      res.write("data:" + JSON.stringify({ error: "Analysis timed out. Please try again." }) + "\n\n");
-    } finally {
-      clearInterval(keepalive);
-    }
 
-    try {
-      // Clean and repair potentially truncated JSON
-      let cleaned = fullText.replace(/```json|```/g,"").trim();
-      // Remove control characters that break JSON parsing
-      cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
-      // If JSON is truncated (unterminated), try to close it
-      if (!cleaned.endsWith("}")) {
-        // Find the last complete key-value pair and close the object
-        const lastBrace = cleaned.lastIndexOf(",");
-        if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace) + "}";
-        else cleaned = cleaned + "}";
-      }
-      const result = JSON.parse(cleaned);
-      const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
-      const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
-      const record = {
-        id: Date.now(), userId: req.user.id, submittedBy: req.user.username,
-        name: sanitize(g("Name")) || "Unknown",
-        phone: sanitize(g("Phone")), age: sanitize(g("Age")), gender: sanitize(g("Gender")),
-        complaint: sanitize(g("Health concern")), notes: sanitize(g("Health notes")),
-        vhs_score: Math.min(100,Math.max(0,Number(result.vhs_score)||0)),
-        vhs_label: sanitize(result.vhs_label),
-        summary: sanitize(result.health_assessment),
-        key_health_concerns: sanitize(result.key_health_concerns),
-        detected_languages: sanitize(result.detected_languages),
-        risk_cardiovascular: Math.min(5,Math.max(0,Number(result.risk_profile?.cardiovascular?.score)||0)),
-        risk_metabolic:      Math.min(5,Math.max(0,Number(result.risk_profile?.metabolic?.score)||0)),
-        risk_liver:          Math.min(5,Math.max(0,Number(result.risk_profile?.liver?.score)||0)),
-        risk_kidney:         Math.min(5,Math.max(0,Number(result.risk_profile?.kidney?.score)||0)),
-        risk_inflammation:   Math.min(5,Math.max(0,Number(result.risk_profile?.inflammation?.score)||0)),
-        nutrition:    (result.nutrition_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
-        lifestyle:    (result.lifestyle_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
-        supplements:  (result.nutritional_support||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
-        monitoring_plan: sanitize(result.monitoring_plan),
-        ip: req.ip||"", created_at: new Date().toISOString(),
-      };
-      getDB().then(db => db.collection("patients").insertOne(record)).catch(e => console.log("DB save error:", e.message));
-    } catch(e) { console.log("DB parse error:", e.message); }
+    clearTimeout(streamTimeout);
 
-    res.end();
+    // Always signal done to the client, even if stream ended unexpectedly
+    sendEvent({ done: true });
+
   } catch(e) {
     console.error("Analysis error:", e.message);
-    if (!res.headersSent) res.status(500).json({ error:"Server error." });
-    else res.end();
+    sendEvent({ error: e.name === "AbortError"
+      ? "Analysis timed out. Please try again."
+      : "Analysis failed: " + e.message });
+  } finally {
+    clearInterval(keepalive);
+    res.end();
   }
+
+  // Save to DB (non-blocking, after response ends)
+  if (!fullText) return;
+  try {
+    let cleaned = fullText.replace(/```json|```/g,"").trim();
+    // Strip control characters
+    cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+    // Attempt to repair truncated JSON
+    if (!cleaned.endsWith("}")) {
+      const lastComma = cleaned.lastIndexOf(",");
+      const lastBrace = cleaned.lastIndexOf("}");
+      if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace + 1); // trim after last }
+      else if (lastComma > 0) cleaned = cleaned.slice(0, lastComma) + "}";
+      else cleaned += "}";
+    }
+    const result = JSON.parse(cleaned);
+    const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
+    const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
+    const record = {
+      id: Date.now(), userId: req.user.id, submittedBy: req.user.username,
+      name: sanitize(g("Name")) || "Unknown",
+      phone: sanitize(g("Phone")), age: sanitize(g("Age")), gender: sanitize(g("Gender")),
+      complaint: sanitize(g("Health concern")), notes: sanitize(g("Health notes")),
+      vhs_score: Math.min(100,Math.max(0,Number(result.vhs_score)||0)),
+      vhs_label: sanitize(result.vhs_label),
+      summary: sanitize(result.health_assessment),
+      key_health_concerns: sanitize(result.key_health_concerns),
+      detected_languages: sanitize(result.detected_languages),
+      risk_cardiovascular: Math.min(5,Math.max(0,Number(result.risk_profile?.cardiovascular?.score)||0)),
+      risk_metabolic:      Math.min(5,Math.max(0,Number(result.risk_profile?.metabolic?.score)||0)),
+      risk_liver:          Math.min(5,Math.max(0,Number(result.risk_profile?.liver?.score)||0)),
+      risk_kidney:         Math.min(5,Math.max(0,Number(result.risk_profile?.kidney?.score)||0)),
+      risk_inflammation:   Math.min(5,Math.max(0,Number(result.risk_profile?.inflammation?.score)||0)),
+      nutrition:    (result.nutrition_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
+      lifestyle:    (result.lifestyle_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
+      supplements:  (result.nutritional_support||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
+      monitoring_plan: sanitize(result.monitoring_plan),
+      ip: req.ip||"", created_at: new Date().toISOString(),
+    };
+    getDB().then(db => db.collection("patients").insertOne(record)).catch(e => console.log("DB save error:", e.message));
+  } catch(e) { console.log("DB parse error:", e.message, "| Raw length:", fullText.length); }
 });
 
 // ══════════════════════════════════════════════════════════════
