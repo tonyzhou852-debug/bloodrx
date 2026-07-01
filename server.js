@@ -3,6 +3,7 @@ const express    = require("express");
 const cors       = require("cors");
 const path       = require("path");
 const crypto     = require("crypto");
+const nodemailer = require("nodemailer");
 const bcrypt     = require("bcryptjs");
 const jwt        = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -366,6 +367,87 @@ app.post("/api/auth/logout", (req, res) => {
 
 app.get("/api/auth/me", requireAuth, (req, res) => {
   res.json({ user:{ username:req.user.username, email:req.user.email, id:req.user.id } });
+});
+
+// ── Password reset ──────────────────────────────────────────────
+function getMailer() {
+  return nodemailer.createTransport({
+    host:     process.env.SMTP_HOST || "smtp.gmail.com",
+    port:     Number(process.env.SMTP_PORT) || 587,
+    secure:   process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+}
+
+app.post("/api/auth/forgot-password", globalLimit, authLimit, async (req, res) => {
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ error:"Email required." });
+  try {
+    const db = await getDB();
+    const user = await db.collection("users").findOne({ email: email.toLowerCase().trim() });
+    // Always return success to prevent email enumeration
+    if (!user) return res.json({ ok: true });
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiry = Date.now() + 60 * 60 * 1000; // 1 hour
+    await db.collection("users").updateOne(
+      { email: user.email },
+      { $set: { resetToken: token, resetExpiry: expiry } }
+    );
+
+    const appUrl = process.env.APP_URL || "https://bloodrx.onrender.com";
+    const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      const mailer = getMailer();
+      await mailer.sendMail({
+        from: `"VANDL VHS" <${process.env.SMTP_USER}>`,
+        to: user.email,
+        subject: "Reset your VANDL VHS password",
+        html: `
+          <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+            <h2 style="color:#b91c1c">Reset your password</h2>
+            <p>Click the button below to reset your VANDL Health Score password. This link expires in 1 hour.</p>
+            <a href="${resetUrl}" style="display:inline-block;margin:20px 0;padding:12px 24px;background:#b91c1c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a>
+            <p style="color:#6b7280;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
+          </div>`,
+      });
+    }
+    res.json({ ok: true });
+  } catch(e) {
+    console.error("Forgot password error:", e.message);
+    res.status(500).json({ error: "Failed to send reset email." });
+  }
+});
+
+app.get("/reset-password", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "reset-password.html"));
+});
+
+app.post("/api/auth/reset-password", globalLimit, authLimit, async (req, res) => {
+  const { token, password } = req.body || {};
+  if (!token || !password || password.length < 8)
+    return res.status(400).json({ error: "Invalid request." });
+  try {
+    const db = await getDB();
+    const user = await db.collection("users").findOne({
+      resetToken: token,
+      resetExpiry: { $gt: Date.now() }
+    });
+    if (!user) return res.status(400).json({ error: "Reset link is invalid or has expired." });
+
+    const passwordHash = await require("bcrypt").hash(password, 12);
+    await db.collection("users").updateOne(
+      { email: user.email },
+      { $set: { passwordHash }, $unset: { resetToken: "", resetExpiry: "" } }
+    );
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: "Reset failed." });
+  }
 });
 
 app.get("/auth/google", passport.authenticate("google", { scope:["profile","email"], session:false }));
