@@ -4,6 +4,63 @@ const cors       = require("cors");
 const path       = require("path");
 const crypto     = require("crypto");
 const nodemailer = require("nodemailer");
+
+// ── Email sending via Resend (HTTPS, works on Render free tier) ──
+async function sendResetEmail(toEmail, resetUrl) {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  // Fallback to nodemailer if Resend not configured
+  if (!apiKey) {
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.warn("[email] No email provider configured (set RESEND_API_KEY or SMTP_USER/PASS)");
+      return;
+    }
+    const mailer = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === "true",
+      connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
+      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    await mailer.sendMail({
+      from: `"VANDL VHS" <${process.env.SMTP_USER}>`,
+      to: toEmail,
+      subject: "Reset your VANDL VHS password",
+      html: emailHtml(resetUrl),
+    });
+    return;
+  }
+
+  // Use Resend API (HTTPS — works on Render free tier)
+  const fromAddress = process.env.RESEND_FROM || "VANDL VHS <noreply@vandlvhs.com>";
+  const resp = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromAddress,
+      to: [toEmail],
+      subject: "Reset your VANDL VHS password",
+      html: emailHtml(resetUrl),
+    }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(`Resend API error: ${err.message || resp.status}`);
+  }
+}
+
+function emailHtml(resetUrl) {
+  return `
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
+      <h2 style="color:#b91c1c">Reset your password</h2>
+      <p>Click the button below to reset your VANDL Health Score password. This link expires in 1 hour.</p>
+      <a href="${resetUrl}" style="display:inline-block;margin:20px 0;padding:12px 24px;background:#b91c1c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a>
+      <p style="color:#6b7280;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
+    </div>`;
+}
 const bcrypt     = require("bcryptjs");
 const jwt        = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -370,21 +427,6 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 });
 
 // ── Password reset ──────────────────────────────────────────────
-function getMailer() {
-  return nodemailer.createTransport({
-    host:     process.env.SMTP_HOST || "smtp.gmail.com",
-    port:     Number(process.env.SMTP_PORT) || 587,
-    secure:   process.env.SMTP_SECURE === "true",
-    connectionTimeout: 10000,
-    greetingTimeout:   10000,
-    socketTimeout:     15000,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-}
-
 app.post("/api/auth/forgot-password", globalLimit, authLimit, async (req, res) => {
   const { email } = req.body || {};
   if (!email) return res.status(400).json({ error:"Email required." });
@@ -404,25 +446,9 @@ app.post("/api/auth/forgot-password", globalLimit, authLimit, async (req, res) =
     const appUrl = process.env.APP_URL || "https://bloodrx.onrender.com";
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
-    if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-      console.log(`[forgot-password] Sending reset email to ${user.email}`);
-      const mailer = getMailer();
-      await mailer.sendMail({
-        from: `"VANDL VHS" <${process.env.SMTP_USER}>`,
-        to: user.email,
-        subject: "Reset your VANDL VHS password",
-        html: `
-          <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
-            <h2 style="color:#b91c1c">Reset your password</h2>
-            <p>Click the button below to reset your VANDL Health Score password. This link expires in 1 hour.</p>
-            <a href="${resetUrl}" style="display:inline-block;margin:20px 0;padding:12px 24px;background:#b91c1c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a>
-            <p style="color:#6b7280;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
-          </div>`,
-      });
-      console.log(`[forgot-password] Email sent successfully to ${user.email}`);
-    } else {
-      console.warn('[forgot-password] SMTP env vars not set — skipping email send');
-    }
+    console.log(`[forgot-password] Sending reset email to ${user.email}`);
+    await sendResetEmail(user.email, resetUrl);
+    console.log(`[forgot-password] Email sent successfully to ${user.email}`);
     res.json({ ok: true });
   } catch(e) {
     console.error("Forgot password error:", e.message);
