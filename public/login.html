@@ -332,24 +332,36 @@ async function doForgot() {
   hideError('forgot-error');
   document.getElementById('forgot-success').classList.remove('show');
   const email = document.getElementById('forgot-email').value.trim();
-  if (!email) return showError('forgot-error', LT.enterCreds);
+  if (!email) return showError('forgot-error', LT.enterCreds || 'Please enter your email.');
   const btn = document.getElementById('forgot-btn');
+  const originalText = btn.textContent;
   btn.disabled = true; btn.textContent = '…';
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
   try {
     const resp = await fetch('/api/auth/forgot-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error);
+    if (!resp.ok) throw new Error(data.error || 'Failed.');
     const s = document.getElementById('forgot-success');
-    s.textContent = LT.resetSent;
+    s.textContent = LT.resetSent || 'Check your email — a reset link has been sent if that address is registered.';
     s.classList.add('show');
   } catch(e) {
-    showError('forgot-error', e.message || LT.resetFailed);
+    clearTimeout(timeout);
+    const msg = e.name === 'AbortError'
+      ? 'Request timed out. Please try again.'
+      : (e.message || LT.resetFailed || 'Failed to send reset email. Please try again.');
+    showError('forgot-error', msg);
   } finally {
-    btn.disabled = false; btn.textContent = LT.sendReset;
+    btn.disabled = false;
+    btn.textContent = LT.sendReset || originalText || 'Send Reset Link';
   }
 }
 
