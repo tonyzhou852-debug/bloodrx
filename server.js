@@ -439,7 +439,7 @@ app.post("/api/auth/reset-password", globalLimit, authLimit, async (req, res) =>
     });
     if (!user) return res.status(400).json({ error: "Reset link is invalid or has expired." });
 
-    const passwordHash = await require("bcrypt").hash(password, 12);
+    const passwordHash = await require("bcryptjs").hash(password, 12);
     await db.collection("users").updateOne(
       { email: user.email },
       { $set: { passwordHash }, $unset: { resetToken: "", resetExpiry: "" } }
