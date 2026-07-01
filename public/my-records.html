@@ -36,6 +36,10 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .user-name{font-size:13px;font-weight:500;color:var(--ink-2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .logout-btn{padding:5px 12px;background:none;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--ink-3);cursor:pointer;transition:all .15s}
 .logout-btn:hover{border-color:var(--brand);color:var(--brand)}
+.lang-switcher{display:flex;gap:3px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px}
+.lang-btn{padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:none;background:none;color:var(--ink-3);cursor:pointer;transition:all .15s;font-family:inherit}
+.lang-btn.active{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-sm)}
+.lang-btn:hover:not(.active){color:var(--ink)}
 
 /* Toggle switcher (history <-> upload) */
 .view-toggle{display:flex;gap:4px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px}
@@ -144,6 +148,11 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
       </a>
     </div>
     <div class="topbar-right">
+      <div class="lang-switcher">
+        <button class="lang-btn" id="ls-en" onclick="switchLang('en')">EN</button>
+        <button class="lang-btn" id="ls-zh-CN" onclick="switchLang('zh-CN')">简</button>
+        <button class="lang-btn" id="ls-zh-TW" onclick="switchLang('zh-TW')">繁</button>
+      </div>
       <div class="user-badge" id="user-badge" style="display:none">
         <div class="user-avatar" id="user-avatar">?</div>
         <span class="user-name" id="user-name"></span>
@@ -259,14 +268,33 @@ function applyI18n() {
   document.getElementById('detail-close-btn').textContent = L.close;
   document.getElementById('detail-del-btn').textContent = L.deleteRecord;
   document.documentElement.lang = LANG === 'zh-CN' ? 'zh-Hans' : LANG === 'zh-TW' ? 'zh-Hant' : 'en';
+  // highlight active lang button
+  ['en','zh-CN','zh-TW'].forEach(l => {
+    const btn = document.getElementById('ls-' + l);
+    if (btn) btn.classList.toggle('active', l === LANG);
+  });
+}
+
+function switchLang(lang) {
+  LANG = lang;
+  L = T[LANG] || T.en;
+  localStorage.setItem('vhs_lang', lang);
+  applyI18n();
+  renderStats();
+  renderList();
 }
 
 async function detectLang() {
-  try {
-    const res = await fetch('/api/lang');
-    const data = await res.json();
-    LANG = data.lang || 'en';
-  } catch(e) { LANG = 'en'; }
+  const saved = localStorage.getItem('vhs_lang');
+  if (saved && T[saved]) {
+    LANG = saved;
+  } else {
+    try {
+      const res = await fetch('/api/lang');
+      const data = await res.json();
+      LANG = data.lang || 'en';
+    } catch(e) { LANG = 'en'; }
+  }
   L = T[LANG] || T.en;
   applyI18n();
 }
