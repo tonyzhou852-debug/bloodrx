@@ -520,10 +520,16 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
     res.setHeader("X-Accel-Buffering","no");
     res.flushHeaders();
 
+    // Keepalive ping every 15s to prevent connection dropping on free tier
+    const keepalive = setInterval(() => {
+      try { res.write(": ping\n\n"); } catch(e) { clearInterval(keepalive); }
+    }, 15000);
+
     let fullText = "";
     const reader = upstream.body.getReader();
     const decoder = new TextDecoder();
 
+    try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -542,6 +548,9 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
           }
         } catch(e) { /* skip */ }
       }
+    }
+    } finally {
+      clearInterval(keepalive);
     }
 
     try {
