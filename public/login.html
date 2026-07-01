@@ -89,6 +89,8 @@ input::placeholder{color:var(--ink-4)}
 .remember-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;margin-top:-4px}
 .remember-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--brand);cursor:pointer;flex-shrink:0}
 .remember-row label{font-size:13px;color:var(--ink-3);cursor:pointer;margin:0;font-weight:400}
+.forgot-link{margin-left:auto;background:none;border:none;font-size:12px;color:var(--ink-3);cursor:pointer;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;padding:0;white-space:nowrap}
+.forgot-link:hover{color:var(--brand)}
 </style>
 </head>
 <body>
@@ -123,6 +125,7 @@ input::placeholder{color:var(--ink-4)}
       <div class="remember-row">
         <input type="checkbox" id="remember-me" checked>
         <label for="remember-me" id="label-remember">Remember me for 30 days</label>
+        <button type="button" class="forgot-link" id="forgot-link" onclick="showPanel('forgot')">Forgot password?</button>
       </div>
       <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
 
@@ -136,6 +139,21 @@ input::placeholder{color:var(--ink-4)}
         </svg>
         <span id="google-login-text">Continue with Google</span>
       </button>
+    </div>
+
+    <!-- Forgot password panel -->
+    <div class="panel" id="panel-forgot">
+      <div class="error-msg" id="forgot-error"></div>
+      <div class="success-msg" id="forgot-success"></div>
+      <p style="font-size:13px;color:var(--ink-3);margin-bottom:16px" id="forgot-desc">Enter your email address and we'll send you a reset link.</p>
+      <div class="form-group">
+        <label for="forgot-email" id="label-forgot-email">Email</label>
+        <input type="email" id="forgot-email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')doForgot()">
+      </div>
+      <button class="btn-primary" id="forgot-btn" onclick="doForgot()">Send Reset Link</button>
+      <div style="text-align:center;margin-top:14px">
+        <button type="button" class="forgot-link" onclick="showPanel('login')" id="back-to-login">← Back to sign in</button>
+      </div>
     </div>
 
     <!-- Register panel -->
@@ -189,6 +207,12 @@ const LOGIN_I18N = {
     googleFailed:'Google login failed. Please try again.',
     loginFailed:'Login failed.',
     registerFailed:'Registration failed.',
+    forgotPassword:'Forgot password?',
+    forgotTitle:'Reset password', forgotSub:'Enter your email to receive a reset link.',
+    forgotDesc:'Enter your email address and we\'ll send you a reset link.',
+    sendReset:'Send Reset Link', backToLogin:'← Back to sign in',
+    resetSent:'Check your email — a reset link has been sent if that address is registered.',
+    resetFailed:'Failed to send reset email. Please try again.',
   },
   'zh-CN': {
     welcomeBack:'\u6b22\u8fce\u56de\u6765', signInSub:'\u767b\u5f55\u60a8\u7684VHS\u8d26\u6237',
@@ -206,6 +230,12 @@ const LOGIN_I18N = {
     googleFailed:'Google\u767b\u5f55\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002',
     loginFailed:'\u767b\u5f55\u5931\u8d25\u3002',
     registerFailed:'\u6ce8\u518c\u5931\u8d25\u3002',
+    forgotPassword:'\u5fd8\u8bb0\u5bc6\u7801\uff1f',
+    forgotTitle:'\u91cd\u7f6e\u5bc6\u7801', forgotSub:'\u8f93\u5165\u60a8\u7684\u90ae\u7bb1\u4ee5\u63a5\u6536\u91cd\u7f6e\u94fe\u63a5\u3002',
+    forgotDesc:'\u8f93\u5165\u60a8\u7684\u90ae\u7bb1\u5730\u5740\uff0c\u6211\u4eec\u5c06\u53d1\u9001\u91cd\u7f6e\u94fe\u63a5\u3002',
+    sendReset:'\u53d1\u9001\u91cd\u7f6e\u94fe\u63a5', backToLogin:'\u2190 \u8fd4\u56de\u767b\u5f55',
+    resetSent:'\u8bf7\u67e5\u6536\u60a8\u7684\u90ae\u7bb1\u2014\u2014\u5982\u679c\u8be5\u5730\u5740\u5df2\u6ce8\u518c\uff0c\u91cd\u7f6e\u94fe\u63a5\u5c06\u5df2\u53d1\u9001\u3002',
+    resetFailed:'\u53d1\u9001\u91cd\u7f6e\u90ae\u4ef6\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5\u3002',
   },
   'zh-TW': {
     welcomeBack:'\u6b61\u8fce\u56de\u4f86', signInSub:'\u767b\u5165\u60a8\u7684VHS\u5e33\u6236',
@@ -223,6 +253,12 @@ const LOGIN_I18N = {
     googleFailed:'Google\u767b\u5165\u5931\u6557\uff0c\u8acb\u91cd\u8a66\u3002',
     loginFailed:'\u767b\u5165\u5931\u6557\u3002',
     registerFailed:'\u8a3b\u518a\u5931\u6557\u3002',
+    forgotPassword:'\u5fd8\u8a18\u5bc6\u78bc\uff1f',
+    forgotTitle:'\u91cd\u7f6e\u5bc6\u78bc', forgotSub:'\u8f38\u5165\u60a8\u7684\u96fb\u5b50\u90f5\u4ef6\u4ee5\u63a5\u6536\u91cd\u7f6e\u9023\u7d50\u3002',
+    forgotDesc:'\u8f38\u5165\u60a8\u7684\u96fb\u5b50\u90f5\u4ef6\u5730\u5740\uff0c\u6211\u5011\u5c07\u767c\u9001\u91cd\u7f6e\u9023\u7d50\u3002',
+    sendReset:'\u767c\u9001\u91cd\u7f6e\u9023\u7d50', backToLogin:'\u2190 \u8fd4\u56de\u767b\u5165',
+    resetSent:'\u8acb\u6aa2\u67e5\u60a8\u7684\u96fb\u5b50\u90f5\u4ef6\u2014\u2014\u5982\u679c\u8a72\u5730\u5740\u5df2\u8a3b\u518a\uff0c\u91cd\u7f6e\u9023\u7d50\u5c07\u5df2\u767c\u9001\u3002',
+    resetFailed:'\u767c\u9001\u91cd\u7f6e\u90f5\u4ef6\u5931\u6557\uff0c\u8acb\u91cd\u8a66\u3002',
   },
 };
 let LOGIN_LANG = 'en';
@@ -246,6 +282,11 @@ function applyLoginI18n() {
   setText('register-btn', LT.signUp);
   setText('divider-register', LT.or);
   setText('google-register-text', LT.signUpGoogle);
+  setText('forgot-link', LT.forgotPassword);
+  setText('forgot-desc', LT.forgotDesc);
+  setText('forgot-btn', LT.sendReset);
+  setText('back-to-login', LT.backToLogin);
+  setText('label-forgot-email', LT.email);
   document.documentElement.lang = LOGIN_LANG === 'zh-CN' ? 'zh-Hans' : LOGIN_LANG === 'zh-TW' ? 'zh-Hant' : 'en';
 }
 
@@ -270,13 +311,45 @@ function showPanel(panel) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('panel-' + panel).classList.add('active');
-  document.querySelectorAll('.tab')[panel === 'login' ? 0 : 1].classList.add('active');
   if (panel === 'login') {
+    document.querySelectorAll('.tab')[0].classList.add('active');
     document.getElementById('card-title').textContent = LT.welcomeBack;
     document.getElementById('card-sub').textContent = LT.signInSub;
-  } else {
+  } else if (panel === 'register') {
+    document.querySelectorAll('.tab')[1].classList.add('active');
     document.getElementById('card-title').textContent = LT.createAccount;
     document.getElementById('card-sub').textContent = LT.createSub;
+  } else if (panel === 'forgot') {
+    document.getElementById('card-title').textContent = LT.forgotTitle;
+    document.getElementById('card-sub').textContent = LT.forgotSub;
+    document.getElementById('forgot-success').classList.remove('show');
+    document.getElementById('forgot-error').classList.remove('show');
+    document.getElementById('forgot-email').value = '';
+  }
+}
+
+async function doForgot() {
+  hideError('forgot-error');
+  document.getElementById('forgot-success').classList.remove('show');
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) return showError('forgot-error', LT.enterCreds);
+  const btn = document.getElementById('forgot-btn');
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const resp = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error);
+    const s = document.getElementById('forgot-success');
+    s.textContent = LT.resetSent;
+    s.classList.add('show');
+  } catch(e) {
+    showError('forgot-error', e.message || LT.resetFailed);
+  } finally {
+    btn.disabled = false; btn.textContent = LT.sendReset;
   }
 }
 
