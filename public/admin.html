@@ -214,6 +214,11 @@ tbody tr:hover td{background:#fef7f7}
     </a>
     <span class="admin-badge">Admin</span>
     <div class="topbar-right">
+      <div style="display:flex;gap:3px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px">
+        <button onclick="manualAdminLang('en')" id="als-en" style="padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:none;background:none;color:var(--ink-3);cursor:pointer;font-family:inherit">EN</button>
+        <button onclick="manualAdminLang('zh-CN')" id="als-zh-CN" style="padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:none;background:none;color:var(--ink-3);cursor:pointer;font-family:inherit">简</button>
+        <button onclick="manualAdminLang('zh-TW')" id="als-zh-TW" style="padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:none;background:none;color:var(--ink-3);cursor:pointer;font-family:inherit">繁</button>
+      </div>
       <a href="/" class="back-btn">&#8592; Back to Analyzer</a>
     </div>
   </div>
@@ -1320,14 +1325,38 @@ function applyAdminI18n() {
   document.documentElement.lang = ADMIN_LANG === 'zh-CN' ? 'zh-Hans' : ADMIN_LANG === 'zh-TW' ? 'zh-Hant' : 'en';
 }
 
+function updateAdminLangButtons(lang) {
+  ['en','zh-CN','zh-TW'].forEach(l => {
+    const btn = document.getElementById('als-' + l);
+    if (!btn) return;
+    btn.style.background = l === lang ? 'var(--surface)' : 'none';
+    btn.style.color = l === lang ? 'var(--brand)' : 'var(--ink-3)';
+    btn.style.boxShadow = l === lang ? '0 1px 2px rgba(0,0,0,.05)' : 'none';
+  });
+}
+
+function manualAdminLang(lang) {
+  ADMIN_LANG = lang;
+  AT = ADMIN_I18N[lang] || ADMIN_I18N.en;
+  localStorage.setItem('vhs_lang', lang);
+  applyAdminI18n();
+  updateAdminLangButtons(lang);
+}
+
 async function detectAdminLang() {
-  try {
-    const res = await fetch('/api/lang', { credentials: 'include' });
-    const data = await res.json();
-    ADMIN_LANG = data.lang || 'en';
-  } catch(e) { ADMIN_LANG = 'en'; }
+  const saved = localStorage.getItem('vhs_lang');
+  if (saved && ADMIN_I18N[saved]) {
+    ADMIN_LANG = saved;
+  } else {
+    try {
+      const res = await fetch('/api/lang', { credentials: 'include' });
+      const data = await res.json();
+      ADMIN_LANG = data.lang || 'en';
+    } catch(e) { ADMIN_LANG = 'en'; }
+  }
   AT = ADMIN_I18N[ADMIN_LANG] || ADMIN_I18N.en;
   applyAdminI18n();
+  updateAdminLangButtons(ADMIN_LANG);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
