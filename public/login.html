@@ -337,8 +337,13 @@ async function doForgot() {
   const originalText = btn.textContent;
   btn.disabled = true; btn.textContent = '…';
 
+  // Show a patience message after 5s (free tier cold start)
+  const slowTimer = setTimeout(() => {
+    if (btn.disabled) btn.textContent = 'Sending… (this may take up to 30s)';
+  }, 5000);
+
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10000);
+  const timeout = setTimeout(() => controller.abort(), 35000);
 
   try {
     const resp = await fetch('/api/auth/forgot-password', {
@@ -348,6 +353,7 @@ async function doForgot() {
       signal: controller.signal,
     });
     clearTimeout(timeout);
+    clearTimeout(slowTimer);
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error || 'Failed.');
     const s = document.getElementById('forgot-success');
@@ -355,8 +361,9 @@ async function doForgot() {
     s.classList.add('show');
   } catch(e) {
     clearTimeout(timeout);
+    clearTimeout(slowTimer);
     const msg = e.name === 'AbortError'
-      ? 'Request timed out. Please try again.'
+      ? 'Server is taking too long. Please wait a moment and try again.'
       : (e.message || LT.resetFailed || 'Failed to send reset email. Please try again.');
     showError('forgot-error', msg);
   } finally {
