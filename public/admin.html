@@ -328,9 +328,9 @@ tbody tr:hover td{background:#fef7f7}
     <div class="modal-footer" style="justify-content:space-between">
       <button class="btn-danger" id="profile-del-btn" onclick="deletePatientProfile()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="margin-right:5px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-        Delete All Records for This Patient
+        <span id="lbl-delete-all">Delete All Records for This Patient</span>
       </button>
-      <button class="btn-cancel" onclick="closeProfile()">Close</button>
+      <button class="btn-cancel" id="lbl-close-profile" onclick="closeProfile()">Close</button>
     </div>
   </div>
 </div>
@@ -487,11 +487,11 @@ function vhsClass(score) {
 }
 
 function vhsLabel(score) {
-  if (score >= 90) return 'Excellent';
-  if (score >= 75) return 'Good';
-  if (score >= 60) return 'Fair';
-  if (score >= 40) return 'Needs Attention';
-  if (score > 0) return 'Poor';
+  if (score >= 90) return AT.excellent;
+  if (score >= 75) return AT.good;
+  if (score >= 60) return AT.fair;
+  if (score >= 40) return AT.needsAttention;
+  if (score > 0) return AT.poor;
   return '—';
 }
 
@@ -608,20 +608,23 @@ function openProfile(patientKey) {
   const avgScore = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
   let progressMsg = '';
   if (scores.length >= 2) {
-    progressMsg = diff > 0 ? `VHS improved from ${firstScore} to ${lastScore} over ${visits.length} visits` :
-                  diff < 0 ? `VHS declined from ${firstScore} to ${lastScore} over ${visits.length} visits` :
-                  `VHS stable at ${lastScore} over ${visits.length} visits`;
+    const isCN = ADMIN_LANG === 'zh-CN' || ADMIN_LANG === 'zh-TW';
+    progressMsg = diff > 0
+      ? (isCN ? `VHS从${firstScore}提升至${lastScore}，共${visits.length}次记录` : `${AT.improved} ${firstScore} to ${lastScore} ${AT.over} ${visits.length} ${AT.visits2}`)
+      : diff < 0
+      ? (isCN ? `VHS从${firstScore}下降至${lastScore}，共${visits.length}次记录` : `${AT.declined} ${firstScore} to ${lastScore} ${AT.over} ${visits.length} ${AT.visits2}`)
+      : (isCN ? `VHS稳定在${lastScore}，共${visits.length}次记录` : `${AT.stable} ${lastScore} ${AT.over} ${visits.length} ${AT.visits2}`);
   }
 
   body.innerHTML = `
     <div class="profile-summary">
-      <div class="profile-stat"><div class="profile-stat-val" style="color:${scoreColor(lastScore)}">${lastScore||'—'}</div><div class="profile-stat-lbl">Latest VHS</div></div>
-      <div class="profile-stat"><div class="profile-stat-val">${avgScore||'—'}</div><div class="profile-stat-lbl">Avg VHS</div></div>
-      <div class="profile-stat"><div class="profile-stat-val">${visits.length}</div><div class="profile-stat-lbl">Total Visits</div></div>
-      <div class="profile-stat"><div class="profile-stat-val">${diff>0?'↑ +'+diff:diff<0?'↓ '+diff:'→'}</div><div class="profile-stat-lbl">Progress</div></div>
+      <div class="profile-stat"><div class="profile-stat-val" style="color:${scoreColor(lastScore)}">${lastScore||'—'}</div><div class="profile-stat-lbl">${AT.latestVhs}</div></div>
+      <div class="profile-stat"><div class="profile-stat-val">${avgScore||'—'}</div><div class="profile-stat-lbl">${AT.avgVhs}</div></div>
+      <div class="profile-stat"><div class="profile-stat-val">${visits.length}</div><div class="profile-stat-lbl">${AT.totalVisits}</div></div>
+      <div class="profile-stat"><div class="profile-stat-val">${diff>0?'↑ +'+diff:diff<0?'↓ '+diff:'→'}</div><div class="profile-stat-lbl">${AT.progress}</div></div>
     </div>
     ${progressMsg ? `<div style="font-size:13px;color:var(--ink-3);margin-bottom:14px;padding:10px 14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)">${progressMsg}</div>` : ''}
-    ${scores.length >= 2 ? `<div class="sparkline-wrap"><div class="sparkline-title">VHS Score Over Time</div>${makeSVGSparkline(visits)}</div>` : ''}
+    ${scores.length >= 2 ? `<div class="sparkline-wrap"><div class="sparkline-title">${AT.vhsOverTime}</div>${makeSVGSparkline(visits)}</div>` : ''}
     <div class="visits-list" id="visits-list-${esc(patientKey.replace(/\s/g,'_'))}">
       ${[...visits].reverse().map((v, i) => renderVisitCard(v, visits.length - i, visits.length)).join('')}
     </div>
@@ -645,7 +648,7 @@ function renderVisitCard(v, visitNum, totalVisits) {
     <div class="visit-card" id="visit-card-${v.id}">
       <div class="visit-header">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-weight:600;font-size:13px">Visit ${visitNum}</span>
+          <span style="font-weight:600;font-size:13px">${AT.visit} ${visitNum}</span>
           <span class="visit-date">· ${new Date(v.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
           ${v.submittedBy ? '<span style="font-size:11px;color:var(--ink-4)">by ' + esc(v.submittedBy) + '</span>' : ''}
         </div>
@@ -654,12 +657,12 @@ function renderVisitCard(v, visitNum, totalVisits) {
           <span class="vhs-badge ${vhsClass(v.vhs_score)}">${vhsLabel(v.vhs_score)}</span>
           <button class="visit-del-btn" data-visit-id="${v.id}" data-visit-num="${visitNum}" title="Delete this visit">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-            Delete Visit
+            ${AT.deleteVisit}
           </button>
         </div>
       </div>
       ${v.summary ? `<div class="visit-body">${esc(v.summary)}</div>` : ''}
-      ${v.key_health_concerns ? `<div style="font-size:12px;color:var(--ink-3);margin-top:6px"><strong>Key concerns:</strong> ${esc(v.key_health_concerns)}</div>` : ''}
+      ${v.key_health_concerns ? `<div style="font-size:12px;color:var(--ink-3);margin-top:6px"><strong>${AT.keyConcerns}:</strong> ${esc(v.key_health_concerns)}</div>` : ''}
       <div class="visit-risks">
         ${riskChip('CV', v.risk_cardiovascular)}
         ${riskChip('Met', v.risk_metabolic)}
@@ -1245,30 +1248,49 @@ document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();cl
 const ADMIN_I18N = {
   en: {
     pageTitle:'Health Assessment Records', pageSub:'All VHS wellness assessments submitted through VANDL VHS',
-    tabPatients:'\ud83d\udc64 Patients', tabAllRecords:'\ud83d\udccb All Records',
+    tabPatients:'👤 Patients', tabAllRecords:'📋 All Records',
     lblUnique:'Unique Patients', lblTotal:'Total Visits', lblToday:'Today', lblAvg:'Avg VHS Score', lblAttention:'Needs Attention',
     hdrPatientProfiles:'Patient Profiles', hdrAllAssessments:'All Assessments',
-    searchPatients:'Search patients\u2026', filterRecords:'Filter records\u2026',
+    searchPatients:'Search patients…', filterRecords:'Filter records…',
     btnDownloadCsv:'Download CSV', btnDeleteSelected:'Delete Selected',
-    loading:'Loading\u2026',
+    loading:'Loading…',
+    // modal / dynamic
+    latestVhs:'Latest VHS', avgVhs:'Avg VHS', totalVisits:'Total Visits', progress:'Progress',
+    vhsOverTime:'VHS Score Over Time',
+    improved:'VHS improved from', declined:'VHS declined from', stable:'VHS stable at', over:'over', visits2:'visits',
+    visit:'Visit', keyConcerns:'Key concerns', deleteVisit:'Delete Visit',
+    excellent:'Excellent', good:'Good', fair:'Fair', needsAttention:'Needs Attention', poor:'Poor',
+    deleteAll:'Delete All Records for This Patient', close:'Close',
   },
   'zh-CN': {
-    pageTitle:'\u5065\u5eb7\u8bc4\u4f30\u8bb0\u5f55', pageSub:'\u901a\u8fc7VANDL VHS\u63d0\u4ea4\u7684\u6240\u6709VHS\u5065\u5eb7\u8bc4\u4f30',
-    tabPatients:'\ud83d\udc64 \u60a3\u8005', tabAllRecords:'\ud83d\udccb \u6240\u6709\u8bb0\u5f55',
-    lblUnique:'\u72ec\u7279\u60a3\u8005\u6570', lblTotal:'\u603b\u8bbf\u95ee\u91cf', lblToday:'\u4eca\u65e5', lblAvg:'\u5e73\u5747VHS\u8bc4\u5206', lblAttention:'\u9700\u8981\u5173\u6ce8',
-    hdrPatientProfiles:'\u60a3\u8005\u6863\u6848', hdrAllAssessments:'\u6240\u6709\u8bc4\u4f30',
-    searchPatients:'\u641c\u7d22\u60a3\u8005\u2026', filterRecords:'\u7b5b\u9009\u8bb0\u5f55\u2026',
-    btnDownloadCsv:'\u4e0b\u8f7dCSV', btnDeleteSelected:'\u5220\u9664\u6240\u9009',
-    loading:'\u52a0\u8f7d\u4e2d\u2026',
+    pageTitle:'健康评估记录', pageSub:'通过VANDL VHS提交的所有VHS健康评估',
+    tabPatients:'👤 患者', tabAllRecords:'📋 所有记录',
+    lblUnique:'独特患者数', lblTotal:'总访问量', lblToday:'今日', lblAvg:'平均VHS评分', lblAttention:'需要关注',
+    hdrPatientProfiles:'患者档案', hdrAllAssessments:'所有评估',
+    searchPatients:'搜索患者…', filterRecords:'筛选记录…',
+    btnDownloadCsv:'下载CSV', btnDeleteSelected:'删除所选',
+    loading:'加载中…',
+    latestVhs:'最新VHS', avgVhs:'平均VHS', totalVisits:'总访问次数', progress:'进展',
+    vhsOverTime:'VHS评分趋势',
+    improved:'VHS从', declined:'VHS从', stable:'VHS稳定在', over:'经过', visits2:'次访问',
+    visit:'第', keyConcerns:'主要关注点', deleteVisit:'删除此记录',
+    excellent:'优秀', good:'良好', fair:'一般', needsAttention:'需要关注', poor:'较差',
+    deleteAll:'删除该患者的所有记录', close:'关闭',
   },
   'zh-TW': {
-    pageTitle:'\u5065\u5eb7\u8a55\u4f30\u8a18\u9304', pageSub:'\u901a\u904eVANDL VHS\u63d0\u4ea4\u7684\u6240\u6709VHS\u5065\u5eb7\u8a55\u4f30',
-    tabPatients:'\ud83d\udc64 \u60a3\u8005', tabAllRecords:'\ud83d\udccb \u6240\u6709\u8a18\u9304',
-    lblUnique:'\u7368\u7279\u60a3\u8005\u6578', lblTotal:'\u7e3d\u8a2a\u554f\u91cf', lblToday:'\u4eca\u65e5', lblAvg:'\u5e73\u5747VHS\u8a55\u5206', lblAttention:'\u9700\u8981\u95dc\u6ce8',
-    hdrPatientProfiles:'\u60a3\u8005\u6a94\u6848', hdrAllAssessments:'\u6240\u6709\u8a55\u4f30',
-    searchPatients:'\u641c\u5c0b\u60a3\u8005\u2026', filterRecords:'\u7be9\u9078\u8a18\u9304\u2026',
-    btnDownloadCsv:'\u4e0b\u8f09CSV', btnDeleteSelected:'\u522a\u9664\u6240\u9078',
-    loading:'\u8f09\u5165\u4e2d\u2026',
+    pageTitle:'健康評估記錄', pageSub:'通過VANDL VHS提交的所有VHS健康評估',
+    tabPatients:'👤 患者', tabAllRecords:'📋 所有記錄',
+    lblUnique:'獨特患者數', lblTotal:'總訪問量', lblToday:'今日', lblAvg:'平均VHS評分', lblAttention:'需要關注',
+    hdrPatientProfiles:'患者檔案', hdrAllAssessments:'所有評估',
+    searchPatients:'搜尋患者…', filterRecords:'篩選記錄…',
+    btnDownloadCsv:'下載CSV', btnDeleteSelected:'刪除所選',
+    loading:'載入中…',
+    latestVhs:'最新VHS', avgVhs:'平均VHS', totalVisits:'總訪問次數', progress:'進展',
+    vhsOverTime:'VHS評分趨勢',
+    improved:'VHS從', declined:'VHS從', stable:'VHS穩定在', over:'經過', visits2:'次訪問',
+    visit:'第', keyConcerns:'主要關注點', deleteVisit:'刪除此記錄',
+    excellent:'優秀', good:'良好', fair:'一般', needsAttention:'需要關注', poor:'較差',
+    deleteAll:'刪除該患者的所有記錄', close:'關閉',
   },
 };
 let ADMIN_LANG = 'en';
@@ -1293,12 +1315,14 @@ function applyAdminI18n() {
   if (searchP) searchP.placeholder = AT.searchPatients;
   const searchR = document.getElementById('search-records');
   if (searchR) searchR.placeholder = AT.filterRecords;
+  setText('lbl-delete-all', AT.deleteAll);
+  setText('lbl-close-profile', AT.close);
   document.documentElement.lang = ADMIN_LANG === 'zh-CN' ? 'zh-Hans' : ADMIN_LANG === 'zh-TW' ? 'zh-Hant' : 'en';
 }
 
 async function detectAdminLang() {
   try {
-    const res = await fetch('/api/lang');
+    const res = await fetch('/api/lang', { credentials: 'include' });
     const data = await res.json();
     ADMIN_LANG = data.lang || 'en';
   } catch(e) { ADMIN_LANG = 'en'; }
@@ -1306,8 +1330,10 @@ async function detectAdminLang() {
   applyAdminI18n();
 }
 
-detectAdminLang();
-loadPatients();
+document.addEventListener('DOMContentLoaded', async () => {
+  await detectAdminLang();
+  loadPatients();
+});
 </script>
 </body>
 </html>
