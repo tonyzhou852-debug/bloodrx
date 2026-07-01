@@ -1430,6 +1430,7 @@ Return ONLY valid JSON:
               loadingTitle.textContent = 'Generating report... ' + Math.min(99, Math.round(charCount/80)) + '%';
             }
           }
+          if (ev.error) { throw new Error(ev.error); }
           if (ev.done) {
             stopLoading();
             if (loadingTitle) loadingTitle.textContent = 'Processing results...';
