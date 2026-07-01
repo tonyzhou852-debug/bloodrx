@@ -402,6 +402,7 @@ app.post("/api/auth/forgot-password", globalLimit, authLimit, async (req, res) =
     const resetUrl = `${appUrl}/reset-password?token=${token}`;
 
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+      console.log(`[forgot-password] Sending reset email to ${user.email}`);
       const mailer = getMailer();
       await mailer.sendMail({
         from: `"VANDL VHS" <${process.env.SMTP_USER}>`,
@@ -415,6 +416,9 @@ app.post("/api/auth/forgot-password", globalLimit, authLimit, async (req, res) =
             <p style="color:#6b7280;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
           </div>`,
       });
+      console.log(`[forgot-password] Email sent successfully to ${user.email}`);
+    } else {
+      console.warn('[forgot-password] SMTP env vars not set — skipping email send');
     }
     res.json({ ok: true });
   } catch(e) {
