@@ -501,15 +501,20 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(500).json({ error:"Server configuration error." });
   try {
+    const abortCtrl = new AbortController();
+    const apiTimeout = setTimeout(() => abortCtrl.abort(), 55000); // 55s — just under Render's 60s limit
+
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{ "Content-Type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01" },
+      signal: abortCtrl.signal,
       body: JSON.stringify({
-        model:"claude-sonnet-4-6", max_tokens:8000, stream:true,
+        model:"claude-sonnet-4-6", max_tokens:4000, stream:true,
         system:"You are a health wellness analyst. Return ONLY a single complete valid JSON object. Include all findings. Keep text fields under 200 chars each. Never truncate JSON. No medication names or prescriptions.",
         messages:req.body.messages,
       }),
     });
+    clearTimeout(apiTimeout);
     if (!upstream.ok) {
       const err = await upstream.json().catch(()=>({}));
       return res.status(upstream.status).json({ error:"Analysis service error." });
@@ -549,6 +554,9 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
         } catch(e) { /* skip */ }
       }
     }
+    } catch(streamErr) {
+      console.error("Stream error:", streamErr.message);
+      res.write("data:" + JSON.stringify({ error: "Analysis timed out. Please try again." }) + "\n\n");
     } finally {
       clearInterval(keepalive);
     }
