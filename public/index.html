@@ -871,14 +871,36 @@ function applyLang(lang) {
   }
 }
 
+function manualLang(lang) {
+  localStorage.setItem('vhs_lang', lang);
+  applyLang(lang);
+  updateLangButtons(lang);
+}
+
+function updateLangButtons(lang) {
+  ['en','zh-CN','zh-TW'].forEach(l => {
+    const btn = document.getElementById('ls-' + l);
+    if (!btn) return;
+    btn.style.background = l === lang ? 'var(--surface)' : 'none';
+    btn.style.color = l === lang ? 'var(--brand)' : 'var(--ink-3)';
+    btn.style.boxShadow = l === lang ? '0 1px 2px rgba(0,0,0,.05)' : 'none';
+  });
+}
+
 async function detectLang() {
-  try {
-    const res = await fetch('/api/lang');
-    const data = await res.json();
-    applyLang(data.lang || 'en');
-  } catch(e) {
-    applyLang('en');
+  const saved = localStorage.getItem('vhs_lang');
+  let lang = 'en';
+  if (saved && TRANSLATIONS[saved]) {
+    lang = saved;
+  } else {
+    try {
+      const res = await fetch('/api/lang');
+      const data = await res.json();
+      lang = data.lang || 'en';
+    } catch(e) {}
   }
+  applyLang(lang);
+  updateLangButtons(lang);
 }
 
 document.addEventListener('DOMContentLoaded', detectLang);
@@ -910,6 +932,11 @@ document.addEventListener('DOMContentLoaded', detectLang);
     </div>
 
     <div class="topbar-right">
+      <div class="lang-switcher" style="display:flex;gap:3px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px">
+        <button onclick="manualLang('en')" id="ls-en" style="padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:none;background:none;color:var(--ink-3);cursor:pointer;font-family:inherit" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color=currentLang==='en'?'var(--brand)':'var(--ink-3)'">EN</button>
+        <button onclick="manualLang('zh-CN')" id="ls-zh-CN" style="padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:none;background:none;color:var(--ink-3);cursor:pointer;font-family:inherit">简</button>
+        <button onclick="manualLang('zh-TW')" id="ls-zh-TW" style="padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;border:none;background:none;color:var(--ink-3);cursor:pointer;font-family:inherit">繁</button>
+      </div>
       <div class="user-badge" id="user-badge" style="display:none">
         <div class="user-avatar" id="user-avatar">?</div>
         <span class="user-name" id="user-name"></span>
