@@ -1192,6 +1192,30 @@ function fmtSize(b) {
   return (b/1048576).toFixed(1) + ' MB';
 }
 
+// Compress images to max width/height and quality to reduce payload size
+function compressImage(file, maxPx, quality) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl.split(',')[1]);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 function addFiles(fileList) {
   hideErr();
   const errs = [];
@@ -1201,9 +1225,18 @@ function addFiles(fileList) {
     const info = detectType(file);
     const entry = { file, name:file.name, size:file.size, category:info.cat, icon:info.icon, badgeCls:info.badge, label:info.label, base64:null, mimeType:resolvedMime(file) };
     uploadedFiles.push(entry);
-    const r = new FileReader();
-    r.onload = e => { entry.base64 = e.target.result.split(',')[1]; renderFileList(); };
-    r.readAsDataURL(file);
+    if (info.cat === 'image') {
+      // Compress images before encoding to reduce payload size for multiple uploads
+      compressImage(file, 1200, 0.82).then(b64 => {
+        entry.base64 = b64;
+        entry.mimeType = 'image/jpeg'; // canvas always outputs jpeg
+        renderFileList();
+      });
+    } else {
+      const r = new FileReader();
+      r.onload = e => { entry.base64 = e.target.result.split(',')[1]; renderFileList(); };
+      r.readAsDataURL(file);
+    }
   });
   if (errs.length) showErr(errs.join(' '));
   renderFileList();
@@ -1434,12 +1467,20 @@ Return ONLY valid JSON:
           if (ev.done) {
             stopLoading();
             if (loadingTitle) loadingTitle.textContent = 'Processing results...';
-            const clean = fullText.replace(/```json|```/g,'').trim();
-            const result = JSON.parse(clean);
-            document.getElementById('loading').style.display = 'none';
-            _originalResult = null;
-            Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
-            renderResults(result, { name, age, gender, complaint, notes });
+            try {
+              let clean = fullText.replace(/```json|```/g,'').trim();
+              clean = clean.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+              const result = JSON.parse(clean);
+              document.getElementById('loading').style.display = 'none';
+              _originalResult = null;
+              Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
+              renderResults(result, { name, age, gender, complaint, notes });
+            } catch(parseErr) {
+              document.getElementById('loading').style.display = 'none';
+              document.getElementById('form-section').style.display = 'block';
+              document.getElementById('form-heading').style.display = 'block';
+              showErr('Analysis failed to process. Please try again.');
+            }
           }
         } catch(e) { /* skip bad JSON chunks */ }
       }
