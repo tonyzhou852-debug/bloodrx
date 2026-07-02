@@ -356,24 +356,63 @@ input[type=file] { display: none; }
   color: #7f1d1d; font-size: 14px; margin-top: 1rem; line-height: 1.6;
 }
 
-#loading { display: none; text-align: center; padding: 5rem 1rem; }
+#loading {
+  display: none;
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(247,248,249,0.7);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  align-items: center; justify-content: center;
+  flex-direction: column;
+  text-align: center; padding: 2rem;
+}
+#loading.active { display: flex; }
+.loading-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 40px rgba(0,0,0,.12);
+  padding: 2.5rem 2rem;
+  width: 100%; max-width: 380px;
+}
 .loading-progress-track {
-  width: 220px; height: 4px; background: var(--bg-2);
+  width: 100%; height: 4px; background: var(--bg-2);
   border-radius: 2px; margin: 0 auto 1.5rem; overflow: hidden;
 }
 .loading-progress-bar {
   height: 4px; background: var(--brand); border-radius: 2px;
-  animation: progress 25s linear forwards;
+  width: 0%; transition: width 0.4s ease;
 }
-@keyframes progress { from { width: 0% } to { width: 90% } }
 #loading h3 { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
-#loading p  { font-size: 13px; color: var(--ink-3); }
-.loading-steps { display: flex; flex-direction: column; gap: 4px; margin-top: 1.5rem; align-items: center; }
-.loading-step { font-size: 12px; color: var(--ink-4); display: flex; align-items: center; gap: 6px; }
+#loading p  { font-size: 13px; color: var(--ink-3); margin-bottom: 1.5rem; }
+.loading-steps { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; width: 100%; }
+.loading-step { font-size: 12px; color: var(--ink-4); display: flex; align-items: center; gap: 8px; transition: color .3s; }
 .loading-step.active { color: var(--brand); font-weight: 500; }
+.loading-step.done { color: var(--green); }
 .step-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.step-check { width: 14px; height: 14px; flex-shrink: 0; }
 
+/* Results blur while loading */
 #results { display: none; }
+#results.generating {
+  display: block;
+  filter: blur(6px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.7;
+  transition: filter 0.5s ease, opacity 0.5s ease;
+}
+#results.done {
+  display: block;
+  filter: none;
+  opacity: 1;
+  pointer-events: auto;
+  user-select: auto;
+}
+
+/* Partial results fade in */
+.result-partial { animation: fadeInUp .4s ease-out; }
+@keyframes fadeInUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
 .result-topbar {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px;
@@ -1141,12 +1180,14 @@ document.addEventListener('DOMContentLoaded', detectLang);
   </div>
 
   <div id="loading" aria-live="polite" aria-atomic="true" role="status">
-    <div class="loading-progress-track">
-      <div class="loading-progress-bar" id="progress-bar"></div>
+    <div class="loading-card">
+      <div class="loading-progress-track">
+        <div class="loading-progress-bar" id="progress-bar"></div>
+      </div>
+      <h3 id="loading-title">Analyzing documents…</h3>
+      <p id="loading-sub">This typically takes 15–30 seconds</p>
+      <div class="loading-steps" id="loading-steps"></div>
     </div>
-    <h3 id="loading-title">Analyzing documents\u2026</h3>
-    <p id="loading-sub">This typically takes 15–30 seconds</p>
-    <div class="loading-steps" id="loading-steps"></div>
   </div>
 
   <div id="results"></div>
@@ -1300,35 +1341,70 @@ function hideErr() { document.getElementById('err-box').style.display = 'none'; 
 
 const STEPS_EN = [
   'Reading and parsing documents',
-  'Detecting language \u2014 translating markers',
+  'Detecting language — translating markers',
   'Extracting and normalising lab values',
   'Calculating VHS Health Score',
   'Generating wellness recommendations',
 ];
 const STEPS_ZH = [
-  '\u6b63\u5728\u8bfb\u53d6\u548c\u89e3\u6790\u6587\u6863',
-  '\u6b63\u5728\u68c0\u6d4b\u8bed\u8a00\u5e76\u7ffb\u8bd1\u6307\u6807',
-  '\u6b63\u5728\u63d0\u53d6\u548c\u6807\u51c6\u5316\u68c0\u9a8c\u503c',
-  '\u6b63\u5728\u8ba1\u7b97VHS\u5065\u5eb7\u8bc4\u5206',
-  '\u6b63\u5728\u751f\u6210\u5065\u5eb7\u5efa\u8bae',
+  '正在读取和解析文档',
+  '正在检测语言并翻译指标',
+  '正在提取和标准化检验值',
+  '正在计算VHS健康评分',
+  '正在生成健康建议',
 ];
-const STEPS = (currentLang === 'zh-CN' || currentLang === 'zh-TW') ? STEPS_ZH : STEPS_EN;
+let STEPS = [];
 let stepTimer, stepIdx = 0;
+
 function startLoading() {
+  STEPS = (currentLang === 'zh-CN' || currentLang === 'zh-TW') ? STEPS_ZH : STEPS_EN;
   stepIdx = 0;
   const el = document.getElementById('loading-steps');
-  el.innerHTML = STEPS.map((s,i) => `<div class="loading-step" id="lstep-${i}"><div class="step-dot"></div>${s}</div>`).join('');
+  el.innerHTML = STEPS.map((s,i) => `
+    <div class="loading-step" id="lstep-${i}">
+      <div class="step-dot"></div>
+      <span>${s}</span>
+    </div>`).join('');
   setStep(0);
-  stepTimer = setInterval(() => { stepIdx = Math.min(stepIdx+1, STEPS.length-1); setStep(stepIdx); }, 2000);
+  // Animate progress bar
+  let pct = 0;
+  const bar = document.getElementById('progress-bar');
+  if (bar) bar.style.width = '0%';
+  const progressTimer = setInterval(() => {
+    pct = Math.min(pct + (Math.random() * 3 + 1), 88);
+    if (bar) bar.style.width = pct + '%';
+  }, 600);
+  window._progressTimer = progressTimer;
+
+  stepTimer = setInterval(() => {
+    // Mark current as done
+    const cur = document.getElementById('lstep-' + stepIdx);
+    if (cur) {
+      cur.className = 'loading-step done';
+      cur.querySelector('.step-dot').outerHTML = `<svg class="step-check" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" fill="#ecfdf5" stroke="#059669"/><polyline points="4.5,8 7,10.5 11.5,5.5" stroke="#059669" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+    stepIdx = Math.min(stepIdx + 1, STEPS.length - 1);
+    setStep(stepIdx);
+  }, 4000);
 }
+
 function setStep(i) {
-  STEPS.forEach((_,j) => {
-    const el = document.getElementById('lstep-'+j);
-    if (el) el.className = 'loading-step' + (j===i?' active':'');
+  document.querySelectorAll('.loading-step').forEach((el, j) => {
+    if (!el.classList.contains('done')) {
+      el.className = 'loading-step' + (j === i ? ' active' : '');
+    }
   });
-  document.getElementById('loading-title').textContent = STEPS[i] + '\u2026';
+  const loadingTitle = document.getElementById('loading-title');
+  if (loadingTitle) loadingTitle.textContent = STEPS[i] + '…';
 }
-function stopLoading() { clearInterval(stepTimer); }
+
+function stopLoading() {
+  clearInterval(stepTimer);
+  clearInterval(window._progressTimer);
+  // Complete the progress bar
+  const bar = document.getElementById('progress-bar');
+  if (bar) bar.style.width = '100%';
+}
 
 function buildContentParts() {
   return uploadedFiles.filter(f => f.base64).map(f => {
@@ -1357,8 +1433,10 @@ async function analyze() {
 
   document.getElementById('form-section').style.display   = 'none';
   document.getElementById('form-heading').style.display   = 'none';
-  document.getElementById('loading').style.display        = 'block';
-  document.getElementById('results').style.display        = 'none';
+  document.getElementById('loading').classList.add('active');
+  const resultsEl = document.getElementById('results');
+  resultsEl.className = 'generating';
+  resultsEl.innerHTML = ''; // clear old results
   startLoading();
 
   const outputLangMap = {
@@ -1440,10 +1518,12 @@ Return ONLY valid JSON:
 
     let fullText = '';
     let charCount = 0;
+    let partialRendered = false;
     const reader = resp.body.getReader();
     const decoder = new TextDecoder();
     let buf = '';
     const loadingTitle = document.getElementById('loading-title');
+    const resultsEl = document.getElementById('results');
 
     while (true) {
       const { done, value } = await reader.read();
@@ -1460,36 +1540,50 @@ Return ONLY valid JSON:
             fullText += ev.t;
             charCount += ev.t.length;
             if (loadingTitle && charCount % 50 === 0) {
-              loadingTitle.textContent = 'Generating report... ' + Math.min(99, Math.round(charCount/80)) + '%';
+              const pct = Math.min(99, Math.round(charCount / 80));
+              loadingTitle.textContent = 'Generating report... ' + pct + '%';
+            }
+            // Try to render partial results as JSON accumulates
+            if (!partialRendered && charCount > 300) {
+              tryRenderPartial(fullText, { name, age, gender, complaint, notes });
+              if (resultsEl.innerHTML) partialRendered = true;
             }
           }
           if (ev.error) { throw new Error(ev.error); }
           if (ev.done) {
             stopLoading();
-            if (loadingTitle) loadingTitle.textContent = 'Processing results...';
             try {
               let clean = fullText.replace(/```json|```/g,'').trim();
               clean = clean.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
               const result = JSON.parse(clean);
-              document.getElementById('loading').style.display = 'none';
+              // Fade out loading overlay, unblur results
+              document.getElementById('loading').classList.remove('active');
               _originalResult = null;
               Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
               renderResults(result, { name, age, gender, complaint, notes });
+              resultsEl.className = 'done';
             } catch(parseErr) {
-              document.getElementById('loading').style.display = 'none';
+              document.getElementById('loading').classList.remove('active');
               document.getElementById('form-section').style.display = 'block';
               document.getElementById('form-heading').style.display = 'block';
+              resultsEl.className = '';
+              resultsEl.style.display = 'none';
               showErr('Analysis failed to process. Please try again.');
             }
           }
-        } catch(e) { /* skip bad JSON chunks */ }
+        } catch(e) {
+          if (e.message && !e.message.includes('JSON')) throw e;
+        }
       }
     }
   } catch(err) {
     stopLoading();
-    document.getElementById('loading').style.display = 'none';
+    document.getElementById('loading').classList.remove('active');
     document.getElementById('form-section').style.display = 'block';
     document.getElementById('form-heading').style.display = 'block';
+    const resultsEl = document.getElementById('results');
+    resultsEl.className = '';
+    resultsEl.style.display = 'none';
     showErr('Analysis failed: ' + err.message);
   }
 }
@@ -1515,6 +1609,55 @@ function uiT(key) {
     translated:      isChinese ? '\u6240\u6709\u6570\u503c\u5df2\u7ffb\u8bd1\u4e3a\u4e2d\u6587\u8fdb\u884c\u5206\u6790' : 'all values translated to English for analysis',
   };
   return labels[key] || key;
+}
+
+// Try to render partial results from incomplete streaming JSON
+function tryRenderPartial(text, p) {
+  try {
+    let cleaned = text.replace(/```json|```/g,'').trim();
+    cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    // Try to extract fields we can parse so far using regex
+    const getStr = (key) => {
+      const m = cleaned.match(new RegExp('"' + key + '"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)'));
+      return m ? m[1] : null;
+    };
+    const getNum = (key) => {
+      const m = cleaned.match(new RegExp('"' + key + '"\\s*:\\s*(\\d+)'));
+      return m ? Number(m[1]) : null;
+    };
+    const score = getNum('vhs_score');
+    const summary = getStr('health_assessment');
+    const vhsLabel = getStr('vhs_label');
+    if (!score && !summary) return; // not enough yet
+
+    const scoreColor = !score ? '#9ca3af' : score >= 90 ? '#059669' : score >= 75 ? '#2563eb' : score >= 60 ? '#b45309' : score >= 40 ? '#dc2626' : '#7f1d1d';
+    const initials = p.name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || 'P';
+
+    const resultsEl = document.getElementById('results');
+    resultsEl.innerHTML = `
+      <div class="result-topbar result-partial">
+        <h2>${uiT("reportTitle")}</h2>
+      </div>
+      <div class="patient-card result-partial">
+        <div class="patient-avatar">${escHtml(initials)}</div>
+        <div class="patient-info">
+          <h3>${escHtml(p.name)}</h3>
+          <p>${[p.age&&p.age+' years', p.gender].filter(Boolean).map(escHtml).join(' · ')}</p>
+        </div>
+        <div class="patient-right">
+          <div class="vhs-score-badge" style="border-color:${scoreColor}">
+            <div class="vhs-score-num" style="color:${scoreColor}">${score || '…'}</div>
+            <div class="vhs-score-label">${uiT("vhsScore")}</div>
+          </div>
+        </div>
+      </div>
+      ${summary ? `
+      <div class="result-section result-partial">
+        <div class="result-section-title">${uiT("healthAssessment")}</div>
+        <div class="summary-block">${escHtml(summary)}${summary.length > 50 ? '…' : ''}</div>
+      </div>` : ''}
+    `;
+  } catch(e) { /* not enough data yet */ }
 }
 
 function renderResults(r, p) {
@@ -1705,7 +1848,13 @@ function renderResults(r, p) {
 
 function resetForm() {
   uploadedFiles = [];
-  ['results','loading'].forEach(id => document.getElementById(id).style.display='none');
+  ['results','loading'].forEach(id => {
+    const el = document.getElementById(id);
+    el.className = '';
+    el.style.display = '';
+  });
+  document.getElementById('loading').classList.remove('active');
+  document.getElementById('results').style.display = 'none';
   ['form-section','form-heading'].forEach(id => document.getElementById(id).style.display='block');
   document.getElementById('file-list').style.display = 'none';
   document.getElementById('add-more-btn').style.display = 'none';
