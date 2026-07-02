@@ -526,13 +526,21 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
       abortCtrl.abort();
     }, 120000);
 
+    // Count images to adjust output limits
+    const msgContent = req.body.messages?.[0]?.content || [];
+    const imageCount = Array.isArray(msgContent) ? msgContent.filter(p => p.type === 'image').length : 0;
+    const maxTokens = imageCount >= 3 ? 4000 : 8000;
+    const sizeNote = imageCount >= 2
+      ? 'IMPORTANT: Multiple images provided. Be VERY concise — max 3 findings, all text under 80 chars, max 2 recommendations each.'
+      : 'max 5 findings, all text fields under 120 chars, recommendations max 3 items each under 100 chars, monitoring_plan under 200 chars.';
+
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{ "Content-Type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01" },
       signal: abortCtrl.signal,
       body: JSON.stringify({
-        model:"claude-sonnet-4-6", max_tokens:8000, stream:true,
-        system:"You are a health wellness analyst. Return ONLY a single complete valid JSON object. STRICT LIMITS: max 5 findings, all text fields under 120 chars, recommendations max 3 items each under 100 chars, monitoring_plan under 200 chars. Always close the JSON object completely. No medication names or prescriptions.",
+        model:"claude-sonnet-4-6", max_tokens:maxTokens, stream:true,
+        system:`You are a health wellness analyst. Return ONLY a single complete valid JSON object. STRICT LIMITS: ${sizeNote} Always close the JSON object completely. No medication names or prescriptions.`,
         messages:req.body.messages,
       }),
     });
