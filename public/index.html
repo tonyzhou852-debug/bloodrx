@@ -1268,9 +1268,12 @@ function addFiles(fileList) {
     uploadedFiles.push(entry);
     if (info.cat === 'image') {
       // Compress images before encoding to reduce payload size for multiple uploads
-      compressImage(file, 1200, 0.82).then(b64 => {
+      compressImage(file, 800, 0.75).then(b64 => {
         entry.base64 = b64;
-        entry.mimeType = 'image/jpeg'; // canvas always outputs jpeg
+        entry.mimeType = 'image/jpeg';
+        // Update displayed size to compressed size
+        const compressedBytes = Math.round(b64.length * 0.75);
+        entry.size = compressedBytes;
         renderFileList();
       });
     } else {
