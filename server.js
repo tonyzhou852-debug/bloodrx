@@ -529,10 +529,10 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
     // Count images to adjust output limits
     const msgContent = req.body.messages?.[0]?.content || [];
     const imageCount = Array.isArray(msgContent) ? msgContent.filter(p => p.type === 'image').length : 0;
-    const maxTokens = imageCount >= 3 ? 4000 : 8000;
+    const maxTokens = imageCount >= 3 ? 6000 : 8000;
     const sizeNote = imageCount >= 2
-      ? 'IMPORTANT: Multiple images provided. Be VERY concise — max 3 findings, all text under 80 chars, max 2 recommendations each.'
-      : 'max 5 findings, all text fields under 120 chars, recommendations max 3 items each under 100 chars, monitoring_plan under 200 chars.';
+      ? 'Multiple images: max 3 findings, all text under 80 chars, max 2 recommendations each.'
+      : 'max 5 findings, all text fields under 120 chars, recommendations max 3 items each under 100 chars.';
 
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
@@ -540,7 +540,7 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
       signal: abortCtrl.signal,
       body: JSON.stringify({
         model:"claude-sonnet-4-6", max_tokens:maxTokens, stream:true,
-        system:`You are a health wellness analyst. Return ONLY a single complete valid JSON object. STRICT LIMITS: ${sizeNote} Always close the JSON object completely. No medication names or prescriptions.`,
+        system:`You are a health wellness analyst. Return ONLY a single complete valid JSON object. CRITICAL: All string values must use only basic ASCII characters — no special quotes, no newlines inside strings, no backslashes, no unicode escapes. Replace any special characters with spaces. STRICT LIMITS: ${sizeNote} Always close the JSON object completely. No medication names or prescriptions.`,
         messages:req.body.messages,
       }),
     });
@@ -608,11 +608,13 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
     let cleaned = fullText.replace(/```json|```/g,"").trim();
     // Strip control characters
     cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+    // Fix unescaped newlines inside JSON strings (common with medical docs)
+    cleaned = cleaned.replace(/\n/g, " ").replace(/\r/g, " ");
     // Attempt to repair truncated JSON
     if (!cleaned.endsWith("}")) {
       const lastComma = cleaned.lastIndexOf(",");
       const lastBrace = cleaned.lastIndexOf("}");
-      if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace + 1); // trim after last }
+      if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace + 1);
       else if (lastComma > 0) cleaned = cleaned.slice(0, lastComma) + "}";
       else cleaned += "}";
     }
