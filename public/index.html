@@ -1534,45 +1534,40 @@ Return ONLY valid JSON:
       for (const line of lines) {
         if (!line.startsWith('data:')) continue;
         const raw = line.slice(5).trim();
-        try {
-          const ev = JSON.parse(raw);
-          if (ev.t) {
-            fullText += ev.t;
-            charCount += ev.t.length;
-            if (loadingTitle && charCount % 50 === 0) {
-              const pct = Math.min(99, Math.round(charCount / 80));
-              loadingTitle.textContent = 'Generating report... ' + pct + '%';
-            }
-            // Try to render partial results as JSON accumulates
-            if (!partialRendered && charCount > 300) {
-              tryRenderPartial(fullText, { name, age, gender, complaint, notes });
-              if (resultsEl.innerHTML) partialRendered = true;
-            }
+        let ev;
+        try { ev = JSON.parse(raw); } catch(e) { continue; } // skip malformed SSE lines
+        if (ev.t) {
+          fullText += ev.t;
+          charCount += ev.t.length;
+          if (loadingTitle && charCount % 50 === 0) {
+            const pct = Math.min(99, Math.round(charCount / 80));
+            loadingTitle.textContent = 'Generating report... ' + pct + '%';
           }
-          if (ev.error) { throw new Error(ev.error); }
-          if (ev.done) {
-            stopLoading();
-            try {
-              let clean = fullText.replace(/```json|```/g,'').trim();
-              clean = clean.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-              const result = JSON.parse(clean);
-              // Fade out loading overlay, unblur results
-              document.getElementById('loading').classList.remove('active');
-              _originalResult = null;
-              Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
-              renderResults(result, { name, age, gender, complaint, notes });
-              resultsEl.className = 'done';
-            } catch(parseErr) {
-              document.getElementById('loading').classList.remove('active');
-              document.getElementById('form-section').style.display = 'block';
-              document.getElementById('form-heading').style.display = 'block';
-              resultsEl.className = '';
-              resultsEl.style.display = 'none';
-              showErr('Analysis failed to process. Please try again.');
-            }
+          if (!partialRendered && charCount > 300) {
+            tryRenderPartial(fullText, { name, age, gender, complaint, notes });
+            if (resultsEl.innerHTML) partialRendered = true;
           }
-        } catch(e) {
-          if (e.message && !e.message.includes('JSON')) throw e;
+        }
+        if (ev.error) { throw new Error(ev.error); }
+        if (ev.done) {
+          stopLoading();
+          let clean = fullText.replace(/```json|```/g,'').trim();
+          clean = clean.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+          let result;
+          try { result = JSON.parse(clean); } catch(parseErr) {
+            document.getElementById('loading').classList.remove('active');
+            document.getElementById('form-section').style.display = 'block';
+            document.getElementById('form-heading').style.display = 'block';
+            resultsEl.className = '';
+            resultsEl.style.display = 'none';
+            showErr('Analysis failed to process. Please try again.');
+            return;
+          }
+          document.getElementById('loading').classList.remove('active');
+          _originalResult = null;
+          Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
+          renderResults(result, { name, age, gender, complaint, notes });
+          resultsEl.className = 'done';
         }
       }
     }
