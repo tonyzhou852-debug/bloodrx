@@ -426,7 +426,97 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
   res.json({ user:{ username:req.user.username, email:req.user.email, id:req.user.id } });
 });
 
-// ── Password reset ──────────────────────────────────────────────
+const MONTHLY_LIMIT = 20;
+
+async function checkMonthlyLimit(req, res, next) {
+  try {
+    const db = await getDB();
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const user = await db.collection("users").findOne({ id: req.user.id }, { projection: { usageMonthly: 1 } });
+    const usage = user?.usageMonthly || {};
+    const used = usage[monthKey] || 0;
+    if (used >= MONTHLY_LIMIT) {
+      // Send SSE-friendly error since headers may not be sent yet
+      res.setHeader("Content-Type","text/event-stream");
+      res.setHeader("Cache-Control","no-cache");
+      res.flushHeaders();
+      res.write(`data:${JSON.stringify({ error: `Monthly limit reached. You've used ${used}/${MONTHLY_LIMIT} analyses this month. Contact us to upgrade.` })}\n\n`);
+      res.end();
+      return;
+    }
+    req._monthKey = monthKey;
+    req._usedCount = used;
+    next();
+  } catch(e) { next(); } // fail open — don't block on DB error
+}
+
+// Usage status endpoint — called by client on load
+app.get("/api/usage", requireAuth, globalLimit, async (req, res) => {
+  try {
+    const db = await getDB();
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const user = await db.collection("users").findOne({ id: req.user.id }, { projection: { usageMonthly: 1 } });
+    const used = user?.usageMonthly?.[monthKey] || 0;
+    res.json({ used, limit: MONTHLY_LIMIT, remaining: Math.max(0, MONTHLY_LIMIT - used), monthKey });
+  } catch(e) { res.status(500).json({ error: "Failed." }); }
+});
+
+
+app.get("/api/family/members", requireAuth, globalLimit, async (req, res) => {
+  try {
+    const db = await getDB();
+    const user = await db.collection("users").findOne({ id: req.user.id }, { projection: { familyMembers: 1 } });
+    res.json({ members: user?.familyMembers || [] });
+  } catch(e) { res.status(500).json({ error: "Failed." }); }
+});
+
+app.post("/api/family/members", requireAuth, globalLimit, async (req, res) => {
+  const { name, relation, age, gender } = req.body || {};
+  if (!name || !relation) return res.status(400).json({ error: "Name and relation required." });
+  const member = {
+    id: Date.now().toString(),
+    name: sanitize(name).slice(0, 60),
+    relation: sanitize(relation).slice(0, 30),
+    age: sanitize(String(age || "")).slice(0, 5),
+    gender: sanitize(gender || "").slice(0, 20),
+  };
+  try {
+    const db = await getDB();
+    await db.collection("users").updateOne(
+      { id: req.user.id },
+      { $push: { familyMembers: member } }
+    );
+    res.json({ member });
+  } catch(e) { res.status(500).json({ error: "Failed." }); }
+});
+
+app.delete("/api/family/members/:memberId", requireAuth, globalLimit, async (req, res) => {
+  try {
+    const db = await getDB();
+    await db.collection("users").updateOne(
+      { id: req.user.id },
+      { $pull: { familyMembers: { id: req.params.memberId } } }
+    );
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: "Failed." }); }
+});
+
+app.get("/api/family/history/:memberId", requireAuth, globalLimit, async (req, res) => {
+  try {
+    const db = await getDB();
+    const records = await db.collection("patients")
+      .find({ userId: req.user.id, familyMemberId: req.params.memberId },
+        { projection: { _id:0, ip:0, userId:0 } })
+      .sort({ id: 1 })
+      .limit(100)
+      .toArray();
+    res.json({ records });
+  } catch(e) { res.status(500).json({ error: "Failed." }); }
+});
+
+
 app.post("/api/auth/forgot-password", globalLimit, authLimit, async (req, res) => {
   const { email } = req.body || {};
   if (!email) return res.status(400).json({ error:"Email required." });
@@ -497,7 +587,7 @@ app.get("/auth/google/callback",
 // ══════════════════════════════════════════════════════════════
 // ANALYSIS with SSE streaming
 // ══════════════════════════════════════════════════════════════
-app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalysis, async (req, res) => {
+app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, checkMonthlyLimit, validateAnalysis, async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(500).json({ error:"Server configuration error." });
 
@@ -529,10 +619,10 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
     // Count images to adjust output limits
     const msgContent = req.body.messages?.[0]?.content || [];
     const imageCount = Array.isArray(msgContent) ? msgContent.filter(p => p.type === 'image').length : 0;
-    const maxTokens = imageCount >= 3 ? 6000 : 8000;
+    const maxTokens = 8000; // Always 8000 — meal plan needs the room
     const sizeNote = imageCount >= 2
-      ? 'Multiple images: max 3 findings, all text under 80 chars, max 2 recommendations each.'
-      : 'max 5 findings, all text fields under 120 chars, recommendations max 3 items each under 100 chars.';
+      ? 'Multiple images: max 3 findings, all non-meal text under 80 chars, max 2 recommendations each.'
+      : 'max 5 findings, all non-meal text fields under 120 chars, recommendations max 3 items each under 100 chars.';
 
     const upstream = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
@@ -540,7 +630,7 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
       signal: abortCtrl.signal,
       body: JSON.stringify({
         model:"claude-sonnet-4-6", max_tokens:maxTokens, stream:true,
-        system:`You are a health wellness analyst. Return ONLY a single complete valid JSON object. CRITICAL: All string values must use only basic ASCII characters — no special quotes, no newlines inside strings, no backslashes, no unicode escapes. Replace any special characters with spaces. STRICT LIMITS: ${sizeNote} Always close the JSON object completely. No medication names or prescriptions.`,
+        system:`You are a health wellness analyst. Return ONLY a single complete valid JSON object. CRITICAL: All string values must use only basic ASCII characters — no special quotes, no newlines inside strings, no backslashes, no unicode escapes. Replace any special characters with spaces. STRICT LIMITS: ${sizeNote} The meal_plan.week field should have all 7 days with brief meal names only (under 60 chars each). Always close the JSON object completely. No medication names or prescriptions.`,
         messages:req.body.messages,
       }),
     });
@@ -592,6 +682,14 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
     // Always signal done to the client, even if stream ended unexpectedly
     sendEvent({ done: true });
 
+    // Increment monthly usage counter (non-blocking)
+    if (req._monthKey) {
+      getDB().then(db => db.collection("users").updateOne(
+        { id: req.user.id },
+        { $inc: { [`usageMonthly.${req._monthKey}`]: 1 } }
+      )).catch(() => {});
+    }
+
   } catch(e) {
     console.error("Analysis error:", e.message);
     sendEvent({ error: e.name === "AbortError"
@@ -623,6 +721,8 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
     const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
     const record = {
       id: Date.now(), userId: req.user.id, submittedBy: req.user.username,
+      familyMemberId: sanitize(g("FamilyMemberId") || ""),
+      familyMemberName: sanitize(g("FamilyMemberName") || ""),
       name: sanitize(g("Name")) || "Unknown",
       phone: sanitize(g("Phone")), age: sanitize(g("Age")), gender: sanitize(g("Gender")),
       complaint: sanitize(g("Health concern")), notes: sanitize(g("Health notes")),
@@ -640,6 +740,7 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, validateAnalys
       lifestyle:    (result.lifestyle_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
       supplements:  (result.nutritional_support||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
       monitoring_plan: sanitize(result.monitoring_plan),
+      meal_plan: result.meal_plan || null,
       ip: req.ip||"", created_at: new Date().toISOString(),
     };
     getDB().then(db => db.collection("patients").insertOne(record)).catch(e => console.log("DB save error:", e.message));
