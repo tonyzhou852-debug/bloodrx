@@ -575,6 +575,13 @@ input[type=file] { display: none; }
 .rec-item { display:flex; align-items:flex-start; gap:10px; font-size:14px; color:var(--ink-2); line-height:1.6; }
 .rec-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
 
+.meal-plan-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+.meal-day-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem 1.25rem; box-shadow:var(--shadow-sm); }
+.meal-day-title { font-size:12px; font-weight:700; color:var(--brand); text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+.meal-item { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:var(--ink-2); line-height:1.5; margin-bottom:8px; }
+.meal-item:last-child { margin-bottom:0; }
+.meal-label { font-size:15px; flex-shrink:0; }
+
 .bot-trigger {
   background: none; border: none; cursor: pointer;
   font-family: inherit; font-size: 12px; color: var(--ink-3);
@@ -1038,6 +1045,17 @@ document.addEventListener('DOMContentLoaded', detectLang);
       </div>
       <div class="section-body">
 
+        <!-- Family member selector -->
+        <div class="lang-row" id="family-row" style="align-items:flex-start;flex-wrap:wrap;gap:8px">
+          <svg viewBox="0 0 24 24" style="margin-top:10px;flex-shrink:0" aria-hidden="true" fill="none" stroke="var(--ink-4)" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;margin-top:8px" id="label-for-whom">For whom?</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1;align-items:center">
+            <select id="family-select" onchange="onFamilySelect()" style="flex:1;min-width:160px;height:36px;min-height:36px"><option value="self">Myself</option></select>
+            <button type="button" onclick="openFamilyManager()" style="padding:6px 12px;height:36px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:inherit;color:var(--ink-3);cursor:pointer;white-space:nowrap">+ Manage</button>
+            <button type="button" onclick="openFamilyDashboard()" style="padding:6px 12px;height:36px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;white-space:nowrap">{1F46A} Family Status</button>
+          </div>
+        </div>
+
         <div class="lang-row">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           <label for="report-lang" id="label-doclang">Document language</label>
@@ -1161,6 +1179,11 @@ document.addEventListener('DOMContentLoaded', detectLang);
             <input type="checkbox" id="consent-check" onchange="updateAnalyzeBtn()">
             <span id="consent-text">I am 18 years or older and agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this platform uses AI to generate wellness assessments for <strong>educational purposes only</strong> \u2014 not medical diagnosis or prescription. I consent to my data being processed as described in the Privacy Policy.</span>
           </label>
+        </div>
+
+        <div id="usage-banner" class="info-banner banner-amber" style="display:none;margin-top:0.75rem">
+          <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" style="flex-shrink:0;margin-top:1px"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+          <span id="usage-banner-text"></span>
         </div>
 
         <button class="analyze-btn" id="analyze-btn" onclick="analyze()" disabled type="button"
@@ -1289,10 +1312,12 @@ function addFiles(fileList) {
 
 function removeFile(i) { uploadedFiles.splice(i,1); renderFileList(); }
 
+let _limitReached = false;
+
 function updateAnalyzeBtn() {
   const consent = document.getElementById('consent-check')?.checked;
   const hasFiles = uploadedFiles.length > 0 && uploadedFiles.every(f => f.base64 !== null);
-  document.getElementById('analyze-btn').disabled = !(consent && hasFiles);
+  document.getElementById('analyze-btn').disabled = !(!_limitReached && consent && hasFiles);
 }
 
 function renderFileList() {
@@ -1433,6 +1458,10 @@ async function analyze() {
   const complaint = document.getElementById('p-complaint').value.trim();
   const notes     = document.getElementById('p-notes').value.trim();
   const lang      = document.getElementById('report-lang').value;
+  const familySel = document.getElementById('family-select');
+  const familyMemberId = familySel ? familySel.value : 'self';
+  const familyMember = familyMembers.find(m => m.id === familyMemberId);
+  const familyMemberName = familyMember ? familyMember.name : '';
 
   document.getElementById('form-section').style.display   = 'none';
   document.getElementById('form-heading').style.display   = 'none';
@@ -1468,6 +1497,8 @@ Individual context:
 - Gender: ${gender||'unknown'}
 - Health concern: ${complaint||'not provided'}
 - Health notes: ${notes||'none provided'}
+- FamilyMemberId: ${familyMemberId !== 'self' ? familyMemberId : ''}
+- FamilyMemberName: ${familyMemberName || ''}
 
 INSTRUCTIONS:
 1. Read ALL provided documents. Translate lab marker names to standard English for the "marker" field only.
@@ -1501,6 +1532,19 @@ Return ONLY valid JSON:
   "nutrition_recommendations": ["recommendation in ${outputLang}", "recommendation in ${outputLang}", "recommendation in ${outputLang}"],
   "lifestyle_recommendations": ["recommendation in ${outputLang}", "recommendation in ${outputLang}", "recommendation in ${outputLang}"],
   "nutritional_support": ["supplement in ${outputLang}", "supplement in ${outputLang}", "supplement in ${outputLang}"],
+  "meal_plan": {
+    "duration_weeks": 4,
+    "duration_note": "Recommended duration in ${outputLang} based on condition severity (e.g. 2 weeks for mild, 4 weeks for moderate, 8 weeks for serious)",
+    "week": {
+      "monday": { "breakfast": "specific food in ${outputLang}", "lunch": "specific food in ${outputLang}", "dinner": "specific food in ${outputLang}" },
+      "tuesday": { "breakfast": "specific food in ${outputLang}", "lunch": "specific food in ${outputLang}", "dinner": "specific food in ${outputLang}" },
+      "wednesday": { "breakfast": "specific food in ${outputLang}", "lunch": "specific food in ${outputLang}", "dinner": "specific food in ${outputLang}" },
+      "thursday": { "breakfast": "specific food in ${outputLang}", "lunch": "specific food in ${outputLang}", "dinner": "specific food in ${outputLang}" },
+      "friday": { "breakfast": "specific food in ${outputLang}", "lunch": "specific food in ${outputLang}", "dinner": "specific food in ${outputLang}" },
+      "saturday": { "breakfast": "specific food in ${outputLang}", "lunch": "specific food in ${outputLang}", "dinner": "specific food in ${outputLang}" },
+      "sunday": { "breakfast": "specific food in ${outputLang}", "lunch": "specific food in ${outputLang}", "dinner": "specific food in ${outputLang}" }
+    }
+  },
   "monitoring_plan": "follow-up tests and timeline in ${outputLang}"
 }`;
 
@@ -1571,6 +1615,7 @@ Return ONLY valid JSON:
           Object.keys(_translationCache).forEach(k => delete _translationCache[k]);
           renderResults(result, { name, age, gender, complaint, notes });
           resultsEl.className = 'done';
+          loadUsage(); // refresh usage counter after successful analysis
         }
       }
     }
@@ -1599,6 +1644,12 @@ function uiT(key) {
     lifestyle:       isChinese ? (trad?'\u751f\u6d3b\u65b9\u5f0f\u5efa\u8b70':'\u751f\u6d3b\u65b9\u5f0f\u5efa\u8bae') : 'Lifestyle Recommendations',
     supplements:     isChinese ? (trad?'\u71df\u990a\u88dc\u5145\u5efa\u8b70':'\u8425\u517b\u8865\u5145\u5efa\u8bae') : 'Suggested Nutritional Support',
     monitoring:      isChinese ? (trad?'\u76e3\u6e2c\u8a08\u5283':'\u76d1\u6d4b\u8ba1\u5212') : 'Monitoring Plan',
+    mealPlan:        isChinese ? (trad?'\u98f2\u98df\u5efa\u8b70\u8a08\u5283':'\u996e\u98df\u5efa\u8bae\u8ba1\u5212') : '7-Day Meal Suggestion Plan',
+    day:             isChinese ? '\u65e5' : 'Day',
+    breakfast:       isChinese ? '\u65e9\u9910' : 'Breakfast',
+    lunch:           isChinese ? '\u5348\u9910' : 'Lunch',
+    dinner:          isChinese ? '\u665a\u9910' : 'Dinner',
+    repeatWeeks:     isChinese ? '\u5efa\u8bae\u91cd\u590d\u8be5\u8ba1\u5212 {n} \u5468' : 'Repeat this plan for {n} weeks',
     vhsScore:        isChinese ? 'VHS\u8bc4\u5206' : 'VHS Score',
     newAssessment:   isChinese ? (trad?'\u2190 \u65b0\u8a55\u4f30':'\u2190 \u65b0\u8bc4\u4f30') : '\u2190 New Assessment',
     aiGenerated:     isChinese ? 'AI\u751f\u6210\u5185\u5bb9' : 'AI-Generated Content',
@@ -1757,6 +1808,7 @@ function renderResults(r, p) {
           </div>
         </div>
         <button class="new-analysis-btn" onclick="resetForm()" type="button">${uiT("newAssessment")}</button>
+        ${familyMembers.length ? `<button class="new-analysis-btn" onclick="openFamilyDashboard()" type="button" style="background:var(--brand-bg);border-color:var(--brand-bd);color:var(--brand)">👨‍👩‍👧 ${currentLang==='zh-CN'?'家庭状态':currentLang==='zh-TW'?'家庭狀態':'Family Status'}</button>` : ''}
       </div>
     </div>
 
@@ -1818,6 +1870,44 @@ function renderResults(r, p) {
     <div class="result-section" role="region" aria-label="Monitoring plan">
       <div class="result-section-title">${uiT("monitoring")}</div>
       <div class="monitoring-card">${escHtml(r.monitoring_plan)}</div>
+    </div>` : ''}
+
+    ${r.meal_plan && r.meal_plan.week ? `
+    <div class="result-section" role="region" aria-label="Meal plan">
+      <div class="result-section-title">${uiT("mealPlan")}</div>
+      ${r.meal_plan.duration_note ? `<div style="font-size:13px;color:var(--ink-3);margin-bottom:14px;padding:10px 14px;background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:var(--radius);line-height:1.6">📅 ${escHtml(r.meal_plan.duration_note)}</div>` : ''}
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm);min-width:600px">
+          <thead>
+            <tr style="background:var(--bg-2)">
+              <th style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;text-align:left;border-bottom:1px solid var(--border)">${uiT('day')}</th>
+              <th style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;text-align:left;border-bottom:1px solid var(--border)">🌅 ${uiT('breakfast')}</th>
+              <th style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;text-align:left;border-bottom:1px solid var(--border)">☀️ ${uiT('lunch')}</th>
+              <th style="padding:10px 14px;font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;text-align:left;border-bottom:1px solid var(--border)">🌙 ${uiT('dinner')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map((day, i) => {
+              const d = r.meal_plan.week[day];
+              if (!d) return '';
+              const dayNames = {
+                en: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+                'zh-CN': ['周一','周二','周三','周四','周五','周六','周日'],
+                'zh-TW': ['週一','週二','週三','週四','週五','週六','週日'],
+              };
+              const langs = dayNames[currentLang] || dayNames.en;
+              const isWeekend = i >= 5;
+              return `<tr style="border-bottom:1px solid var(--border);${isWeekend?'background:var(--bg-2)':''}">
+                <td style="padding:11px 14px;font-size:13px;font-weight:600;color:${isWeekend?'var(--brand)':'var(--ink-2)'};white-space:nowrap">${langs[i]}</td>
+                <td style="padding:11px 14px;font-size:13px;color:var(--ink-2);line-height:1.5">${escHtml(d.breakfast||'')}</td>
+                <td style="padding:11px 14px;font-size:13px;color:var(--ink-2);line-height:1.5">${escHtml(d.lunch||'')}</td>
+                <td style="padding:11px 14px;font-size:13px;color:var(--ink-2);line-height:1.5">${escHtml(d.dinner||'')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      ${r.meal_plan.duration_weeks ? `<p style="font-size:12px;color:var(--ink-4);margin-top:8px;text-align:center">🔄 ${uiT('repeatWeeks').replace('{n}', r.meal_plan.duration_weeks)}</p>` : ''}
     </div>` : ''}
 
     <div class="disclaimer" role="note">
@@ -2213,9 +2303,33 @@ async function loadUser() {
     document.getElementById('user-name').textContent = u.username || u.email;
     document.getElementById('user-avatar').textContent = (u.username || u.email || '?')[0].toUpperCase();
     document.getElementById('user-badge').style.display = 'flex';
+    loadUsage();
   } catch(e) {
     window.location.href = '/login';
   }
+}
+
+async function loadUsage() {
+  try {
+    const resp = await fetch('/api/usage', { credentials: 'include' });
+    const data = await resp.json();
+    const { used, limit, remaining } = data;
+    const banner = document.getElementById('usage-banner');
+    const bannerText = document.getElementById('usage-banner-text');
+    if (!banner) return;
+    if (used >= limit) {
+      _limitReached = true;
+      banner.style.display = 'flex';
+      banner.style.background = 'var(--red-bg)';
+      banner.style.borderColor = 'var(--red-bd)';
+      banner.style.color = '#7f1d1d';
+      bannerText.innerHTML = `You've used all ${limit} analyses this month. <a href="mailto:hello@vandlvhs.com" style="color:var(--brand);font-weight:600">Contact us to upgrade →</a>`;
+      document.getElementById('analyze-btn').disabled = true;
+    } else if (remaining <= 5) {
+      banner.style.display = 'flex';
+      bannerText.textContent = `${remaining} of ${limit} analyses remaining this month.`;
+    }
+  } catch(e) {}
 }
 
 async function doLogout() {
@@ -2224,6 +2338,551 @@ async function doLogout() {
 }
 
 loadUser();
+</script>
+<!-- Family Manager Modal -->
+<div class="modal-overlay" id="family-overlay" onclick="if(event.target===this)closeFamilyManager()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:480px;max-height:80vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)">
+      <h3 style="font-size:16px;font-weight:700" id="family-modal-title">Family Members</h3>
+      <button onclick="closeFamilyManager()" style="background:none;border:1px solid var(--border);border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:16px;color:var(--ink-3)">&#x2715;</button>
+    </div>
+    <div style="padding:20px 24px;overflow-y:auto;flex:1">
+      <div id="family-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px"></div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+        <div style="font-size:12px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px" id="add-member-title">Add Family Member</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div><label style="font-size:11px;font-weight:500;color:var(--ink-3);display:block;margin-bottom:4px" id="fm-label-name">Name</label><input type="text" id="fm-name" placeholder="e.g. Mom" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit"></div>
+          <div><label style="font-size:11px;font-weight:500;color:var(--ink-3);display:block;margin-bottom:4px" id="fm-label-relation">Relation</label><input type="text" id="fm-relation" placeholder="e.g. Mother" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div><label style="font-size:11px;font-weight:500;color:var(--ink-3);display:block;margin-bottom:4px" id="fm-label-age">Age</label><input type="number" id="fm-age" placeholder="Age" min="0" max="120" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit"></div>
+          <div><label style="font-size:11px;font-weight:500;color:var(--ink-3);display:block;margin-bottom:4px" id="fm-label-gender">Gender</label><select id="fm-gender" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;height:38px"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div>
+        </div>
+        <button onclick="addFamilyMember()" style="width:100%;padding:10px;background:var(--brand);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer" id="btn-add-member">Add Member</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Family Members ─────────────────────────────────────────────
+let familyMembers = [];
+let _selectedMemberId = 'self';
+
+async function loadFamilyMembers() {
+  try {
+    const resp = await fetch('/api/family/members', { credentials: 'include' });
+    const data = await resp.json();
+    familyMembers = data.members || [];
+    updateFamilySelect();
+  } catch(e) {}
+}
+
+function updateFamilySelect() {
+  const sel = document.getElementById('family-select');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="self">Myself</option>' +
+    familyMembers.map(m => `<option value="${m.id}">${escHtml(m.name)} (${escHtml(m.relation)})</option>`).join('');
+  if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
+  onFamilySelect();
+}
+
+function onFamilySelect() {
+  const sel = document.getElementById('family-select');
+  _selectedMemberId = sel.value;
+  if (_selectedMemberId === 'self') {
+    // Clear auto-filled fields
+    document.getElementById('p-name').placeholder = 'Full name';
+    return;
+  }
+  const member = familyMembers.find(m => m.id === _selectedMemberId);
+  if (!member) return;
+  // Pre-fill patient info fields
+  document.getElementById('p-name').value = member.name;
+  if (member.age) document.getElementById('p-age').value = member.age;
+  if (member.gender) document.getElementById('p-gender').value = member.gender;
+}
+
+function openFamilyManager() {
+  renderFamilyList();
+  const overlay = document.getElementById('family-overlay');
+  overlay.style.display = 'flex';
+}
+
+function closeFamilyManager() {
+  document.getElementById('family-overlay').style.display = 'none';
+}
+
+function renderFamilyList() {
+  const el = document.getElementById('family-list');
+  if (!familyMembers.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--ink-4);text-align:center;padding:12px 0">No family members added yet.</p>';
+    return;
+  }
+  el.innerHTML = familyMembers.map(m => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--ink)">${escHtml(m.name)}</div>
+        <div style="font-size:12px;color:var(--ink-3)">${escHtml(m.relation)}${m.age ? ' · ' + m.age + 'y' : ''}${m.gender ? ' · ' + m.gender : ''}</div>
+      </div>
+      <button onclick="deleteFamilyMember('${m.id}')" style="background:none;border:none;cursor:pointer;color:var(--ink-4);font-size:16px;padding:4px 8px;border-radius:4px" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--ink-4)'">&#x2715;</button>
+    </div>`).join('');
+}
+
+async function addFamilyMember() {
+  const name = document.getElementById('fm-name').value.trim();
+  const relation = document.getElementById('fm-relation').value.trim();
+  const age = document.getElementById('fm-age').value;
+  const gender = document.getElementById('fm-gender').value;
+  if (!name || !relation) { alert('Name and relation are required.'); return; }
+  try {
+    const resp = await fetch('/api/family/members', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name, relation, age, gender }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error);
+    familyMembers.push(data.member);
+    document.getElementById('fm-name').value = '';
+    document.getElementById('fm-relation').value = '';
+    document.getElementById('fm-age').value = '';
+    document.getElementById('fm-gender').value = '';
+    updateFamilySelect();
+    renderFamilyList();
+  } catch(e) { alert('Failed to add member: ' + e.message); }
+}
+
+async function deleteFamilyMember(id) {
+  if (!confirm('Remove this family member?')) return;
+  try {
+    await fetch(`/api/family/members/${id}`, { method: 'DELETE', credentials: 'include' });
+    familyMembers = familyMembers.filter(m => m.id !== id);
+    updateFamilySelect();
+    renderFamilyList();
+  } catch(e) {}
+}
+
+// Load family members when page loads
+loadFamilyMembers();
+</script>
+
+<!-- FAMILY DASHBOARD -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     FAMILY DASHBOARD MODAL
+     Include this fragment in index.html before </body>
+     Requires: familyMembers[] global, escHtml(), currentLang
+════════════════════════════════════════════════════════════ -->
+
+<style>
+/* Family Dashboard */
+.fd-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.55); z-index: 300;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.fd-overlay.open { display: flex; }
+.fd-modal {
+  background: var(--surface); border-radius: var(--radius-xl);
+  box-shadow: 0 32px 80px rgba(0,0,0,.25);
+  width: 100%; max-width: 860px; max-height: 90vh;
+  display: flex; flex-direction: column;
+  animation: fdIn .2s ease-out;
+}
+@keyframes fdIn { from { opacity:0; transform:scale(.97) translateY(8px) } to { opacity:1; transform:scale(1) translateY(0) } }
+.fd-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.fd-head h2 { font-size: 17px; font-weight: 700; }
+.fd-head-sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+.fd-close {
+  width: 34px; height: 34px; border-radius: 8px; background: none;
+  border: 1px solid var(--border); cursor: pointer; font-size: 16px;
+  color: var(--ink-3); display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.fd-close:hover { border-color: var(--brand); color: var(--brand); }
+.fd-body { display: flex; flex: 1; overflow: hidden; }
+
+/* Left sidebar — member list */
+.fd-sidebar {
+  width: 220px; flex-shrink: 0; border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.fd-member-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius);
+  border: 1px solid transparent; background: none;
+  cursor: pointer; text-align: left; width: 100%;
+  transition: all .15s; font-family: inherit;
+}
+.fd-member-btn:hover { background: var(--bg-2); border-color: var(--border); }
+.fd-member-btn.active { background: var(--brand-bg); border-color: var(--brand-bd); }
+.fd-member-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--brand); color: #fff;
+  font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.fd-member-btn.active .fd-member-avatar { background: var(--brand); }
+.fd-member-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+.fd-member-relation { font-size: 11px; color: var(--ink-3); }
+.fd-member-score {
+  margin-left: auto; font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
+.fd-no-members {
+  padding: 20px 12px; text-align: center;
+  font-size: 13px; color: var(--ink-4); line-height: 1.6;
+}
+
+/* Right panel — detail */
+.fd-detail { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.fd-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; color: var(--ink-4); text-align: center; gap: 10px; padding: 40px;
+}
+.fd-empty svg { opacity: .3; }
+
+/* Stats row */
+.fd-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+.fd-stat {
+  background: var(--bg-2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px; text-align: center;
+}
+.fd-stat-val { font-size: 22px; font-weight: 700; letter-spacing: -.02em; line-height: 1; margin-bottom: 4px; }
+.fd-stat-lbl { font-size: 11px; color: var(--ink-3); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+
+/* Chart */
+.fd-chart-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 16px 16px 8px;
+  margin-bottom: 16px;
+}
+.fd-chart-title { font-size: 12px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 12px; }
+.fd-chart-svg { width: 100%; overflow: visible; }
+
+/* Trend badge */
+.fd-trend {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600; padding: 3px 10px;
+  border-radius: 20px; margin-bottom: 16px;
+}
+.fd-trend.up { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
+.fd-trend.down { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-bd); }
+.fd-trend.stable { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-bd); }
+
+/* Overall summary */
+.fd-summary {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 14px 16px;
+  font-size: 13px; line-height: 1.7; color: var(--ink-2);
+  margin-bottom: 14px;
+}
+.fd-summary-title { font-size: 11px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+
+/* Risk mini bars */
+.fd-risks { display: grid; grid-template-columns: repeat(auto-fit,minmax(130px,1fr)); gap: 8px; }
+.fd-risk-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+}
+.fd-risk-lbl { font-size: 11px; font-weight: 600; color: var(--ink-3); margin-bottom: 5px; text-transform: capitalize; }
+.fd-risk-bar-wrap { height: 5px; background: var(--bg-2); border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+.fd-risk-bar { height: 5px; border-radius: 3px; }
+.fd-risk-score { font-size: 11px; font-weight: 600; }
+
+/* No records state */
+.fd-no-records {
+  text-align: center; padding: 40px 20px; color: var(--ink-4);
+  font-size: 13px; line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+  .fd-body { flex-direction: column; }
+  .fd-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; padding: 8px; }
+  .fd-stats { grid-template-columns: repeat(2,1fr); }
+  .fd-modal { max-height: 95vh; }
+}
+</style>
+
+<!-- Modal HTML -->
+<div class="fd-overlay" id="fd-overlay" onclick="if(event.target===this)closeFamilyDashboard()">
+  <div class="fd-modal">
+    <div class="fd-head">
+      <div>
+        <h2 id="fd-title">Family Health Dashboard</h2>
+        <div class="fd-head-sub" id="fd-sub">Click a family member to view their health history</div>
+      </div>
+      <button class="fd-close" onclick="closeFamilyDashboard()">&#x2715;</button>
+    </div>
+    <div class="fd-body">
+      <div class="fd-sidebar" id="fd-sidebar">
+        <div class="fd-no-members" id="fd-no-members" style="display:none">
+          No family members yet.<br>Add them via<br>"Manage Family".
+        </div>
+      </div>
+      <div class="fd-detail" id="fd-detail">
+        <div class="fd-empty" id="fd-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <p>Select a family member<br>to view their health overview</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Family Dashboard ───────────────────────────────────────────
+let _fdActiveMemberId = null;
+const _fdCache = {}; // memberId -> records[]
+
+const RISK_COLORS = ['#059669','#65a30d','#b45309','#dc2626','#7f1d1d'];
+
+function scoreColor(s) {
+  if (!s) return '#9ca3af';
+  if (s >= 90) return '#059669';
+  if (s >= 75) return '#2563eb';
+  if (s >= 60) return '#b45309';
+  if (s >= 40) return '#dc2626';
+  return '#7f1d1d';
+}
+
+function openFamilyDashboard() {
+  renderFdSidebar();
+  document.getElementById('fd-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeFamilyDashboard() {
+  document.getElementById('fd-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeFamilyDashboard();
+});
+
+function renderFdSidebar() {
+  const sidebar = document.getElementById('fd-sidebar');
+  const noMembers = document.getElementById('fd-no-members');
+
+  if (!familyMembers.length) {
+    noMembers.style.display = 'block';
+    sidebar.innerHTML = '';
+    sidebar.appendChild(noMembers);
+    return;
+  }
+  noMembers.style.display = 'none';
+
+  sidebar.innerHTML = familyMembers.map(m => {
+    const cached = _fdCache[m.id];
+    const scores = cached ? cached.filter(r => r.vhs_score > 0).map(r => r.vhs_score) : [];
+    const latest = scores.length ? scores[scores.length - 1] : null;
+    const initials = m.name.split(/\s+/).map(w=>w[0]).join('').toUpperCase().slice(0,2) || m.name[0].toUpperCase();
+    return `
+      <button class="fd-member-btn ${_fdActiveMemberId === m.id ? 'active' : ''}" onclick="selectFdMember('${m.id}')">
+        <div class="fd-member-avatar">${escHtml(initials)}</div>
+        <div style="flex:1;min-width:0">
+          <div class="fd-member-name">${escHtml(m.name)}</div>
+          <div class="fd-member-relation">${escHtml(m.relation)}</div>
+        </div>
+        ${latest ? `<div class="fd-member-score" style="color:${scoreColor(latest)}">${latest}</div>` : ''}
+      </button>`;
+  }).join('');
+}
+
+async function selectFdMember(memberId) {
+  _fdActiveMemberId = memberId;
+  renderFdSidebar();
+
+  const detail = document.getElementById('fd-detail');
+  detail.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px"><div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite"></div></div>';
+
+  // Load from cache or fetch
+  let records = _fdCache[memberId];
+  if (!records) {
+    try {
+      const resp = await fetch(`/api/family/history/${memberId}`, { credentials: 'include' });
+      const data = await resp.json();
+      records = data.records || [];
+      _fdCache[memberId] = records;
+    } catch(e) {
+      detail.innerHTML = '<div class="fd-no-records">Failed to load records. Please try again.</div>';
+      return;
+    }
+  }
+
+  renderFdDetail(memberId, records);
+}
+
+function renderFdDetail(memberId, records) {
+  const member = familyMembers.find(m => m.id === memberId);
+  if (!member) return;
+
+  const detail = document.getElementById('fd-detail');
+
+  if (!records.length) {
+    detail.innerHTML = `
+      <div class="fd-no-records">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="opacity:.3;margin-bottom:10px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p><strong>${escHtml(member.name)}</strong> has no health reports yet.<br>Submit a report for them using the "For whom?" selector.</p>
+      </div>`;
+    return;
+  }
+
+  // Compute stats
+  const scores = records.filter(r => r.vhs_score > 0).map(r => r.vhs_score);
+  const latest = scores.length ? scores[scores.length-1] : 0;
+  const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+  const best = scores.length ? Math.max(...scores) : 0;
+  const totalReports = records.length;
+
+  // Trend
+  let trend = 'stable', trendLabel = '→ Stable', trendClass = 'stable';
+  if (scores.length >= 2) {
+    const diff = scores[scores.length-1] - scores[0];
+    if (diff >= 5) { trend = 'up'; trendLabel = `↑ Improving (+${diff} pts)`; trendClass = 'up'; }
+    else if (diff <= -5) { trend = 'down'; trendLabel = `↓ Declining (${diff} pts)`; trendClass = 'down'; }
+  }
+
+  // Overall summary from latest record
+  const latest_rec = records[records.length - 1];
+  const summary = latest_rec?.summary || '';
+  const concerns = latest_rec?.key_health_concerns || '';
+
+  // Risk profile from latest record (averaged across all records for robustness)
+  const riskKeys = ['risk_cardiovascular','risk_metabolic','risk_liver','risk_kidney','risk_inflammation'];
+  const riskLabels = ['Cardiovascular','Metabolic','Liver','Kidney','Inflammation'];
+  const avgRisks = riskKeys.map(k => {
+    const vals = records.map(r => r[k]).filter(v => v > 0);
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : 0;
+  });
+
+  // Build SVG line chart
+  const chartSvg = buildVhsChart(records, scores);
+
+  // i18n labels
+  const isCN = currentLang === 'zh-CN' || currentLang === 'zh-TW';
+  const labels = {
+    latestVhs: isCN ? '最新VHS' : 'Latest VHS',
+    avgVhs: isCN ? '平均VHS' : 'Avg VHS',
+    bestVhs: isCN ? '最佳VHS' : 'Best VHS',
+    reports: isCN ? '报告总数' : 'Total Reports',
+    vhsOverTime: isCN ? 'VHS评分趋势' : 'VHS Score Over Time',
+    overallSummary: isCN ? '综合健康评估' : 'Overall Health Summary',
+    riskProfile: isCN ? '平均风险概况' : 'Average Risk Profile',
+    basedOn: isCN ? `基于 ${totalReports} 份报告` : `Based on ${totalReports} report${totalReports>1?'s':''}`,
+  };
+
+  detail.innerHTML = `
+    <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div style="font-size:18px;font-weight:700">${escHtml(member.name)}</div>
+        <div style="font-size:12px;color:var(--ink-3)">${escHtml(member.relation)}${member.age ? ' · ' + member.age + 'y' : ''}${member.gender ? ' · ' + member.gender : ''}</div>
+      </div>
+      <span class="fd-trend ${trendClass}">${trendLabel}</span>
+    </div>
+
+    <div class="fd-stats">
+      <div class="fd-stat">
+        <div class="fd-stat-val" style="color:${scoreColor(latest)}">${latest||'—'}</div>
+        <div class="fd-stat-lbl">${labels.latestVhs}</div>
+      </div>
+      <div class="fd-stat">
+        <div class="fd-stat-val">${avg||'—'}</div>
+        <div class="fd-stat-lbl">${labels.avgVhs}</div>
+      </div>
+      <div class="fd-stat">
+        <div class="fd-stat-val" style="color:var(--green)">${best||'—'}</div>
+        <div class="fd-stat-lbl">${labels.bestVhs}</div>
+      </div>
+      <div class="fd-stat">
+        <div class="fd-stat-val">${totalReports}</div>
+        <div class="fd-stat-lbl">${labels.reports}</div>
+      </div>
+    </div>
+
+    ${scores.length >= 2 ? `
+    <div class="fd-chart-wrap">
+      <div class="fd-chart-title">${labels.vhsOverTime}</div>
+      ${chartSvg}
+    </div>` : ''}
+
+    ${summary ? `
+    <div class="fd-summary">
+      <div class="fd-summary-title">${labels.overallSummary}</div>
+      ${escHtml(summary)}
+      ${concerns ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:12px;color:var(--ink-3)"><strong>${isCN?'主要问题':'Key concerns'}:</strong> ${escHtml(concerns)}</div>` : ''}
+      <div style="margin-top:6px;font-size:11px;color:var(--ink-4)">${labels.basedOn}</div>
+    </div>` : ''}
+
+    ${avgRisks.some(r => r > 0) ? `
+    <div class="fd-summary-title" style="margin-bottom:8px">${labels.riskProfile}</div>
+    <div class="fd-risks">
+      ${riskKeys.map((k, i) => avgRisks[i] > 0 ? `
+        <div class="fd-risk-card">
+          <div class="fd-risk-lbl">${riskLabels[i]}</div>
+          <div class="fd-risk-bar-wrap"><div class="fd-risk-bar" style="width:${(avgRisks[i]/5)*100}%;background:${RISK_COLORS[avgRisks[i]-1]}"></div></div>
+          <div class="fd-risk-score" style="color:${RISK_COLORS[avgRisks[i]-1]}">${avgRisks[i]}/5</div>
+        </div>` : '').join('')}
+    </div>` : ''}
+  `;
+}
+
+function buildVhsChart(records, scores) {
+  if (scores.length < 2) return '';
+  const W = 600, H = 160, PAD = { t:10, r:20, b:30, l:36 };
+  const iW = W - PAD.l - PAD.r;
+  const iH = H - PAD.t - PAD.b;
+
+  const minS = Math.max(0, Math.min(...scores) - 10);
+  const maxS = Math.min(100, Math.max(...scores) + 10);
+  const range = maxS - minS || 1;
+
+  const pts = scores.map((s, i) => ({
+    x: PAD.l + (i / (scores.length - 1)) * iW,
+    y: PAD.t + iH - ((s - minS) / range) * iH,
+    score: s,
+    date: records[i]?.created_at ? new Date(records[i].created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '',
+  }));
+
+  const polyline = pts.map(p => `${p.x},${p.y}`).join(' ');
+  const area = `${pts[0].x},${PAD.t+iH} ${polyline} ${pts[pts.length-1].x},${PAD.t+iH}`;
+
+  // Y grid lines
+  const gridLines = [0,25,50,75,100].filter(v => v >= minS && v <= maxS).map(v => {
+    const y = PAD.t + iH - ((v - minS) / range) * iH;
+    return `<line x1="${PAD.l}" y1="${y}" x2="${PAD.l+iW}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
+            <text x="${PAD.l-4}" y="${y+4}" text-anchor="end" font-size="10" fill="var(--ink-4)">${v}</text>`;
+  }).join('');
+
+  // X labels — show max 6
+  const step = Math.ceil(pts.length / 6);
+  const xLabels = pts.filter((_,i) => i % step === 0 || i === pts.length-1).map(p =>
+    `<text x="${p.x}" y="${PAD.t+iH+18}" text-anchor="middle" font-size="10" fill="var(--ink-4)">${p.date}</text>`
+  ).join('');
+
+  // Dots and tooltips
+  const dots = pts.map(p =>
+    `<circle cx="${p.x}" cy="${p.y}" r="4" fill="${scoreColor(p.score)}" stroke="white" stroke-width="1.5">
+       <title>${p.date}: ${p.score}</title>
+     </circle>`
+  ).join('');
+
+  // Zone color for line
+  const lineColor = scoreColor(scores[scores.length-1]);
+
+  return `<svg class="fd-chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${gridLines}
+    <polyline fill="${lineColor}22" stroke="none" points="${area}"/>
+    <polyline fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="${polyline}"/>
+    ${dots}
+    ${xLabels}
+  </svg>`;
+}
 </script>
 </body>
 </html>
