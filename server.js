@@ -832,17 +832,22 @@ const BOT_SYSTEM = `You are the VHS Help Assistant for VANDL Health Score platfo
 app.post("/api/bot", requireAuth, globalLimit, botLimit, async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(500).json({ error:"Configuration error." });
-  const { messages, translate } = req.body||{};
+  const { messages, translate, system: customSystem } = req.body||{};
   if (!messages||!Array.isArray(messages)||!messages.length||messages.length>12) return res.status(400).json({ error:"Invalid request." });
-  const limit = translate ? 8000 : 1000;
+  const limit = translate ? 8000 : (customSystem ? 2000 : 1000);
   for (const m of messages) {
     if (!["user","assistant"].includes(m.role)||typeof m.content!=="string"||m.content.length>limit) return res.status(400).json({ error:"Invalid message." });
   }
+  // Use custom system prompt for family health chat, otherwise use default bot system
+  const systemPrompt = (customSystem && typeof customSystem === 'string' && customSystem.length < 3000 && !translate)
+    ? customSystem
+    : translate ? "You are a professional medical translator. Return ONLY valid JSON with same keys." : BOT_SYSTEM;
+  const maxTok = translate ? 2000 : (customSystem ? 500 : 300);
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method:"POST",
       headers:{ "Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01" },
-      body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:translate?2000:300, system:translate?"You are a professional medical translator. Return ONLY valid JSON with same keys.":BOT_SYSTEM, messages:messages.slice(-6) }),
+      body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:maxTok, system:systemPrompt, messages:messages.slice(-8) }),
     });
     const data = await r.json();
     if (!r.ok) return res.status(500).json({ error:"Bot unavailable." });
