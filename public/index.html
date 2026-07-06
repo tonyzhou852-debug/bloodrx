@@ -1052,7 +1052,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
           <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1;align-items:center">
             <select id="family-select" onchange="onFamilySelect()" style="flex:1;min-width:160px;height:36px;min-height:36px"><option value="self">Myself</option></select>
             <button type="button" onclick="openFamilyManager()" style="padding:6px 12px;height:36px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:inherit;color:var(--ink-3);cursor:pointer;white-space:nowrap">+ Manage</button>
-            <button type="button" onclick="openFamilyDashboard()" style="padding:6px 12px;height:36px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;white-space:nowrap">{1F46A} Family Status</button>
+            <button type="button" onclick="openFamilyDashboard()" style="padding:6px 12px;height:36px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;white-space:nowrap">👨‍👩‍👧 Family Status</button>
           </div>
         </div>
 
@@ -2596,6 +2596,78 @@ loadFamilyMembers();
 .fd-risk-bar { height: 5px; border-radius: 3px; }
 .fd-risk-score { font-size: 11px; font-weight: 600; }
 
+/* Health Q&A chat */
+.fd-chat {
+  margin-top: 20px; border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  display: flex; flex-direction: column;
+  background: var(--surface);
+}
+.fd-chat-head {
+  padding: 12px 16px; background: var(--brand);
+  display: flex; align-items: center; gap: 8px;
+}
+.fd-chat-head-text { font-size: 13px; font-weight: 600; color: #fff; }
+.fd-chat-head-sub { font-size: 11px; color: rgba(255,255,255,.75); }
+.fd-chat-msgs {
+  height: 260px; overflow-y: auto; padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+  scroll-behavior: smooth; background: var(--bg);
+}
+.fd-chat-msg { display: flex; gap: 8px; align-items: flex-start; }
+.fd-chat-msg.user { flex-direction: row-reverse; }
+.fd-chat-bubble {
+  max-width: 80%; padding: 8px 12px; border-radius: 12px;
+  font-size: 13px; line-height: 1.55; word-break: break-word;
+}
+.fd-chat-msg.ai .fd-chat-bubble {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--ink-2); border-bottom-left-radius: 4px;
+}
+.fd-chat-msg.user .fd-chat-bubble {
+  background: var(--brand); color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.fd-chat-typing {
+  display: flex; gap: 4px; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; border-bottom-left-radius: 4px; width: fit-content;
+}
+.fd-chat-typing span {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--ink-4);
+  animation: typingDot 1.2s infinite;
+}
+.fd-chat-typing span:nth-child(2) { animation-delay: .2s; }
+.fd-chat-typing span:nth-child(3) { animation-delay: .4s; }
+.fd-chat-input-row {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--border); background: var(--surface);
+  align-items: flex-end;
+}
+.fd-chat-input {
+  flex: 1; padding: 8px 12px; font-size: 13px; font-family: inherit;
+  border: 1px solid var(--border-2); border-radius: var(--radius-sm);
+  outline: none; resize: none; max-height: 80px; min-height: 36px;
+  line-height: 1.4; color: var(--ink); background: var(--surface);
+  transition: border-color .15s;
+}
+.fd-chat-input:focus { border-color: var(--brand); box-shadow: 0 0 0 2px rgba(185,28,28,.1); }
+.fd-chat-send {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  background: var(--brand); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.fd-chat-send:hover { background: var(--brand-dark, #991b1b); }
+.fd-chat-send:disabled { background: var(--ink-4); cursor: not-allowed; }
+.fd-chat-chips { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 12px 8px; background: var(--surface); }
+.fd-chat-chip {
+  font-size: 11px; padding: 4px 10px; border-radius: 20px;
+  background: var(--brand-bg); color: var(--brand);
+  border: 1px solid var(--brand-bd); cursor: pointer; font-family: inherit;
+  transition: background .15s; white-space: nowrap;
+}
+.fd-chat-chip:hover { background: var(--brand); color: #fff; }
+
 /* No records state */
 .fd-no-records {
   text-align: center; padding: 40px 20px; color: var(--ink-4);
@@ -2829,7 +2901,165 @@ function renderFdDetail(memberId, records) {
           <div class="fd-risk-score" style="color:${RISK_COLORS[avgRisks[i]-1]}">${avgRisks[i]}/5</div>
         </div>` : '').join('')}
     </div>` : ''}
+
+    <div class="fd-chat">
+      <div class="fd-chat-head">
+        <div>
+          <div class="fd-chat-head-text">💬 ${isCN ? '健康问答' : 'Health Q&A'}</div>
+          <div class="fd-chat-head-sub">${isCN ? `基于${escHtml(member.name)}的健康数据回答` : `Answers based on ${escHtml(member.name)}'s health data`}</div>
+        </div>
+      </div>
+      <div class="fd-chat-msgs" id="fd-msgs-${memberId}">
+        <div class="fd-chat-msg ai">
+          <div class="fd-chat-bubble">${isCN
+            ? `你好！我已经读取了${escHtml(member.name)}的健康报告数据。有什么关于他/她健康状况的问题都可以问我。`
+            : `Hi! I've reviewed ${escHtml(member.name)}'s health records. Ask me anything about their health.`}
+          </div>
+        </div>
+      </div>
+      <div class="fd-chat-chips">
+        ${isCN ? `
+          <button class="fd-chat-chip" onclick="fdAsk('${memberId}','整体健康状况怎么样？')">整体状况</button>
+          <button class="fd-chat-chip" onclick="fdAsk('${memberId}','主要有哪些健康风险？')">主要风险</button>
+          <button class="fd-chat-chip" onclick="fdAsk('${memberId}','饮食上有什么建议？')">饮食建议</button>
+          <button class="fd-chat-chip" onclick="fdAsk('${memberId}','适合做什么运动？')">运动建议</button>
+        ` : `
+          <button class="fd-chat-chip" onclick="fdAsk('${memberId}','What is the overall health status?')">Overall status</button>
+          <button class="fd-chat-chip" onclick="fdAsk('${memberId}','What are the main health risks?')">Main risks</button>
+          <button class="fd-chat-chip" onclick="fdAsk('${memberId}','Any diet recommendations?')">Diet tips</button>
+          <button class="fd-chat-chip" onclick="fdAsk('${memberId}','What exercise is suitable?')">Exercise</button>
+        `}
+      </div>
+      <div class="fd-chat-input-row">
+        <textarea class="fd-chat-input" id="fd-input-${memberId}"
+          placeholder="${isCN ? '输入关于'+escHtml(member.name)+'健康状况的问题…' : 'Ask about '+escHtml(member.name)+'\\'s health…'}"
+          rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();fdSend('${memberId}')}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+        <button class="fd-chat-send" id="fd-send-${memberId}" onclick="fdSend('${memberId}')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
   `;
+
+  // Store chat history and context per member
+  if (!window._fdChatHistory) window._fdChatHistory = {};
+  if (!window._fdChatContext) window._fdChatContext = {};
+  window._fdChatContext[memberId] = buildFdContext(member, records, latest_rec, scores, avgRisks, riskLabels);
+
+  // Re-render previous chat messages if any
+  const existingHistory = window._fdChatHistory[memberId] || [];
+  if (!window._fdChatHistory[memberId]) window._fdChatHistory[memberId] = [];
+  if (existingHistory.length) {
+    const msgsEl = document.getElementById('fd-msgs-' + memberId);
+    if (msgsEl) {
+      existingHistory.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = 'fd-chat-msg ' + (msg.role === 'user' ? 'user' : 'ai');
+        div.innerHTML = `<div class="fd-chat-bubble">${escHtml(msg.content)}</div>`;
+        msgsEl.appendChild(div);
+      });
+      msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+  }
+}
+
+function buildFdContext(member, records, latest_rec, scores, avgRisks, riskLabels) {
+  const latest = scores.length ? scores[scores.length-1] : 0;
+  const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
+  const riskSummary = riskLabels.map((l,i) => avgRisks[i] > 0 ? `${l}: ${avgRisks[i]}/5` : '').filter(Boolean).join(', ');
+  return `You are a health wellness advisor. You have access to the following health data for ${member.name} (${member.relation}, age ${member.age||'unknown'}, ${member.gender||'unknown'}).
+
+HEALTH DATA SUMMARY:
+- Latest VHS Score: ${latest}/100
+- Average VHS Score: ${avg}/100
+- Total Reports: ${records.length}
+- Risk Profile (average): ${riskSummary || 'No data'}
+- Latest Health Assessment: ${latest_rec?.summary || 'Not available'}
+- Key Health Concerns: ${latest_rec?.key_health_concerns || 'None noted'}
+- Nutrition recommendations: ${latest_rec?.nutrition || 'None'}
+- Lifestyle recommendations: ${latest_rec?.lifestyle || 'None'}
+- Monitoring plan: ${latest_rec?.monitoring_plan || 'None'}
+
+RULES:
+- Answer ONLY health-related questions about this person
+- Base answers on the actual data above
+- Be concise — max 3-4 sentences per answer
+- Never prescribe medications or diagnose conditions
+- Respond in the same language the user writes in
+- If asked something unrelated to health, politely redirect`;
+}
+
+async function fdAsk(memberId, question) {
+  const input = document.getElementById('fd-input-'+memberId);
+  if (input) input.value = question;
+  await fdSend(memberId);
+}
+
+async function fdSend(memberId) {
+  const input = document.getElementById('fd-input-'+memberId);
+  const sendBtn = document.getElementById('fd-send-'+memberId);
+  const msgs = document.getElementById('fd-msgs-'+memberId);
+  if (!input || !msgs) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Add user message
+  input.value = '';
+  input.style.height = 'auto';
+  if (sendBtn) sendBtn.disabled = true;
+
+  const userDiv = document.createElement('div');
+  userDiv.className = 'fd-chat-msg user';
+  userDiv.innerHTML = `<div class="fd-chat-bubble">${escHtml(text)}</div>`;
+  msgs.appendChild(userDiv);
+
+  // Show typing indicator
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'fd-chat-msg ai';
+  typingDiv.id = 'fd-typing-'+memberId;
+  typingDiv.innerHTML = '<div class="fd-chat-typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(typingDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Build history
+  if (!window._fdChatHistory) window._fdChatHistory = {};
+  if (!window._fdChatHistory[memberId]) window._fdChatHistory[memberId] = [];
+  window._fdChatHistory[memberId].push({ role: 'user', content: text });
+
+  try {
+    const context = window._fdChatContext?.[memberId] || '';
+    const resp = await fetch('/api/bot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        messages: window._fdChatHistory[memberId].slice(-8),
+        system: context,
+      }),
+    });
+    const data = await resp.json();
+    const reply = data.reply || 'Sorry, I could not get a response.';
+    window._fdChatHistory[memberId].push({ role: 'assistant', content: reply });
+
+    // Remove typing, add response
+    document.getElementById('fd-typing-'+memberId)?.remove();
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'fd-chat-msg ai';
+    aiDiv.innerHTML = `<div class="fd-chat-bubble">${escHtml(reply)}</div>`;
+    msgs.appendChild(aiDiv);
+    msgs.scrollTop = msgs.scrollHeight;
+  } catch(e) {
+    document.getElementById('fd-typing-'+memberId)?.remove();
+    const errDiv = document.createElement('div');
+    errDiv.className = 'fd-chat-msg ai';
+    errDiv.innerHTML = '<div class="fd-chat-bubble" style="color:var(--red)">Failed to get response. Please try again.</div>';
+    msgs.appendChild(errDiv);
+  }
+
+  if (sendBtn) sendBtn.disabled = false;
+  if (input) input.focus();
 }
 
 function buildVhsChart(records, scores) {
