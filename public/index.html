@@ -1914,6 +1914,18 @@ function renderResults(r, p) {
       <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
       <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.</span>
     </div>
+
+    <div style="margin-top:1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.5rem;box-shadow:var(--shadow);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+      <img src="/wechat-qr.png" alt="VANDL VHS WeChat QR Code" style="width:110px;height:110px;border-radius:var(--radius);flex-shrink:0;object-fit:contain">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#07c160" aria-hidden="true"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.11.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.49.49 0 0 1 .177-.554C22.888 18.35 24 16.74 24 14.98c0-3.21-2.931-5.837-7.063-6.122zm-3.494 3.138c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
+          <span style="font-size:15px;font-weight:700;color:var(--ink)">关注我们的微信公众号</span>
+        </div>
+        <p style="font-size:13px;color:var(--ink-3);line-height:1.6;margin-bottom:8px">扫描二维码关注 <strong>VANDLVHS</strong>，获取健康资讯和报告更新。</p>
+        <p style="font-size:12px;color:var(--ink-4)">Follow us on WeChat for health updates and report notifications.</p>
+      </div>
+    </div>
   `;
 
   document.getElementById('results').style.display = 'block';
@@ -2932,7 +2944,7 @@ function renderFdDetail(memberId, records) {
       </div>
       <div class="fd-chat-input-row">
         <textarea class="fd-chat-input" id="fd-input-${memberId}"
-          placeholder="${isCN ? '输入关于'+escHtml(member.name)+'健康状况的问题…' : 'Ask about '+escHtml(member.name)+'\\'s health…'}"
+          placeholder="${isCN ? '输入健康问题…' : 'Ask about their health…'}"
           rows="1"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();fdSend('${memberId}')}"
           oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
