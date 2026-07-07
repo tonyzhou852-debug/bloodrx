@@ -820,6 +820,10 @@ const TRANSLATIONS = {
     disclaimer: 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
     navNew: 'New Assessment',
     navHistory: 'My History',
+    wechatBtn: 'Follow on WeChat',
+    wechatTitle: 'VANDL VHS',
+    wechatDesc: 'Scan to follow us on WeChat for health updates and report notifications.',
+    wechatClose: 'Close',
   },
   'zh-CN': {
     pageTitle: 'VHS\u5065\u5eb7\u8bc4\u4f30',
@@ -845,6 +849,10 @@ const TRANSLATIONS = {
     disclaimer: '\u672c\u62a5\u544a\u4ec5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u6784\u6210\u533b\u7597\u8bca\u65ad\u3001\u6cbb\u7597\u5efa\u8bae\u6216\u5904\u65b9\u3002\u7528\u6237\u5728\u4f5c\u51fa\u533b\u7597\u51b3\u7b56\u524d\u5e94\u54a8\u8be2\u6301\u724c\u533b\u751f\u3002',
     navNew: '\u65b0\u5efa\u8bc4\u4f30',
     navHistory: '\u6211\u7684\u8bb0\u5f55',
+    wechatBtn: '\u5173\u6ce8\u5fae\u4fe1',
+    wechatTitle: 'VANDL VHS \u5fae\u4fe1\u516c\u4f17\u53f7',
+    wechatDesc: '\u626b\u63cf\u4e8c\u7ef4\u7801\u5173\u6ce8\u6211\u4eec\u7684\u5fae\u4fe1\u516c\u4f17\u53f7\uff0c\u83b7\u53d6\u5065\u5eb7\u8d44\u8baf\u548c\u62a5\u544a\u66f4\u65b0\u3002',
+    wechatClose: '\u5173\u95ed',
   },
   'zh-TW': {
     pageTitle: 'VHS\u5065\u5eb7\u8a55\u4f30',
@@ -870,6 +878,10 @@ const TRANSLATIONS = {
     disclaimer: '\u672c\u5831\u544a\u50c5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u69cb\u6210\u91ab\u7642\u8a3a\u65b7\u3001\u6cbb\u7642\u5efa\u8b70\u6216\u8655\u65b9\u3002\u7528\u6236\u5728\u4f5c\u51fa\u91ab\u7642\u6c7a\u5b9a\u524d\u61c9\u8af8\u8a62\u6301\u7247\u91ab\u751f\u3002',
     navNew: '\u65b0\u5efa\u8a55\u4f30',
     navHistory: '\u6211\u7684\u8a18\u9304',
+    wechatBtn: '\u95dc\u6ce8\u5fae\u4fe1',
+    wechatTitle: 'VANDL VHS \u5fae\u4fe1\u516c\u773e\u865f',
+    wechatDesc: '\u6383\u63cf\u4e8c\u7dad\u78bc\u95dc\u6ce8\u6211\u5011\u7684\u5fae\u4fe1\u516c\u773e\u865f\uff0c\u7372\u53d6\u5065\u5eb7\u8cc7\u8a0a\u548c\u5831\u544a\u66f4\u65b0\u3002',
+    wechatClose: '\u95dc\u9589',
   }
 };
 
@@ -1809,6 +1821,10 @@ function renderResults(r, p) {
         </div>
         <button class="new-analysis-btn" onclick="resetForm()" type="button">${uiT("newAssessment")}</button>
         ${familyMembers.length ? `<button class="new-analysis-btn" onclick="openFamilyDashboard()" type="button" style="background:var(--brand-bg);border-color:var(--brand-bd);color:var(--brand)">👨‍👩‍👧 ${currentLang==='zh-CN'?'家庭状态':currentLang==='zh-TW'?'家庭狀態':'Family Status'}</button>` : ''}
+        <button class="new-analysis-btn" onclick="openWechatQR()" type="button" style="background:#f0faf4;border-color:#b7e8c8;color:#07c160;display:flex;align-items:center;gap:6px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="#07c160"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.11.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.49.49 0 0 1 .177-.554C22.888 18.35 24 16.74 24 14.98c0-3.21-2.931-5.837-7.063-6.122zm-3.494 3.138c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
+          ${currentLang==='zh-CN'||currentLang==='zh-TW' ? (TRANSLATIONS[currentLang]?.wechatBtn||'关注微信') : 'Follow on WeChat'}
+        </button>
       </div>
     </div>
 
@@ -1913,18 +1929,6 @@ function renderResults(r, p) {
     <div class="disclaimer" role="note">
       <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
       <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.</span>
-    </div>
-
-    <div style="margin-top:1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.5rem;box-shadow:var(--shadow);display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
-      <img src="/wechat-qr.png" alt="VANDL VHS WeChat QR Code" style="width:110px;height:110px;border-radius:var(--radius);flex-shrink:0;object-fit:contain">
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="#07c160" aria-hidden="true"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.11.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.49.49 0 0 1 .177-.554C22.888 18.35 24 16.74 24 14.98c0-3.21-2.931-5.837-7.063-6.122zm-3.494 3.138c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
-          <span style="font-size:15px;font-weight:700;color:var(--ink)">关注我们的微信公众号</span>
-        </div>
-        <p style="font-size:13px;color:var(--ink-3);line-height:1.6;margin-bottom:8px">扫描二维码关注 <strong>VANDLVHS</strong>，获取健康资讯和报告更新。</p>
-        <p style="font-size:12px;color:var(--ink-4)">Follow us on WeChat for health updates and report notifications.</p>
-      </div>
     </div>
   `;
 
@@ -3126,5 +3130,35 @@ function buildVhsChart(records, scores) {
   </svg>`;
 }
 </script>
+<!-- WeChat QR Modal -->
+<div id="wechat-overlay" onclick="if(event.target===this)closeWechatQR()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:center;justify-content:center;padding:24px">
+  <div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:0 24px 64px rgba(0,0,0,.25);width:100%;max-width:340px;padding:32px 24px;text-align:center;animation:botIn .2s ease-out">
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="#07c160"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.11.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.49.49 0 0 1 .177-.554C22.888 18.35 24 16.74 24 14.98c0-3.21-2.931-5.837-7.063-6.122zm-3.494 3.138c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
+      <span id="wechat-modal-title" style="font-size:18px;font-weight:700;color:var(--ink)">VANDL VHS</span>
+    </div>
+    <p id="wechat-modal-desc" style="font-size:13px;color:var(--ink-3);margin-bottom:20px;line-height:1.6"></p>
+    <img src="/wechat-qr.png" alt="WeChat QR Code" style="width:200px;height:200px;object-fit:contain;border-radius:var(--radius);border:1px solid var(--border);padding:8px">
+    <p style="font-size:12px;color:var(--ink-4);margin-top:12px">上海裔陇生物科技有限公司</p>
+    <button id="wechat-modal-close" onclick="closeWechatQR()" style="margin-top:16px;width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:inherit;color:var(--ink-3);cursor:pointer">Close</button>
+  </div>
+</div>
+
+<script>
+function openWechatQR() {
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  document.getElementById('wechat-modal-title').textContent = t.wechatTitle || 'VANDL VHS';
+  document.getElementById('wechat-modal-desc').textContent = t.wechatDesc || 'Scan to follow us on WeChat for health updates and report notifications.';
+  document.getElementById('wechat-modal-close').textContent = t.wechatClose || 'Close';
+  const el = document.getElementById('wechat-overlay');
+  el.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeWechatQR() {
+  document.getElementById('wechat-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+</script>
+
 </body>
 </html>
