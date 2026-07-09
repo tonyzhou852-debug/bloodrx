@@ -3159,7 +3159,8 @@ function closeWechatQR() {
   document.body.style.overflow = '';
 }
 </script>
-<!-- VHB - Vandl Health Bot -->
+<!-- VHB - Vandl Health Bot (with family member selector) -->
+<!-- REPLACE the existing VHB block in index.html with this entire block -->
 <style>
 .vhb-fab{position:fixed;bottom:28px;right:28px;z-index:400;width:56px;height:56px;border-radius:50%;background:var(--brand);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(185,28,28,.35);display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform .2s,box-shadow .2s;font-family:inherit}
 .vhb-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(185,28,28,.45)}
@@ -3167,7 +3168,7 @@ function closeWechatQR() {
 .vhb-fab:hover .vhb-fab-label{opacity:1}
 .vhb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:flex-end;justify-content:flex-end;padding:24px}
 .vhb-overlay.open{display:flex}
-.vhb-window{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 24px 64px rgba(0,0,0,.22);width:100%;max-width:400px;display:flex;flex-direction:column;max-height:580px;min-height:420px;animation:vhbIn .2s ease-out}
+.vhb-window{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 24px 64px rgba(0,0,0,.22);width:100%;max-width:420px;display:flex;flex-direction:column;max-height:600px;min-height:440px;animation:vhbIn .2s ease-out}
 @keyframes vhbIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .vhb-head{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--brand);border-radius:var(--radius-lg) var(--radius-lg) 0 0}
 .vhb-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -3176,6 +3177,10 @@ function closeWechatQR() {
 .vhb-head-status{font-size:11px;color:rgba(255,255,255,.75);margin-top:1px}
 .vhb-close{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.8);font-size:18px;line-height:1;padding:4px;border-radius:4px}
 .vhb-close:hover{color:#fff}
+.vhb-selector{padding:8px 12px;background:var(--bg-2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.vhb-selector label{font-size:11px;font-weight:600;color:var(--ink-3);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em}
+.vhb-selector select{flex:1;padding:5px 8px;font-size:12px;font-family:inherit;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--ink);cursor:pointer}
+.vhb-selector select:focus{outline:none;border-color:var(--brand)}
 .vhb-msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;background:var(--bg)}
 .vhb-msg{display:flex;gap:8px;align-items:flex-start}
 .vhb-msg.user{flex-direction:row-reverse}
@@ -3197,7 +3202,7 @@ function closeWechatQR() {
 .vhb-send:hover{background:#991b1b}
 .vhb-send:disabled{background:var(--ink-4);cursor:not-allowed}
 .vhb-send svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-@media(max-width:600px){.vhb-overlay{padding:0;align-items:flex-end}.vhb-window{max-width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:75vh}.vhb-fab{bottom:16px;right:16px}}
+@media(max-width:600px){.vhb-overlay{padding:0;align-items:flex-end}.vhb-window{max-width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:80vh}.vhb-fab{bottom:16px;right:16px}}
 </style>
 
 <button class="vhb-fab" onclick="openVHB()" aria-label="Open VHB Health Bot">&#x1F916;<span class="vhb-fab-label">Ask VHB</span></button>
@@ -3208,20 +3213,30 @@ function closeWechatQR() {
       <div class="vhb-avatar">&#x1F916;</div>
       <div class="vhb-head-text">
         <div class="vhb-head-name">VHB &mdash; Vandl Health Bot</div>
-        <div class="vhb-head-status" id="vhb-status">Loading your health data&hellip;</div>
+        <div class="vhb-head-status" id="vhb-status">Loading health data&hellip;</div>
       </div>
       <button class="vhb-close" onclick="closeVHB()">&#x2715;</button>
     </div>
-    <div class="vhb-msgs" id="vhb-msgs"></div>
-    <div class="vhb-chips" id="vhb-chips">
-      <button class="vhb-chip" onclick="vhbAsk('What is my overall health status?')">Overall status</button>
-      <button class="vhb-chip" onclick="vhbAsk('What are my main health risks?')">Main risks</button>
-      <button class="vhb-chip" onclick="vhbAsk('What should I eat?')">Diet tips</button>
-      <button class="vhb-chip" onclick="vhbAsk('What exercise is good for me?')">Exercise</button>
-      <button class="vhb-chip" onclick="vhbAsk('What supplements should I take?')">Supplements</button>
+
+    <div class="vhb-selector" id="vhb-selector" style="display:none">
+      <label>Asking about:</label>
+      <select id="vhb-who" onchange="vhbSwitchPerson()">
+        <option value="self">Myself</option>
+      </select>
     </div>
+
+    <div class="vhb-msgs" id="vhb-msgs"></div>
+
+    <div class="vhb-chips" id="vhb-chips">
+      <button class="vhb-chip" onclick="vhbAsk('What is the overall health status?')">Overall status</button>
+      <button class="vhb-chip" onclick="vhbAsk('What are the main health risks?')">Main risks</button>
+      <button class="vhb-chip" onclick="vhbAsk('What should they eat?')">Diet tips</button>
+      <button class="vhb-chip" onclick="vhbAsk('What exercise is recommended?')">Exercise</button>
+      <button class="vhb-chip" onclick="vhbAsk('What supplements are recommended?')">Supplements</button>
+    </div>
+
     <div class="vhb-input-row">
-      <textarea class="vhb-input" id="vhb-input" placeholder="Ask about your health&hellip;" rows="1"
+      <textarea class="vhb-input" id="vhb-input" placeholder="Ask about their health&hellip;" rows="1"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();vhbSend()}"
         oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
       <button class="vhb-send" id="vhb-send-btn" onclick="vhbSend()" disabled>
@@ -3232,37 +3247,148 @@ function closeWechatQR() {
 </div>
 
 <script>
-var _vhbReady=false,_vhbHistory=[],_vhbLoading=false,_vhbContext='',_vhbDataLoaded=false;
-function openVHB(){document.getElementById('vhb-overlay').classList.add('open');document.body.style.overflow='hidden';if(!_vhbDataLoaded)loadVHBData();setTimeout(function(){document.getElementById('vhb-input').focus()},200)}
-function closeVHB(){document.getElementById('vhb-overlay').classList.remove('open');document.body.style.overflow=''}
-document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.getElementById('vhb-overlay').classList.contains('open'))closeVHB()});
+var _vhbLoading=false,_vhbDataLoaded=false;
+var _vhbCurrentId='self';
+var _vhbContexts={}; // id -> context string
+var _vhbHistories={}; // id -> message array
+var _vhbUser=null;
+var _vhbFamilyMembers=[];
+
+function openVHB(){
+  document.getElementById('vhb-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  if(!_vhbDataLoaded)loadVHBData();
+  setTimeout(function(){document.getElementById('vhb-input').focus()},200);
+}
+function closeVHB(){
+  document.getElementById('vhb-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('vhb-overlay').classList.contains('open'))closeVHB();
+});
+
 async function loadVHBData(){
   _vhbDataLoaded=true;
   try{
+    // Load user
     var meRes=await fetch('/api/auth/me',{credentials:'include'});
     var meData=await meRes.json();
-    var user=meData.user;
+    _vhbUser=meData.user;
+
+    // Load own records
     var recRes=await fetch('/api/my/records',{credentials:'include'});
     var records=await recRes.json();
-    if(!records||records.length===0){
-      document.getElementById('vhb-status').textContent='No health records found yet';
-      vhbAppendMsg('bot',"Hi! I'm VHB, your Vandl Health Bot. I don't see any health assessments yet - submit your first report and I'll be able to answer questions about your health data.");
-      document.getElementById('vhb-send-btn').disabled=false;
-      _vhbReady=true;return;
+    _vhbContexts['self']=buildContext(_vhbUser.username||_vhbUser.email, records);
+    _vhbHistories['self']=[];
+
+    // Load family members
+    var famRes=await fetch('/api/family/members',{credentials:'include'});
+    var famData=await famRes.json();
+    _vhbFamilyMembers=famData.members||[];
+
+    // Populate selector
+    var sel=document.getElementById('vhb-who');
+    sel.innerHTML='<option value="self">Myself ('+(_vhbUser.username||_vhbUser.email)+')</option>';
+    _vhbFamilyMembers.forEach(function(m){
+      var opt=document.createElement('option');
+      opt.value=m.id;
+      opt.textContent=m.name+' ('+m.relation+')';
+      sel.appendChild(opt);
+    });
+
+    // Show selector only if there are family members
+    if(_vhbFamilyMembers.length>0){
+      document.getElementById('vhb-selector').style.display='flex';
     }
-    var latest=records[0];
+
+    // Greet with own data
     var scores=records.filter(function(r){return r.vhs_score>0}).map(function(r){return r.vhs_score});
-    var avgScore=scores.length?Math.round(scores.reduce(function(a,b){return a+b},0)/scores.length):0;
-    _vhbContext='You are VHB (Vandl Health Bot), a personal health assistant for '+(user.username||user.email)+'.\n\nHealth data:\n- Total assessments: '+records.length+'\n- Latest VHS Score: '+latest.vhs_score+'/100\n- Average VHS Score: '+avgScore+'/100\n- Latest summary: '+(latest.summary||'Not available')+'\n- Key concerns: '+(latest.key_health_concerns||'None')+'\n- Cardiovascular risk: '+(latest.risk_cardiovascular||0)+'/5\n- Metabolic risk: '+(latest.risk_metabolic||0)+'/5\n- Liver risk: '+(latest.risk_liver||0)+'/5\n- Kidney risk: '+(latest.risk_kidney||0)+'/5\n- Inflammation risk: '+(latest.risk_inflammation||0)+'/5\n- Nutrition: '+(latest.nutrition||'None')+'\n- Lifestyle: '+(latest.lifestyle||'None')+'\n- Supplements: '+(latest.supplements||'None')+'\n- Monitoring: '+(latest.monitoring_plan||'None')+'\n\nRULES: Answer ONLY health questions based on this data. Max 3-4 sentences. Never prescribe or diagnose. Respond in same language as user. Note results are AI-generated for wellness education only.';
-    document.getElementById('vhb-status').textContent=records.length+' assessment'+(records.length>1?'s':'')+' loaded - Latest VHS: '+latest.vhs_score;
-    vhbAppendMsg('bot','Hi '+(user.username||'')+", I'm VHB, your Vandl Health Bot. I've reviewed your "+records.length+' health assessment'+(records.length>1?'s':'')+'. Your latest VHS score is '+latest.vhs_score+'/100. What would you like to know about your health?');
+    var latest=records[0];
+    if(records.length===0){
+      document.getElementById('vhb-status').textContent='No health records yet';
+      vhbAppendMsg('bot',"Hi "+(_vhbUser.username||'')+", I'm VHB, your Vandl Health Bot. You don't have any health assessments yet. Submit your first report and I'll be able to answer questions about your health.");
+    } else {
+      document.getElementById('vhb-status').textContent='Loaded · Latest VHS: '+latest.vhs_score;
+      vhbAppendMsg('bot',"Hi "+(_vhbUser.username||'')+", I'm VHB. Your latest VHS score is "+latest.vhs_score+"/100. What would you like to know about your health?");
+    }
     document.getElementById('vhb-send-btn').disabled=false;
-    _vhbReady=true;
+
+    // Pre-load family records in background
+    _vhbFamilyMembers.forEach(function(m){
+      _vhbHistories[m.id]=[];
+      fetch('/api/family/history/'+m.id,{credentials:'include'})
+        .then(function(r){return r.json()})
+        .then(function(data){
+          _vhbContexts[m.id]=buildContext(m.name, data.records||[]);
+        }).catch(function(){
+          _vhbContexts[m.id]=buildContext(m.name,[]);
+        });
+    });
+
   }catch(e){
-    document.getElementById('vhb-status').textContent='Could not load health data';
-    vhbAppendMsg('bot',"Hi! I'm VHB. I had trouble loading your health data. Please refresh and try again.");
+    document.getElementById('vhb-status').textContent='Could not load data';
+    vhbAppendMsg('bot',"Hi! I'm VHB. I had trouble loading health data. Please refresh and try again.");
   }
 }
+
+function buildContext(name, records){
+  if(!records||records.length===0){
+    return 'You are VHB (Vandl Health Bot). You are answering questions about '+name+'. They have no health assessments yet. Let the user know and suggest they submit a report.';
+  }
+  var latest=records[0];
+  var scores=records.filter(function(r){return r.vhs_score>0}).map(function(r){return r.vhs_score});
+  var avgScore=scores.length?Math.round(scores.reduce(function(a,b){return a+b},0)/scores.length):0;
+  return 'You are VHB (Vandl Health Bot). You are answering questions about '+name+'.\n\nHealth data for '+name+':\n- Total assessments: '+records.length+'\n- Latest VHS Score: '+latest.vhs_score+'/100\n- Average VHS Score: '+avgScore+'/100\n- Latest summary: '+(latest.summary||'Not available')+'\n- Key concerns: '+(latest.key_health_concerns||'None')+'\n- Cardiovascular risk: '+(latest.risk_cardiovascular||0)+'/5\n- Metabolic risk: '+(latest.risk_metabolic||0)+'/5\n- Liver risk: '+(latest.risk_liver||0)+'/5\n- Kidney risk: '+(latest.risk_kidney||0)+'/5\n- Inflammation risk: '+(latest.risk_inflammation||0)+'/5\n- Nutrition: '+(latest.nutrition||'None')+'\n- Lifestyle: '+(latest.lifestyle||'None')+'\n- Supplements: '+(latest.supplements||'None')+'\n- Monitoring: '+(latest.monitoring_plan||'None')+'\n\nRULES: Answer ONLY health questions based on this data. Max 3-4 sentences. Never prescribe or diagnose. Respond in same language as user. Note results are AI-generated for wellness education only.';
+}
+
+function vhbSwitchPerson(){
+  var sel=document.getElementById('vhb-who');
+  var newId=sel.value;
+  if(newId===_vhbCurrentId)return;
+  _vhbCurrentId=newId;
+
+  // Clear chat UI
+  document.getElementById('vhb-msgs').innerHTML='';
+  document.getElementById('vhb-chips').style.display='flex';
+
+  // Get name
+  var name='Myself';
+  if(newId!=='self'){
+    var member=_vhbFamilyMembers.find(function(m){return m.id===newId});
+    if(member)name=member.name;
+  } else {
+    name=_vhbUser?(_vhbUser.username||_vhbUser.email):'you';
+  }
+
+  // Show greeting for this person
+  if(!_vhbHistories[newId])_vhbHistories[newId]=[];
+
+  if(_vhbContexts[newId]){
+    var hasRecords=_vhbContexts[newId].indexOf('No health assessments yet')===-1;
+    if(hasRecords){
+      // Extract latest VHS from context
+      var scoreMatch=_vhbContexts[newId].match(/Latest VHS Score: (\d+)/);
+      var score=scoreMatch?scoreMatch[1]:'unknown';
+      vhbAppendMsg('bot','Switched to '+name+'. Their latest VHS score is '+score+'/100. What would you like to know?');
+    } else {
+      vhbAppendMsg('bot',name+' has no health assessments yet. Submit a report for them using the "For whom?" selector on the main form.');
+    }
+    document.getElementById('vhb-status').textContent='Viewing: '+name;
+  } else {
+    document.getElementById('vhb-status').textContent='Loading '+name+'\'s data...';
+    vhbAppendMsg('bot','Loading '+name+'\'s health data...');
+    // Wait for background load
+    var wait=setInterval(function(){
+      if(_vhbContexts[newId]){
+        clearInterval(wait);
+        document.getElementById('vhb-msgs').innerHTML='';
+        vhbSwitchPerson();
+      }
+    },500);
+  }
+}
+
 function vhbAppendMsg(role,text){
   var msgs=document.getElementById('vhb-msgs');
   var div=document.createElement('div');div.className='vhb-msg '+role;
@@ -3275,14 +3401,17 @@ function vhbShowTyping(){
   div.innerHTML='<div class="vhb-typing"><span></span><span></span><span></span></div>';
   msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
 }
-function vhbHideTyping(){var el=document.getElementById('vhb-typing');if(el)el.remove()}
+function vhbHideTyping(){var el=document.getElementById('vhb-typing');if(el)el.remove();}
+
 async function vhbAsk(question){
   if(_vhbLoading)return;
   document.getElementById('vhb-chips').style.display='none';
   vhbAppendMsg('user',question);
-  _vhbHistory.push({role:'user',content:question});
+  if(!_vhbHistories[_vhbCurrentId])_vhbHistories[_vhbCurrentId]=[];
+  _vhbHistories[_vhbCurrentId].push({role:'user',content:question});
   await vhbGetReply();
 }
+
 async function vhbSend(){
   var input=document.getElementById('vhb-input');
   var text=input.value.trim();
@@ -3290,21 +3419,34 @@ async function vhbSend(){
   input.value='';input.style.height='auto';
   document.getElementById('vhb-chips').style.display='none';
   vhbAppendMsg('user',text);
-  _vhbHistory.push({role:'user',content:text});
+  if(!_vhbHistories[_vhbCurrentId])_vhbHistories[_vhbCurrentId]=[];
+  _vhbHistories[_vhbCurrentId].push({role:'user',content:text});
   await vhbGetReply();
 }
+
 async function vhbGetReply(){
   if(_vhbLoading)return;
   _vhbLoading=true;
   document.getElementById('vhb-send-btn').disabled=true;
   vhbShowTyping();
+  var context=_vhbContexts[_vhbCurrentId]||'You are VHB, a health assistant. No data available for this person yet.';
+  var history=_vhbHistories[_vhbCurrentId]||[];
   try{
-    var resp=await fetch('/api/bot',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({messages:_vhbHistory.slice(-8),system:_vhbContext})});
+    var resp=await fetch('/api/bot',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({messages:history.slice(-8),system:context})
+    });
     var data=await resp.json();
     var reply=data.reply||'Sorry, I could not get a response. Please try again.';
-    vhbHideTyping();vhbAppendMsg('bot',reply);
-    _vhbHistory.push({role:'assistant',content:reply});
-  }catch(e){vhbHideTyping();vhbAppendMsg('bot','Something went wrong. Please try again.');}
+    vhbHideTyping();
+    vhbAppendMsg('bot',reply);
+    _vhbHistories[_vhbCurrentId].push({role:'assistant',content:reply});
+  }catch(e){
+    vhbHideTyping();
+    vhbAppendMsg('bot','Something went wrong. Please try again.');
+  }
   _vhbLoading=false;
   document.getElementById('vhb-send-btn').disabled=false;
   document.getElementById('vhb-input').focus();
