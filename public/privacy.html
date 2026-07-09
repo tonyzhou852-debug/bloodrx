@@ -21,11 +21,13 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .logo em{color:var(--brand);font-style:normal}
 .back{margin-left:auto;font-size:13px;color:var(--ink-3);text-decoration:none;display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;transition:color .15s,border-color .15s;min-height:36px}
 .back:hover{color:var(--brand);border-color:var(--brand-bd)}
+.back:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .page{max-width:760px;margin:0 auto;padding:3rem 1.5rem 5rem}
 h1{font-size:28px;font-weight:700;letter-spacing:-.4px;margin-bottom:8px}
 .meta{font-size:13px;color:var(--ink-3);margin-bottom:2.5rem}
 h2{font-size:17px;font-weight:600;margin:2.25rem 0 .75rem;color:var(--ink);display:flex;align-items:center;gap:8px}
 h2::before{content:'';width:3px;height:18px;border-radius:2px;background:var(--brand);flex-shrink:0}
+h3{font-size:15px;font-weight:600;margin:1.5rem 0 .5rem;color:var(--ink-2)}
 p{color:var(--ink-2);margin-bottom:1rem;line-height:1.75}
 ul{color:var(--ink-2);margin:.5rem 0 1rem 1.5rem}
 ul li{margin-bottom:6px;line-height:1.65}
@@ -39,35 +41,71 @@ ul li{margin-bottom:6px;line-height:1.65}
 .rights-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
 .rights-card strong{display:block;font-size:13px;color:var(--ink);margin-bottom:4px}
 .rights-card span{font-size:12px;color:var(--ink-3);line-height:1.5}
-.lang-wrap{position:relative;display:inline-block;margin-bottom:1.5rem}
-.lang-toggle{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:500;color:var(--ink-2);font-family:inherit;cursor:pointer;transition:all .15s;white-space:nowrap}
-.lang-toggle:hover{border-color:var(--brand);color:var(--brand)}
-.lang-toggle svg{transition:transform .2s}
-.lang-toggle.open svg{transform:rotate(180deg)}
-.lang-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:100;min-width:200px;max-height:340px;overflow-y:auto}
-.lang-dropdown.open{display:block}
-.lang-option{display:block;width:100%;padding:10px 16px;text-align:left;background:none;border:none;font-size:13px;font-family:inherit;color:var(--ink-2);cursor:pointer;transition:background .1s;white-space:nowrap}
-.lang-option:hover{color:var(--brand)}
-.lang-option.active{background:var(--brand-bg);color:var(--brand);font-weight:600}
-.lang-divider{height:1px;background:var(--border);margin:4px 0}
-.accordion{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin:1rem 0}
-.accordion+.accordion{margin-top:8px}
-.acc-trigger{width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--surface);border:none;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;text-align:left;transition:background .15s;gap:12px}
-.acc-trigger:hover{background:var(--bg-2)}
-.acc-trigger.open{background:var(--brand-bg);color:var(--brand);border-bottom:1px solid var(--brand-bd)}
-.acc-trigger-left{display:flex;align-items:center;gap:10px}
-.acc-flag{font-size:18px;flex-shrink:0}
-.acc-arrow{flex-shrink:0;transition:transform .2s;color:var(--ink-4)}
-.acc-trigger.open .acc-arrow{transform:rotate(180deg);color:var(--brand)}
-.acc-body{display:none;padding:16px 18px;background:var(--surface);border-top:1px solid var(--border);font-size:14px;color:var(--ink-2);line-height:1.7}
-.acc-body.open{display:block}
-.acc-body ul{margin:.5rem 0 .5rem 1.25rem}
-.acc-body ul li{margin-bottom:5px}
-.acc-group-label{font-size:11px;font-weight:600;color:var(--ink-4);text-transform:uppercase;letter-spacing:.06em;margin:1.5rem 0 .5rem}
+.region-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:1rem 0}
+.region-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:13px}
+.region-card strong{display:block;color:var(--ink);margin-bottom:3px;font-size:13px}
+.region-card span{color:var(--ink-3);font-size:12px;line-height:1.5}
+.lang-wrap { position: relative; display: inline-block; margin-bottom: 1.5rem; }
+.lang-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; color: var(--ink-2);
+  font-family: inherit; cursor: pointer; transition: all .15s;
+  white-space: nowrap;
+}
+.lang-toggle:hover { border-color: var(--brand); color: var(--brand); }
+.lang-toggle svg { transition: transform .2s; }
+.lang-toggle.open svg { transform: rotate(180deg); }
+.lang-dropdown {
+  display: none; position: absolute; top: calc(100% + 6px); left: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 100; min-width: 200px;
+  max-height: 340px; overflow-y: auto;
+  animation: dropIn .15s ease-out;
+}
+.lang-dropdown.open { display: block; }
+@keyframes dropIn { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:translateY(0) } }
+.lang-option {
+  display: block; width: 100%; padding: 10px 16px;
+  text-align: left; background: none; border: none;
+  font-size: 13px; font-family: inherit; color: var(--ink-2);
+  cursor: pointer; transition: background .1s;
+  white-space: nowrap;
+}
+.lang-option:hover { background: var(--bg-2); color: var(--brand); }
+.lang-option.active { background: var(--brand-bg); color: var(--brand); font-weight: 600; }
+.lang-option:first-child { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.lang-option:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.lang-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.notranslate { font-family: inherit; }
+.accordion { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin: 1rem 0; }
+.accordion + .accordion { margin-top: 8px; }
+.acc-trigger {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--surface); border: none;
+  font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink);
+  cursor: pointer; text-align: left; transition: background .15s;
+  gap: 12px;
+}
+.acc-trigger:hover { background: var(--bg-2); }
+.acc-trigger.open { background: var(--brand-bg); color: var(--brand); border-bottom: 1px solid var(--brand-bd); }
+.acc-trigger-left { display: flex; align-items: center; gap: 10px; }
+.acc-flag { font-size: 18px; flex-shrink: 0; }
+.acc-arrow { flex-shrink: 0; transition: transform .2s; color: var(--ink-4); }
+.acc-trigger.open .acc-arrow { transform: rotate(180deg); color: var(--brand); }
+.acc-body { display: none; padding: 16px 18px; background: var(--surface); border-top: 1px solid var(--border); font-size: 14px; color: var(--ink-2); line-height: 1.7; }
+.acc-body.open { display: block; }
+.acc-body ul { margin: .5rem 0 .5rem 1.25rem; }
+.acc-body ul li { margin-bottom: 5px; line-height: 1.6; }
+.acc-body p { margin-bottom: .75rem; }
+.acc-body p:last-child { margin-bottom: 0; }
+.acc-group-label { font-size: 11px; font-weight: 600; color: var(--ink-4); text-transform: uppercase; letter-spacing: .06em; margin: 1.5rem 0 .5rem; }
 .site-footer{text-align:center;font-size:12px;color:var(--ink-4);margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border)}
 .site-footer a{color:var(--ink-3);text-decoration:none}
 .site-footer a:hover{color:var(--brand)}
-@media(max-width:600px){.page{padding:2rem 1rem 4rem}h1{font-size:22px}.rights-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.page{padding:2rem 1rem 4rem}h1{font-size:22px}.rights-grid,.region-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -83,66 +121,82 @@ ul li{margin-bottom:6px;line-height:1.65}
   <h1>Privacy Policy</h1>
   <p class="meta">Last updated: July 8, 2026 &nbsp;·&nbsp; Effective immediately &nbsp;·&nbsp; Applies globally</p>
 
-  <div class="lang-wrap" id="lang-wrap">
+  <div class="lang-wrap notranslate" id="lang-wrap">
     <button class="lang-toggle" id="lang-toggle" onclick="toggleLangMenu()" aria-haspopup="listbox" aria-expanded="false">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       <span id="lang-current">English</span>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
-    <div class="lang-dropdown" id="lang-dropdown" role="listbox">
-      <button class="lang-option active" onclick="switchLang('en','English')" role="option">🇬🇧 English</button>
+    <div class="lang-dropdown" id="lang-dropdown" role="listbox" aria-label="Select language">
+      <button class="lang-option active notranslate" onclick="switchLang('en','English')" role="option">🇬🇧 English</button>
       <div class="lang-divider"></div>
-      <button class="lang-option" onclick="switchLang('zh-CN','简体中文')" role="option">🇨🇳 简体中文</button>
-      <button class="lang-option" onclick="switchLang('zh-TW','繁體中文')" role="option">🇹🇼 繁體中文</button>
+      <button class="lang-option notranslate" onclick="switchLang('zh-CN','简体中文')" role="option">🇨🇳 简体中文</button>
+      <button class="lang-option notranslate" onclick="switchLang('zh-TW','繁體中文')" role="option">🇹🇼 繁體中文</button>
       <div class="lang-divider"></div>
-      <button class="lang-option" onclick="switchLang('es','Español')" role="option">🇪🇸 Español</button>
-      <button class="lang-option" onclick="switchLang('fr','Français')" role="option">🇫🇷 Français</button>
-      <button class="lang-option" onclick="switchLang('de','Deutsch')" role="option">🇩🇪 Deutsch</button>
-      <button class="lang-option" onclick="switchLang('ja','日本語')" role="option">🇯🇵 日本語</button>
-      <button class="lang-option" onclick="switchLang('ko','한국어')" role="option">🇰🇷 한국어</button>
-      <button class="lang-option" onclick="switchLang('ar','العربية')" role="option">🇸🇦 العربية</button>
+      <button class="lang-option notranslate" onclick="switchLang('es','Español')" role="option">🇪🇸 Español</button>
+      <button class="lang-option notranslate" onclick="switchLang('fr','Français')" role="option">🇫🇷 Français</button>
+      <button class="lang-option notranslate" onclick="switchLang('de','Deutsch')" role="option">🇩🇪 Deutsch</button>
+      <button class="lang-option notranslate" onclick="switchLang('it','Italiano')" role="option">🇮🇹 Italiano</button>
+      <button class="lang-option notranslate" onclick="switchLang('pt','Português')" role="option">🇵🇹 Português</button>
+      <button class="lang-option notranslate" onclick="switchLang('nl','Nederlands')" role="option">🇳🇱 Nederlands</button>
+      <button class="lang-option notranslate" onclick="switchLang('pl','Polski')" role="option">🇵🇱 Polski</button>
+      <button class="lang-option notranslate" onclick="switchLang('ru','Русский')" role="option">🇷🇺 Русский</button>
+      <button class="lang-option notranslate" onclick="switchLang('tr','Türkçe')" role="option">🇹🇷 Türkçe</button>
+      <div class="lang-divider"></div>
+      <button class="lang-option notranslate" onclick="switchLang('ar','العربية')" role="option">🇸🇦 العربية</button>
+      <button class="lang-option notranslate" onclick="switchLang('hi','हिन्दी')" role="option">🇮🇳 हिन्दी</button>
+      <button class="lang-option notranslate" onclick="switchLang('ja','日本語')" role="option">🇯🇵 日本語</button>
+      <button class="lang-option notranslate" onclick="switchLang('ko','한국어')" role="option">🇰🇷 한국어</button>
+      <button class="lang-option notranslate" onclick="switchLang('ms','Bahasa Melayu')" role="option">🇲🇾 Bahasa Melayu</button>
+      <button class="lang-option notranslate" onclick="switchLang('id','Bahasa Indonesia')" role="option">🇮🇩 Bahasa Indonesia</button>
+      <button class="lang-option notranslate" onclick="switchLang('th','ภาษาไทย')" role="option">🇹🇭 ภาษาไทย</button>
+      <button class="lang-option notranslate" onclick="switchLang('vi','Tiếng Việt')" role="option">🇻🇳 Tiếng Việt</button>
     </div>
   </div>
 
   <div class="info-box" role="note">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    <span>This Privacy Policy applies to all users of VANDL Health Score (VHS) worldwide. The Service is operated by <strong>上海裔陇生物科技有限公司 (Shanghai Yilongsheng Biotechnology Co., Ltd.)</strong>. Contact: <a href="mailto:hello@vandlvhs.com" style="color:#1e3a8a">hello@vandlvhs.com</a></span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <span>This Privacy Policy applies to all users of VANDL Health Score (VHS) worldwide. We are committed to compliance with applicable privacy laws in every jurisdiction where our Service is accessible, including GDPR (EU/EEA/UK), COPPA (USA), PIPL (China), LGPD (Brazil), PIPEDA (Canada), Privacy Act (Australia), POPIA (South Africa), PDPA (Singapore), DPDP (India), PIPA (South Korea), APPI (Japan), and others.</span>
   </div>
 
-  <span aria-hidden="true" style="display:none"> </span>
   <h2>1. Who We Are</h2>
-  <p>VANDL Health Score (VHS) is a wellness education and health management platform accessible at <strong>vandlvhs.com</strong>. We are operated by <strong>上海裔陇生物科技有限公司</strong>. We use artificial intelligence to analyze submitted health documents and generate wellness assessments for adults aged 18 and over.</p>
+  <p>VANDL Health Score (VHS) is a wellness education and health management platform accessible at vandlvhs.com. We use artificial intelligence to analyze submitted health documents and generate wellness assessments for adults aged 18 and over.</p>
+  <p>This Service is operated globally and is subject to the data protection laws of all jurisdictions from which it is accessed.</p>
 
-  <span aria-hidden="true" style="display:none"> </span>
   <h2>2. Age Restriction — Strictly 18+</h2>
   <div class="warn-box" role="alert">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     <div>
       <strong style="display:block;margin-bottom:4px">No data from persons under 18</strong>
-      This Service is strictly for users aged 18 and over. We do not knowingly collect, process, or store personal data from individuals under 18. If we discover we have collected data from a minor, we will delete it within 48 hours. To report data belonging to a minor, email <a href="mailto:hello@vandlvhs.com" style="color:#7f1d1d">hello@vandlvhs.com</a> immediately.
+      This Service is strictly for users aged 18 and over. We do not knowingly collect, process, or store personal data from individuals under 18. In compliance with COPPA (USA), we do not knowingly collect data from children under 13 under any circumstances. If we discover we have collected data from a minor, we will delete it immediately within 48 hours. To report data belonging to a minor, contact us through the Service immediately.
     </div>
   </div>
 
-  <span aria-hidden="true" style="display:none"> </span>
   <h2>3. Data We Collect</h2>
-  <p>We collect only the minimum data necessary (data minimization principle):</p>
+  <p>We collect only the minimum data necessary to provide the Service (data minimization principle):</p>
   <ul>
     <li><strong>Identity data:</strong> Name, age, gender (voluntarily entered)</li>
     <li><strong>Contact data:</strong> Phone number (optional)</li>
-    <li><strong>Health data:</strong> Symptoms, clinical notes, uploaded health documents — classified as sensitive/special category data</li>
+    <li><strong>Health data:</strong> Symptoms, clinical notes, uploaded health documents — classified as sensitive/special category data under applicable law</li>
     <li><strong>Assessment results:</strong> AI-generated VHS score, risk profile, wellness recommendations</li>
     <li><strong>Technical data:</strong> IP address, timestamp, document language detected</li>
-    <li><strong>Age verification:</strong> A timestamp in your browser's local storage confirming 18+ (stored locally only, expires in 30 days)</li>
+    <li><strong>Age verification:</strong> A timestamp stored in your browser's local storage confirming you confirmed you are 18+ (no personal data, stored locally only, expires in 30 days)</li>
   </ul>
-  <p>We do <strong>not</strong> collect: payment information, government IDs, biometric data, precise location, browsing history, or advertising data.</p>
+  <p>We do <strong>not</strong> collect: payment information, government IDs, passwords, biometric data, precise location, browsing history, or any data not listed above.</p>
 
-  <div style="height:1px"></div>
+  <h2>4. Legal Basis for Processing</h2>
+  <p>We process your data on the following legal bases depending on your jurisdiction:</p>
+  <ul>
+    <li><strong>Consent (GDPR Art. 6(1)(a) and Art. 9(2)(a)):</strong> You provide explicit consent at the time of submission for processing of health data (special category data)</li>
+    <li><strong>Legitimate interests (GDPR Art. 6(1)(f)):</strong> Providing and improving the Service, detecting fraud and abuse</li>
+    <li><strong>Legal obligation:</strong> Compliance with applicable laws</li>
+  </ul>
+  <p>Health data is classified as special category data under GDPR Article 9 and equivalent laws. Processing requires your explicit consent, which you provide at the time of submission.</p>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>4. How We Use Your Data</h2>
+  <h2>5. How We Use Your Data</h2>
   <p>Your data is used exclusively for:</p>
   <ul>
-    <li>Generating AI-assisted wellness assessments</li>
+    <li>Generating AI-assisted wellness assessments (the primary purpose)</li>
     <li>Maintaining assessment records for authorized administrators</li>
     <li>Improving Service accuracy and reliability</li>
     <li>Complying with legal obligations</li>
@@ -150,73 +204,104 @@ ul li{margin-bottom:6px;line-height:1.65}
   </ul>
   <p>We do <strong>not</strong> sell, rent, share, or use your data for advertising, profiling, or marketing under any circumstances.</p>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>5. AI Processing Disclosure</h2>
+  <h2>6. AI Processing Disclosure (EU AI Act Article 50)</h2>
   <div class="info-box" role="note">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
     <div>
-      <strong style="display:block;margin-bottom:4px">AI-Generated Content (EU AI Act Article 50)</strong>
-      All wellness assessment reports are generated by artificial intelligence. The Help Assistant is an AI chatbot — not a human. AI-generated content is clearly labelled on all results pages. VANDL VHS is a limited-risk AI system under the EU AI Act.
+      <strong style="display:block;margin-bottom:4px">AI-Generated Content Disclosure</strong>
+      In compliance with EU AI Act Article 50 (effective August 2, 2026), we disclose that: (1) All wellness assessment reports on this platform are generated by artificial intelligence. (2) The Help Assistant is an AI chatbot — not a human. (3) AI-generated content is clearly labelled on all results pages. VANDL VHS is classified as a limited-risk AI system under the EU AI Act and is not a regulated medical device.
     </div>
   </div>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>6. Third-Party AI Processing (Anthropic)</h2>
-  <p>This Service uses Anthropic's Claude AI. When you submit a document:</p>
+  <h2>7. Third-Party AI Processing (Anthropic)</h2>
+  <p>This Service uses Anthropic's Claude AI model to process submitted health data. When you submit a document:</p>
   <ul>
-    <li>Content is transmitted to Anthropic's API servers for processing</li>
-    <li>Anthropic processes this under their own Privacy Policy (anthropic.com/privacy)</li>
-    <li>Data may be processed in the United States</li>
-    <li>EU/EEA users: transfers to Anthropic are covered by Standard Contractual Clauses</li>
+    <li>Document content and context information is transmitted to Anthropic's API servers for processing</li>
+    <li>Anthropic processes this data under their own Privacy Policy (anthropic.com/privacy)</li>
+    <li>Data may be processed in the United States or other jurisdictions where Anthropic operates</li>
+    <li>EU/EEA users: this constitutes a cross-border data transfer. Anthropic participates in applicable transfer mechanisms including Standard Contractual Clauses</li>
+    <li>China users: please note that data submitted may be transferred outside mainland China for AI processing — see Section 12 (China PIPL) below</li>
   </ul>
   <p>By using this Service, you explicitly consent to this third-party AI processing of your health data.</p>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>7. Data Storage and Security</h2>
-  <p>Assessment records are stored in MongoDB Atlas (encrypted at rest and in transit). Security measures include HTTPS/TLS, password-protected admin access with brute-force lockout, rate limiting, Content Security Policy, and input sanitization. No system is 100% secure. In the event of a breach likely to risk your rights, we will notify relevant authorities within 72 hours.</p>
+  <h2>8. Data Storage and Security</h2>
+  <p>Assessment records are stored in MongoDB Atlas (cloud database, hosted by MongoDB Inc.). Security measures include:</p>
+  <ul>
+    <li>HTTPS/TLS encryption for all data in transit</li>
+    <li>MongoDB Atlas encryption at rest</li>
+    <li>Password-protected admin access with brute-force lockout (15-minute lockout after 5 failed attempts)</li>
+    <li>Rate limiting on all API endpoints</li>
+    <li>Content Security Policy and security headers preventing common web attacks</li>
+    <li>Input sanitization preventing injection attacks</li>
+    <li>IP addresses stored but never displayed in any user interface</li>
+    <li>Admin data API never returns raw MongoDB IDs or IP addresses</li>
+  </ul>
+  <p>No system is 100% secure. In the event of a data breach that is likely to result in risk to your rights and freedoms, we will notify relevant authorities within 72 hours (as required by GDPR and equivalent laws) and affected users without undue delay.</p>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>8. Data Retention</h2>
-  <p>Records are retained until deletion is requested or the Service ceases operation. Deletion requests are processed within 30 days.</p>
+  <h2>9. Data Retention</h2>
+  <p>Assessment records are retained for as long as the Service operates, or until deletion is requested. You may request deletion of your data at any time. We will process deletion requests within 30 days. Data may be retained longer where required by applicable law or for legitimate legal defense purposes.</p>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>9. Your Rights</h2>
+  <h2>10. Your Rights</h2>
+  <p>You have the following rights regarding your personal data (applicable rights vary by jurisdiction):</p>
   <div class="rights-grid">
-    <div class="rights-card"><strong>Right to Access</strong><span>Request a copy of all personal data we hold</span></div>
-    <div class="rights-card"><strong>Right to Rectification</strong><span>Request correction of inaccurate data</span></div>
-    <div class="rights-card"><strong>Right to Erasure</strong><span>Request deletion of your data</span></div>
-    <div class="rights-card"><strong>Right to Portability</strong><span>Receive your data in machine-readable format</span></div>
-    <div class="rights-card"><strong>Right to Object</strong><span>Object to processing for certain purposes</span></div>
-    <div class="rights-card"><strong>Right to Withdraw Consent</strong><span>Withdraw consent at any time</span></div>
+    <div class="rights-card"><strong>Right to Access</strong><span>Request a copy of all personal data we hold about you</span></div>
+    <div class="rights-card"><strong>Right to Rectification</strong><span>Request correction of inaccurate or incomplete data</span></div>
+    <div class="rights-card"><strong>Right to Erasure</strong><span>Request deletion of your data ("right to be forgotten")</span></div>
+    <div class="rights-card"><strong>Right to Portability</strong><span>Receive your data in a structured, machine-readable format</span></div>
+    <div class="rights-card"><strong>Right to Object</strong><span>Object to processing of your data for certain purposes</span></div>
+    <div class="rights-card"><strong>Right to Restrict</strong><span>Request restriction of processing in certain circumstances</span></div>
+    <div class="rights-card"><strong>Right to Withdraw Consent</strong><span>Withdraw consent at any time without affecting prior processing</span></div>
+    <div class="rights-card"><strong>Right to Complain</strong><span>Lodge a complaint with your national data protection authority</span></div>
   </div>
-  <p>To exercise any right, email <a href="mailto:hello@vandlvhs.com">hello@vandlvhs.com</a>. We respond within 30 days at no charge.</p>
+  <p>To exercise any of these rights, contact us through the Service. We will respond within 30 days at no charge.</p>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>10. Regional Compliance</h2>
-  <p class="acc-group-label">Asia Pacific</p>
+  <h2>11. Global Regional Compliance</h2>
+  <p class="acc-group-label">Americas</p>
 
   <div class="accordion">
     <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
-      <span class="acc-trigger-left"><span class="acc-flag">🇨🇳</span> China — PIPL (Important Notice)</span>
+      <span class="acc-trigger-left"><span class="acc-flag">🇺🇸</span> USA — COPPA &amp; FTC Act</span>
       <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="acc-body">
-      <p><strong>International version (vandlvhs.com):</strong> Data is stored on MongoDB Atlas servers outside mainland China and transmitted to Anthropic (US) for AI processing. By using this version, mainland China users explicitly consent to this cross-border transfer under PIPL Article 38.</p>
-      <p><strong>China domestic version (coming soon):</strong> Data will be stored on servers in mainland China in compliance with PIPL data localization requirements. Users requiring full PIPL compliance should use this version when available.</p>
       <ul>
-        <li>Rights: access, correction, deletion, restriction — honored within 30 days</li>
-        <li>Contact: <a href="mailto:hello@vandlvhs.com">hello@vandlvhs.com</a></li>
+        <li><strong>COPPA:</strong> We do not knowingly collect any data from children under 13 under any circumstances. Our platform is 18+ globally.</li>
+        <li><strong>FTC Act:</strong> We do not engage in unfair or deceptive data practices. Our privacy disclosures are clear and accurate.</li>
+        <li><strong>HIPAA:</strong> This platform is NOT a HIPAA-covered entity. Do not submit Protected Health Information (PHI). See Section 13 for full HIPAA notice.</li>
+        <li><strong>State laws (CCPA/CPRA):</strong> California residents have rights to know, delete, correct, and opt out of sale of personal data. We do not sell personal data.</li>
       </ul>
     </div>
   </div>
 
   <div class="accordion">
     <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
-      <span class="acc-trigger-left"><span class="acc-flag">🇭🇰</span> Hong Kong — PDPO</span>
+      <span class="acc-trigger-left"><span class="acc-flag">🇧🇷</span> Brazil — LGPD</span>
       <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="acc-body">
-      <p>We comply with PDPO Cap. 486. Data access/correction requests honored within 40 days. Supervisory authority: PCPD.</p>
+      <p>We comply with Lei Geral de Proteção de Dados (LGPD — Law 13.709/2018). Health data is sensitive data requiring explicit consent under LGPD Article 11.</p>
+      <ul>
+        <li>Legal basis: explicit consent (Article 7, VIII and Article 11, I)</li>
+        <li>Rights: access, correction, deletion, portability, information about sharing, and right to revoke consent</li>
+        <li>Supervisory authority: ANPD (Autoridade Nacional de Proteção de Dados)</li>
+        <li>Cross-border transfers: covered by consent and adequacy mechanisms</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇨🇦</span> Canada — PIPEDA</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with the Personal Information Protection and Electronic Documents Act (PIPEDA) and applicable provincial privacy laws.</p>
+      <ul>
+        <li>Health data is classified as sensitive personal information requiring meaningful consent</li>
+        <li>Rights: access and correction of personal information</li>
+        <li>Breach notification: we notify affected individuals and the OPC where required</li>
+        <li>Supervisory authority: Office of the Privacy Commissioner (OPC)</li>
+      </ul>
     </div>
   </div>
 
@@ -228,63 +313,255 @@ ul li{margin-bottom:6px;line-height:1.65}
       <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="acc-body">
+      <p>We comply with the General Data Protection Regulation (GDPR — Regulation EU 2016/679). Health data is special category data under Article 9 requiring explicit consent.</p>
       <ul>
-        <li>Legal basis: explicit consent (Art. 6(1)(a) and Art. 9(2)(a)) for health data</li>
-        <li>All GDPR rights honored within 30 days</li>
-        <li>Cross-border transfers to Anthropic under Standard Contractual Clauses</li>
-        <li>72-hour supervisory authority notification for breaches</li>
-        <li>Data controller: 上海裔陇生物科技有限公司 — contact hello@vandlvhs.com</li>
+        <li><strong>Legal basis:</strong> Explicit consent (Art. 6(1)(a) and Art. 9(2)(a)) for health data processing</li>
+        <li><strong>Rights:</strong> Access, rectification, erasure, portability, objection, restriction — all honored within 30 days</li>
+        <li><strong>Cross-border transfers:</strong> Data transmitted to Anthropic (US) under Standard Contractual Clauses</li>
+        <li><strong>Data breach:</strong> Supervisory authority notification within 72 hours, user notification without undue delay</li>
+        <li><strong>EU AI Act Article 50:</strong> AI-generated content is labelled; the Help Assistant discloses it is an AI</li>
+        <li><strong>Supervisory authority:</strong> Your national DPA (e.g. CNIL in France, BfDI in Germany, ICO in UK)</li>
+        <li><strong>DPO:</strong> We are a small platform and do not currently have a designated DPO. Contact us through the Service for data requests.</li>
       </ul>
     </div>
   </div>
-
-  <p class="acc-group-label">Americas</p>
 
   <div class="accordion">
     <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
-      <span class="acc-trigger-left"><span class="acc-flag">🇺🇸</span> USA — COPPA, FTC, CCPA</span>
+      <span class="acc-trigger-left"><span class="acc-flag">🇬🇧</span> United Kingdom — UK GDPR + DPA 2018</span>
       <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="acc-body">
+      <p>Post-Brexit, we comply with UK GDPR and the Data Protection Act 2018. UK data protection rights are substantially equivalent to EU GDPR.</p>
       <ul>
-        <li><strong>COPPA:</strong> No data from under-13s. 18+ gate exceeds this globally.</li>
-        <li><strong>HIPAA:</strong> NOT a covered entity. Do not submit PHI.</li>
-        <li><strong>CCPA/CPRA:</strong> We do not sell personal data. California residents have full rights to know, delete, and correct.</li>
+        <li>All GDPR rights apply equally to UK users</li>
+        <li>Health data treated as special category data requiring explicit consent</li>
+        <li>Supervisory authority: Information Commissioner's Office (ICO)</li>
+        <li>UK users may lodge complaints with the ICO: ico.org.uk</li>
       </ul>
     </div>
   </div>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>11. HIPAA Notice (United States)</h2>
-  <div class="warn-box" role="note">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <span>VANDL VHS is NOT a HIPAA-covered entity and does not execute Business Associate Agreements. Do not submit Protected Health Information (PHI) through this Service.</span>
+  <p class="acc-group-label">Asia Pacific</p>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇨🇳</span> China — PIPL (Important)</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p><strong>⚠️ Cross-Border Transfer Notice for Mainland China Users</strong></p>
+      <p>China's Personal Information Protection Law (PIPL) requires health data (sensitive personal information) to be stored on domestic servers with government security assessments before cross-border transfers. While VANDL VHS operates a server within mainland China, health data is stored on MongoDB Atlas servers located outside mainland China and is transmitted to Anthropic's API (US-based) for AI processing.</p>
+      <ul>
+        <li>The app runs on a mainland China server but health data storage and AI processing occur outside mainland China</li>
+        <li>By using the Service, mainland China users explicitly consent to this cross-border transfer under PIPL Article 38</li>
+        <li>Users requiring full PIPL-compliant data localization should not use this Service</li>
+        <li>Rights under PIPL: access, correction, deletion, restriction of processing — honored within 30 days</li>
+      </ul>
+    </div>
   </div>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>12. Cookies and Local Storage</h2>
-  <p>We do not use cookies for tracking or advertising. We use browser local storage only for age verification confirmation (18+ consent), stored locally on your device for 30 days and never transmitted to our servers. We do not use Google Analytics, Facebook Pixel, or any third-party tracking.</p>
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇭🇰</span> Hong Kong — PDPO</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with the Personal Data (Privacy) Ordinance (PDPO) Cap. 486 of Hong Kong.</p>
+      <ul>
+        <li>Data collection limited to the minimum necessary for the stated purpose</li>
+        <li>Rights: data access and correction requests honored within 40 days</li>
+        <li>Supervisory authority: Privacy Commissioner for Personal Data (PCPD)</li>
+      </ul>
+    </div>
+  </div>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>13. Data Breach Notification</h2>
-  <p>In the event of a breach likely to risk your rights and freedoms, we will notify the relevant supervisory authority within 72 hours and affected users without undue delay.</p>
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇹🇼</span> Taiwan — PDPA</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with Taiwan's Personal Data Protection Act (個人資料保護法).</p>
+      <ul>
+        <li>Health data treated as sensitive personal data requiring explicit consent</li>
+        <li>Rights: access, correction, deletion, restriction of processing, and objection</li>
+        <li>Supervisory authority: Personal Data Protection Commission (PDPC)</li>
+      </ul>
+    </div>
+  </div>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>14. Changes to This Policy</h2>
-  <p>We may update this Policy to reflect legal changes or Service updates. Significant changes will be communicated by updating the date above. Continued use constitutes acceptance.</p>
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇯🇵</span> Japan — APPI</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with Japan's Act on Protection of Personal Information (APPI — 個人情報の保護に関する法律).</p>
+      <ul>
+        <li>Health data classified as "special care-required personal information" requiring prior consent</li>
+        <li>Rights: disclosure, correction, deletion, and suspension of use</li>
+        <li>Supervisory authority: Personal Information Protection Commission (PPC)</li>
+        <li>Japan is recognized as adequate by the EU for cross-border data transfers</li>
+      </ul>
+    </div>
+  </div>
 
-  <span aria-hidden="true" style="display:none"> </span>
-  <h2>15. Contact and Data Requests</h2>
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇰🇷</span> South Korea — PIPA</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with South Korea's Personal Information Protection Act (PIPA — 개인정보 보호법).</p>
+      <ul>
+        <li>Health data classified as sensitive information requiring separate explicit consent</li>
+        <li>Rights: access, correction, deletion, suspension of processing</li>
+        <li>Breach notification required to PIPC and affected users</li>
+        <li>Supervisory authority: Personal Information Protection Commission (PIPC)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇸🇬</span> Singapore — PDPA</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with Singapore's Personal Data Protection Act 2012 (PDPA).</p>
+      <ul>
+        <li>Consent-based data collection and processing</li>
+        <li>Data minimization and purpose limitation observed</li>
+        <li>Rights: access and correction of personal data</li>
+        <li>Supervisory authority: Personal Data Protection Commission (PDPC)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇮🇳</span> India — DPDP</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with India's Digital Personal Data Protection Act 2023 (DPDP Act).</p>
+      <ul>
+        <li>We act as a Data Fiduciary and observe consent-based processing obligations</li>
+        <li>Rights: access, correction, erasure, and grievance redressal</li>
+        <li>Data of children requires verifiable parental consent — our 18+ age gate addresses this</li>
+        <li>Supervisory authority: Data Protection Board of India (once operational)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇮🇩</span> Indonesia — PDPL</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with Indonesia's Personal Data Protection Law (UU PDP — Law No. 27 of 2022).</p>
+      <ul>
+        <li>Health data classified as specific personal data requiring explicit consent</li>
+        <li>Rights: access, correction, deletion, and withdrawal of consent</li>
+        <li>Cross-border transfer requires ensuring adequate protection in the recipient country</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇦🇺</span> Australia — Privacy Act</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with Australia's Privacy Act 1988 and the Australian Privacy Principles (APPs).</p>
+      <ul>
+        <li>Health information is sensitive information requiring consent for collection</li>
+        <li>Rights: access and correction of personal information</li>
+        <li>Notifiable Data Breaches (NDB) scheme: we notify OAIC and affected individuals for eligible breaches</li>
+        <li>Supervisory authority: Office of the Australian Information Commissioner (OAIC)</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="acc-group-label">Africa &amp; Middle East</p>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇿🇦</span> South Africa — POPIA</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with South Africa's Protection of Personal Information Act (POPIA — Act 4 of 2013).</p>
+      <ul>
+        <li>Health data classified as special personal information requiring explicit consent</li>
+        <li>Rights: access, correction, deletion, and objection</li>
+        <li>Breach notification to Information Regulator and affected parties required</li>
+        <li>Supervisory authority: Information Regulator of South Africa</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="accordion">
+    <button class="acc-trigger" onclick="toggleAcc(this)" aria-expanded="false">
+      <span class="acc-trigger-left"><span class="acc-flag">🇦🇪</span> UAE &amp; 🇸🇦 Saudi Arabia</span>
+      <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="acc-body">
+      <p>We comply with applicable data protection laws in the UAE and Saudi Arabia.</p>
+      <ul>
+        <li><strong>UAE:</strong> DIFC Data Protection Law 2020 (for DIFC) and Federal Decree-Law No. 45 of 2021 on Personal Data Protection</li>
+        <li><strong>Saudi Arabia:</strong> Personal Data Protection Law (PDPL — Royal Decree No. M/19)</li>
+        <li>Health data treated as sensitive data requiring explicit consent in both jurisdictions</li>
+        <li>Rights: access, correction, deletion honored within 30 days</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>12. China PIPL — Important Notice for Mainland China Users</h2>
+  <div class="warn-box" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div>
+      <strong style="display:block;margin-bottom:4px">China PIPL Cross-Border Transfer Notice</strong>
+      China's Personal Information Protection Law (PIPL) requires that health data (sensitive personal information) be stored on domestic servers, with government security assessments required before cross-border transfers. While VANDL VHS operates a server within mainland China (Shanghai), health data is stored on MongoDB Atlas servers located outside mainland China and transmitted to Anthropic's API (US-based) for AI processing. Users in mainland China should be aware that submitting health data through this Service constitutes a cross-border transfer of sensitive personal information. By using the Service, mainland China users explicitly consent to this cross-border transfer as permitted under PIPL Article 38. Users who require PIPL-compliant data localization should not use this Service until a fully localized China version is available.
+    </div>
+  </div>
+
+  <h2>13. HIPAA Notice (United States)</h2>
+  <div class="warn-box" role="note">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>VANDL Health Score (VHS) is NOT a HIPAA-covered entity and does not execute Business Associate Agreements. US healthcare providers must not submit Protected Health Information (PHI) as defined under HIPAA through this Service. Use of this Service with PHI is at the user's own legal risk.</span>
+  </div>
+
+  <h2>14. Cookies and Local Storage</h2>
+  <p>We do not use cookies for tracking, advertising, or analytics. We use browser local storage solely for:</p>
   <ul>
-    <li><strong>Email:</strong> <a href="mailto:hello@vandlvhs.com">hello@vandlvhs.com</a></li>
-    <li><strong>Website:</strong> vandlvhs.com</li>
-    <li><strong>Data controller:</strong> 上海裔陇生物科技有限公司 (Shanghai Yilongsheng Biotechnology Co., Ltd.)</li>
+    <li>Remembering your age verification confirmation (18+ consent) for 30 days — stored locally on your device only, never transmitted to our servers</li>
   </ul>
-  <p>We acknowledge requests within 5 business days and respond fully within 30 days at no charge.</p>
+  <p>We do not use Google Analytics, Facebook Pixel, or any third-party tracking technology.</p>
+
+  <h2>15. No Automated Decision-Making with Legal Effects</h2>
+  <p>VANDL VHS does not make automated decisions with legal or similarly significant effects about individuals. All AI-generated wellness assessments are informational only and require human review before any action is taken.</p>
+
+  <h2>16. Data Breach Notification</h2>
+  <p>In the event of a personal data breach that is likely to result in risk to your rights and freedoms:</p>
+  <ul>
+    <li>We will notify the relevant supervisory authority within 72 hours (GDPR) or equivalent timeframes under applicable law</li>
+    <li>We will notify affected users without undue delay where the breach is likely to result in high risk</li>
+    <li>Notifications will describe the nature of the breach, data affected, and steps taken to mitigate harm</li>
+  </ul>
+
+  <h2>17. Changes to This Policy</h2>
+  <p>We may update this Privacy Policy to reflect legal changes or Service updates. Significant changes will be communicated by updating the date above. For material changes affecting your rights, we will provide additional notice where required by law. Continued use of the Service after changes constitutes acceptance of the updated Policy.</p>
+
+  <h2>18. Contact and Data Requests</h2>
+  <p>For privacy questions, data access requests, data deletion requests, breach reports, or to report data belonging to a minor, contact us through the Service at vandlvhs.com. We will acknowledge your request within 5 business days and respond fully within 30 days at no charge to you.</p>
 
   <div class="green-box" role="note">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-    <span><strong>Note:</strong> While we have taken comprehensive steps to comply with global privacy laws, we strongly recommend consulting a qualified data protection lawyer before using this Service to process health data commercially, particularly in the EU, China, South Korea, and the United States.</span>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    <span><strong>Note:</strong> While we have taken comprehensive steps to comply with applicable global privacy laws, this platform is operated by a small team. We strongly recommend consulting a qualified data protection lawyer before using this Service to process health data of individuals in regulated jurisdictions, particularly the EU, China, South Korea, and the United States.</span>
   </div>
 
   <footer class="site-footer">
@@ -295,45 +572,142 @@ ul li{margin-bottom:6px;line-height:1.65}
 <div id="translate-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.88);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:14px">
   <div style="width:40px;height:40px;border:3px solid #e5e7eb;border-top-color:#b91c1c;border-radius:50%;animation:_spin .75s linear infinite"></div>
   <div style="font-size:14px;font-weight:500;color:#374151" id="tl-msg">Translating...</div>
+  <div style="font-size:12px;color:#9ca3af" id="tl-sub">This may take 10-20 seconds for a large document</div>
 </div>
 <style>@keyframes _spin{to{transform:rotate(360deg)}}</style>
 
 <script>
-var _origContent=null,_cache={},_curLang="en";
-function toggleLangMenu(){var t=document.getElementById("lang-toggle"),d=document.getElementById("lang-dropdown"),o=d.classList.toggle("open");t.classList.toggle("open",o);t.setAttribute("aria-expanded",o)}
-function _closeDropdown(){document.getElementById("lang-dropdown").classList.remove("open");document.getElementById("lang-toggle").classList.remove("open");document.getElementById("lang-toggle").setAttribute("aria-expanded","false")}
-function _reattachAccordions(){document.querySelectorAll(".acc-trigger").forEach(function(t){t.onclick=function(){toggleAcc(this)}})}
-function switchLang(lang,label){
+var _origContent = null;
+var _cache = {};
+var _curLang = "en";
+
+function toggleLangMenu() {
+  var toggle = document.getElementById("lang-toggle");
+  var dropdown = document.getElementById("lang-dropdown");
+  var isOpen = dropdown.classList.toggle("open");
+  toggle.classList.toggle("open", isOpen);
+  toggle.setAttribute("aria-expanded", isOpen);
+}
+function _closeDropdown() {
+  document.getElementById("lang-dropdown").classList.remove("open");
+  document.getElementById("lang-toggle").classList.remove("open");
+  document.getElementById("lang-toggle").setAttribute("aria-expanded","false");
+}
+function _showOverlay(msg) {
+  document.getElementById("tl-msg").textContent = msg || "Translating...";
+  document.getElementById("translate-overlay").style.display = "flex";
+}
+function _hideOverlay() {
+  document.getElementById("translate-overlay").style.display = "none";
+}
+function _reattachAccordions() {
+  document.querySelectorAll(".acc-trigger").forEach(function(t) {
+    t.onclick = function() { toggleAcc(this); };
+  });
+}
+function switchLang(lang, label) {
   _closeDropdown();
-  document.querySelectorAll(".lang-option").forEach(function(b){b.classList.remove("active")});
-  var main=document.getElementById("main-content");
-  if(!main||lang===_curLang)return;
-  if(lang==="en"){if(_origContent){main.innerHTML=_origContent;_reattachAccordions()}_curLang="en";document.getElementById("lang-current").textContent="English";return}
-  if(_cache[lang]){if(!_origContent)_origContent=main.innerHTML;main.innerHTML=_cache[lang];_reattachAccordions();_curLang=lang;document.getElementById("lang-current").textContent=label;return}
-  if(!_origContent)_origContent=main.innerHTML;
-  document.getElementById("tl-msg").textContent="Translating to "+label+"...";
-  document.getElementById("translate-overlay").style.display="flex";
-  var langNames={"zh-CN":"Simplified Chinese","zh-TW":"Traditional Chinese","es":"Spanish","fr":"French","de":"German","ja":"Japanese","ko":"Korean","ar":"Arabic"};
-  var nodes=[],walker=document.createTreeWalker(main,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentElement;if(!p)return NodeFilter.FILTER_REJECT;var t=p.tagName.toLowerCase();if(t==="script"||t==="style")return NodeFilter.FILTER_REJECT;if(p.closest(".lang-wrap"))return NodeFilter.FILTER_REJECT;if(n.nodeValue.trim().length<2)return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT}});
-  var n;while(n=walker.nextNode())nodes.push(n);
-  var SEP="|||SPLIT|||",batches=[],batch=[],blen=0;
-  for(var i=0;i<nodes.length;i++){var t=nodes[i].nodeValue.trim();if(blen+t.length>3500&&batch.length>0){batches.push(batch);batch=[nodes[i]];blen=t.length}else{batch.push(nodes[i]);blen+=t.length+SEP.length}}
-  if(batch.length)batches.push(batch);
-  var total=batches.length,done=0;
-  function processBatch(idx){
-    if(idx>=total){_cache[lang]=main.innerHTML;_reattachAccordions();_curLang=lang;document.getElementById("lang-current").textContent=label;document.getElementById("translate-overlay").style.display="none";return}
-    var grp=batches[idx];
-    document.getElementById("tl-msg").textContent="Translating... "+Math.round(((done+1)/total)*100)+"%";
-    fetch("/api/translate/public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:grp.map(function(n){return n.nodeValue.trim()}).join(SEP),targetLang:langNames[lang]||lang})})
-    .then(function(r){return r.json()})
-    .then(function(data){if(data&&data.translated){var parts=data.translated.split(SEP);grp.forEach(function(node,j){if(parts[j]&&parts[j].trim().length>0)node.nodeValue=parts[j].trim()})}done++;processBatch(idx+1)})
-    .catch(function(){done++;processBatch(idx+1)})
+  document.querySelectorAll(".lang-option").forEach(function(b) { b.classList.remove("active"); });
+  var main = document.getElementById("main-content");
+  if (!main || lang === _curLang) return;
+  if (lang === "en") {
+    if (_origContent) { main.innerHTML = _origContent; _reattachAccordions(); }
+    _curLang = "en";
+    document.getElementById("lang-current").textContent = "English";
+    return;
+  }
+  if (_cache[lang]) {
+    if (!_origContent) _origContent = main.innerHTML;
+    main.innerHTML = _cache[lang];
+    _reattachAccordions();
+    _curLang = lang;
+    document.getElementById("lang-current").textContent = label;
+    return;
+  }
+  if (!_origContent) _origContent = main.innerHTML;
+  _showOverlay("Translating to " + label + "... (20-40 seconds)");
+  var langNames = {"zh-CN":"Simplified Chinese","zh-TW":"Traditional Chinese","es":"Spanish","fr":"French","de":"German","it":"Italian","pt":"Portuguese","ru":"Russian","nl":"Dutch","pl":"Polish","tr":"Turkish","ar":"Arabic","hi":"Hindi","ja":"Japanese","ko":"Korean","ms":"Malay","id":"Indonesian","th":"Thai","vi":"Vietnamese"};
+  var targetLang = langNames[lang] || lang;
+  var nodes = [];
+  var walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(node) {
+      var p = node.parentElement;
+      if (!p) return NodeFilter.FILTER_REJECT;
+      var tag = p.tagName.toLowerCase();
+      if (tag === "script" || tag === "style") return NodeFilter.FILTER_REJECT;
+      if (p.closest(".lang-wrap")) return NodeFilter.FILTER_REJECT;
+      if (node.nodeValue.trim().length < 2) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  var n; while (n = walker.nextNode()) nodes.push(n);
+  var SEP = "|||SPLIT|||";
+  var batches = [];
+  var batch = [];
+  var blen = 0;
+  for (var i = 0; i < nodes.length; i++) {
+    var t = nodes[i].nodeValue.trim();
+    if (blen + t.length > 3500 && batch.length > 0) {
+      batches.push(batch); batch = [nodes[i]]; blen = t.length;
+    } else { batch.push(nodes[i]); blen += t.length + SEP.length; }
+  }
+  if (batch.length) batches.push(batch);
+  var total = batches.length;
+  var done = 0;
+  function processBatch(idx) {
+    if (idx >= total) {
+      _cache[lang] = main.innerHTML;
+      _reattachAccordions();
+      _curLang = lang;
+      document.getElementById("lang-current").textContent = label;
+      _hideOverlay();
+      return;
+    }
+    var grp = batches[idx];
+    var combined = grp.map(function(node) { return node.nodeValue.trim(); }).join(SEP);
+    document.getElementById("tl-msg").textContent = "Translating... " + Math.round(((done+1)/total)*100) + "%";
+    fetch("/api/translate/public", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({text: combined, targetLang: targetLang})
+    }).then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function(data) {
+      if (data && data.translated) {
+        var parts = data.translated.split(SEP);
+        grp.forEach(function(node, j) {
+          if (parts[j] !== undefined && parts[j].trim().length > 0) {
+            node.nodeValue = parts[j].trim();
+          }
+        });
+      }
+      done++;
+      processBatch(idx + 1);
+    }).catch(function(e) {
+      console.warn("Batch", idx, "failed:", e.message);
+      done++;
+      processBatch(idx + 1);
+    });
   }
   processBatch(0);
 }
-document.addEventListener("click",function(e){var w=document.getElementById("lang-wrap");if(w&&!w.contains(e.target))_closeDropdown()});
-document.addEventListener("keydown",function(e){if(e.key==="Escape")_closeDropdown()});
-function toggleAcc(trigger){var body=trigger.nextElementSibling,isOpen=body.classList.toggle("open");trigger.classList.toggle("open",isOpen);trigger.setAttribute("aria-expanded",isOpen)}
+document.addEventListener("click", function(e) {
+  var wrap = document.getElementById("lang-wrap");
+  if (wrap && !wrap.contains(e.target)) _closeDropdown();
+});
+document.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") _closeDropdown();
+});
+</script>
+
+<script>
+function toggleAcc(trigger) {
+  const body = trigger.nextElementSibling;
+  const isOpen = body.classList.toggle('open');
+  trigger.classList.toggle('open', isOpen);
+  trigger.setAttribute('aria-expanded', isOpen);
+}
 </script>
 </body>
 </html>
