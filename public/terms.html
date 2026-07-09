@@ -37,8 +37,6 @@ ul li{margin-bottom:6px;line-height:1.65}
 .info-box svg{flex-shrink:0;margin-top:1px}
 .green-box{background:var(--green-bg);border:1px solid var(--green-bd);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin:1.5rem 0;color:#065f46;font-size:14px;display:flex;gap:10px;align-items:flex-start;line-height:1.6}
 .green-box svg{flex-shrink:0;margin-top:1px}
-
-/* Language switcher */
 .lang-wrap { position: relative; display: inline-block; margin-bottom: 1.5rem; }
 .lang-toggle {
   display: inline-flex; align-items: center; gap: 8px;
@@ -51,7 +49,6 @@ ul li{margin-bottom:6px;line-height:1.65}
 .lang-toggle:hover { border-color: var(--brand); color: var(--brand); }
 .lang-toggle svg { transition: transform .2s; }
 .lang-toggle.open svg { transform: rotate(180deg); }
-
 .lang-dropdown {
   display: none; position: absolute; top: calc(100% + 6px); left: 0;
   background: var(--surface); border: 1px solid var(--border);
@@ -62,13 +59,11 @@ ul li{margin-bottom:6px;line-height:1.65}
 }
 .lang-dropdown.open { display: block; }
 @keyframes dropIn { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:translateY(0) } }
-
 .lang-option {
   display: block; width: 100%; padding: 10px 16px;
   text-align: left; background: none; border: none;
   font-size: 13px; font-family: inherit; color: var(--ink-2);
-  cursor: pointer; transition: background .1s;
-  white-space: nowrap;
+  cursor: pointer; transition: background .1s; white-space: nowrap;
 }
 .lang-option:hover { background: var(--bg-2); color: var(--brand); }
 .lang-option.active { background: var(--brand-bg); color: var(--brand); font-weight: 600; }
@@ -76,9 +71,6 @@ ul li{margin-bottom:6px;line-height:1.65}
 .lang-option:last-child { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 .lang-divider { height: 1px; background: var(--border); margin: 4px 0; }
 .notranslate { font-family: inherit; }
-
-
-/* Accordion */
 .accordion { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin: 1rem 0; }
 .accordion + .accordion { margin-top: 8px; }
 .acc-trigger {
@@ -100,7 +92,6 @@ ul li{margin-bottom:6px;line-height:1.65}
 .acc-body p { margin-bottom: .75rem; }
 .acc-body p:last-child { margin-bottom: 0; }
 .acc-group-label { font-size: 11px; font-weight: 600; color: var(--ink-4); text-transform: uppercase; letter-spacing: .06em; margin: 1.5rem 0 .5rem; }
-
 .site-footer{text-align:center;font-size:12px;color:var(--ink-4);margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border)}
 .site-footer a{color:var(--ink-3);text-decoration:none}
 .site-footer a:hover{color:var(--brand)}
@@ -118,9 +109,8 @@ ul li{margin-bottom:6px;line-height:1.65}
 </nav>
 <main class="page" id="main-content">
   <h1>Terms of Service</h1>
-  <p class="meta">Last updated: June 23, 2026 &nbsp;·&nbsp; Effective immediately &nbsp;·&nbsp; Applies globally</p>
+  <p class="meta">Last updated: July 8, 2026 &nbsp;·&nbsp; Effective immediately &nbsp;·&nbsp; Applies globally</p>
 
-  <!-- Language Switcher -->
   <div class="lang-wrap notranslate" id="lang-wrap">
     <button class="lang-toggle" id="lang-toggle" onclick="toggleLangMenu()" aria-haspopup="listbox" aria-expanded="false">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
@@ -277,7 +267,7 @@ ul li{margin-bottom:6px;line-height:1.65}
       <svg class="acc-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <div class="acc-body">
-      <p><strong>Cross-border transfer notice:</strong> PIPL requires health data to be stored on domestic servers. VANDL VHS stores data outside mainland China and transmits to Anthropic (US). By using the Service, mainland China users explicitly consent to this cross-border transfer under PIPL Article 38. Users requiring full PIPL data localization should not use this Service. See Privacy Policy Section 12 for full details.</p>
+      <p><strong>Cross-border transfer notice:</strong> While VANDL VHS operates a server within mainland China, health data is stored outside mainland China and transmitted to Anthropic (US) for AI processing. By using the Service, mainland China users explicitly consent to this cross-border transfer under PIPL Article 38. Users requiring full PIPL data localization should not use this Service. See Privacy Policy Section 12 for full details.</p>
     </div>
   </div>
 
@@ -403,7 +393,7 @@ ul li{margin-bottom:6px;line-height:1.65}
   <p>We may modify these Terms at any time. Significant changes will be communicated by updating the date above. For material changes that affect user rights, we will provide additional notice where required by law. Continued use after changes constitutes acceptance.</p>
 
   <h2>16. Contact</h2>
-  <p>For questions about these Terms, data requests, or to report violations, contact us through the Service at vandlvhs.onrender.com. We respond within 30 days.</p>
+  <p>For questions about these Terms, data requests, or to report violations, contact us through the Service at vandlvhs.com. We respond within 30 days.</p>
 
   <div class="green-box" role="note">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -415,7 +405,6 @@ ul li{margin-bottom:6px;line-height:1.65}
   </footer>
 </main>
 
-<!-- Google Translate -->
 <div id="translate-overlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.88);z-index:999;flex-direction:column;align-items:center;justify-content:center;gap:14px">
   <div style="width:40px;height:40px;border:3px solid #e5e7eb;border-top-color:#b91c1c;border-radius:50%;animation:_spin .75s linear infinite"></div>
   <div style="font-size:14px;font-weight:500;color:#374151" id="tl-msg">Translating...</div>
@@ -424,7 +413,6 @@ ul li{margin-bottom:6px;line-height:1.65}
 <style>@keyframes _spin{to{transform:rotate(360deg)}}</style>
 
 <script>
-/* <![CDATA[ */
 var _origContent = null;
 var _cache = {};
 var _curLang = "en";
@@ -547,7 +535,6 @@ document.addEventListener("click", function(e) {
 document.addEventListener("keydown", function(e) {
   if (e.key === "Escape") _closeDropdown();
 });
-/* ]]> */
 </script>
 
 <script>
@@ -558,7 +545,5 @@ function toggleAcc(trigger) {
   trigger.setAttribute('aria-expanded', isOpen);
 }
 </script>
-
-
 </body>
 </html>
