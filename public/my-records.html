@@ -41,13 +41,8 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .lang-btn.active{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-sm)}
 .lang-btn:hover:not(.active){color:var(--ink)}
 
-/* Toggle switcher (history <-> upload) */
 .view-toggle{display:flex;gap:4px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:3px}
-.view-toggle a{
-  padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;
-  text-decoration:none;cursor:pointer;transition:all .15s;color:var(--ink-3);
-  display:flex;align-items:center;gap:6px;
-}
+.view-toggle a{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s;color:var(--ink-3);display:flex;align-items:center;gap:6px}
 .view-toggle a.active{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-sm)}
 .view-toggle a:hover:not(.active){color:var(--ink)}
 .view-toggle svg{width:14px;height:14px;flex-shrink:0}
@@ -64,10 +59,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .stat-card.brand .stat-value{color:var(--brand)}
 
 .records-list{display:flex;flex-direction:column;gap:12px}
-.record-card{
-  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
-  padding:1.1rem 1.4rem;box-shadow:var(--shadow-sm);cursor:pointer;transition:border-color .15s,box-shadow .15s;
-}
+.record-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem 1.4rem;box-shadow:var(--shadow-sm);cursor:pointer;transition:border-color .15s,box-shadow .15s}
 .record-card:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(185,28,28,.08)}
 .record-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px}
 .record-name{font-size:15px;font-weight:700;color:var(--ink)}
@@ -81,29 +73,18 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .record-score{font-size:22px;font-weight:700}
 .record-summary{font-size:13px;color:var(--ink-2);line-height:1.6;margin-top:6px}
 .record-date{font-size:11px;color:var(--ink-4);margin-top:8px}
-.record-del-btn{
-  display:inline-flex;align-items:center;gap:5px;padding:5px 11px;
-  background:none;border:1px solid var(--border);border-radius:var(--radius-sm);
-  font-size:11px;font-weight:500;font-family:inherit;color:var(--ink-3);cursor:pointer;
-  transition:all .15s;flex-shrink:0;
-}
-.record-del-btn:hover{background:var(--red-bg);border-color:var(--red-bd);color:var(--red)}
 
 .empty-state{text-align:center;padding:4rem 2rem;color:var(--ink-3)}
 .empty-state svg{margin-bottom:14px;opacity:.4}
 .empty-state h3{font-size:16px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
-.empty-cta{
-  display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:10px 20px;
-  background:var(--brand);color:#fff;border-radius:var(--radius);text-decoration:none;
-  font-size:14px;font-weight:600;
-}
+.empty-cta{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:10px 20px;background:var(--brand);color:#fff;border-radius:var(--radius);text-decoration:none;font-size:14px;font-weight:600}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Detail modal */
+/* ── Detail Modal ────────────────────────────────────────────── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:24px}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:680px;max-height:90vh;display:flex;flex-direction:column;animation:modalIn .2s ease-out}
+.modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:760px;max-height:92vh;display:flex;flex-direction:column;animation:modalIn .2s ease-out}
 @keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
 .modal-head{display:flex;align-items:flex-start;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
 .modal-title{font-size:16px;font-weight:700;color:var(--ink)}
@@ -112,13 +93,48 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .modal-close:hover{border-color:var(--brand);color:var(--brand)}
 .modal-body{padding:20px 24px;overflow-y:auto;flex:1}
 .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0}
-.detail-row{display:flex;gap:8px;margin-bottom:10px;font-size:13px}
-.detail-row strong{color:var(--ink-2);min-width:120px;flex-shrink:0}
+
+/* Section headers inside modal */
+.section-title{font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.07em;margin:20px 0 10px;display:flex;align-items:center;gap:6px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.section-title:first-child{margin-top:0}
+
+/* Detail rows */
+.detail-row{display:flex;gap:8px;margin-bottom:8px;font-size:13px}
+.detail-row strong{color:var(--ink-2);min-width:130px;flex-shrink:0}
 .detail-row span{color:var(--ink-3)}
-.risk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+
+/* Risk grid */
+.risk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:8px}
 .risk-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px}
 .risk-card-label{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
-.risk-card-val{font-size:13px;font-weight:600;color:var(--ink)}
+.risk-bar-wrap{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.risk-bar{height:5px;border-radius:3px}
+.risk-card-val{font-size:12px;font-weight:600}
+
+/* Rec list */
+.rec-list{display:flex;flex-direction:column;gap:6px}
+.rec-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink-2);line-height:1.5;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.rec-icon{flex-shrink:0;font-size:15px;margin-top:1px}
+
+/* Monitoring box */
+.monitoring-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-size:13px;color:var(--ink-2);line-height:1.7}
+
+/* Meal plan table */
+.meal-table{width:100%;border-collapse:collapse;font-size:13px;background:var(--surface);border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)}
+.meal-table thead tr{background:var(--bg-2)}
+.meal-table th{padding:9px 12px;font-size:11px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;text-align:left;border-bottom:1px solid var(--border)}
+.meal-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--ink-2);line-height:1.5;vertical-align:top}
+.meal-table tr:last-child td{border-bottom:none}
+.meal-table tr:nth-child(even) td{background:var(--bg-2)}
+.meal-day{font-weight:600;color:var(--brand);white-space:nowrap}
+.meal-duration{font-size:12px;color:var(--ink-3);margin-top:8px;padding:8px 10px;background:var(--amber-bg);border:1px solid var(--amber-bd);border-radius:var(--radius-sm)}
+
+/* Score hero */
+.score-hero{display:flex;align-items:center;gap:16px;padding:16px;background:var(--bg);border-radius:var(--radius-lg);border:1px solid var(--border);margin-bottom:4px}
+.score-num{font-size:48px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.score-info h3{font-size:16px;font-weight:700;margin-bottom:4px}
+
 .btn-cancel{padding:9px 18px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:500;font-family:inherit;cursor:pointer}
 .btn-danger{padding:9px 18px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
 
@@ -126,6 +142,8 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
   .topbar-right .user-name{display:none}
   .page{padding:1.5rem 1rem 3rem}
   .record-card-head{flex-direction:column}
+  .modal{max-height:95vh}
+  .risk-grid{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -211,12 +229,19 @@ const T = {
     emptyCta:'Start an Assessment',
     detailTitle:'Assessment Details', close:'Close', deleteRecord:'Delete This Record',
     deleteConfirm:'Delete this record permanently? This cannot be undone.',
-    deleteFailed:'Failed to delete: ', needsAttention:'Needs Attention',
-    excellent:'Excellent', good:'Good', fair:'Fair', poor:'Poor',
-    age:'Age', gender:'Gender', phone:'Phone', complaint:'Complaint', notes:'Notes',
-    keyConcerns:'Key Concerns', monitoring:'Monitoring Plan',
+    deleteFailed:'Failed to delete: ',
+    excellent:'Excellent', good:'Good', fair:'Fair', needsAttention:'Needs Attention', poor:'Poor',
+    sPatient:'Patient Information', sAssessment:'Health Assessment', sRisk:'Risk Profile',
+    sNutrition:'Nutrition Recommendations', sLifestyle:'Lifestyle Recommendations',
+    sSupplements:'Nutritional Support', sMeal:'7-Day Meal Plan', sMonitoring:'Monitoring Plan',
+    age:'Age', gender:'Gender', phone:'Phone', complaint:'Chief Complaint', notes:'Clinical Notes',
+    keyConcerns:'Key Health Concerns', monitoring:'Monitoring Plan',
     riskCV:'Cardiovascular', riskMet:'Metabolic', riskLiver:'Liver', riskKidney:'Kidney', riskInflam:'Inflammation',
-    notProvided:'Not provided',
+    notProvided:'Not provided', vhsScore:'VHS Score',
+    breakfast:'Breakfast', lunch:'Lunch', dinner:'Dinner',
+    day:'Day', repeatWeeks:'Repeat this plan for {n} weeks',
+    mealDuration:'Recommended duration',
+    days:['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
   },
   'zh-CN': {
     title:'我的健康记录', sub:'您提交的所有健康评估记录',
@@ -227,12 +252,19 @@ const T = {
     emptyCta:'开始评估',
     detailTitle:'评估详情', close:'关闭', deleteRecord:'删除此记录',
     deleteConfirm:'确定要永久删除此记录吗？此操作无法撤销。',
-    deleteFailed:'删除失败：', needsAttention:'需要关注',
-    excellent:'优秀', good:'良好', fair:'一般', poor:'较差',
+    deleteFailed:'删除失败：',
+    excellent:'优秀', good:'良好', fair:'一般', needsAttention:'需要关注', poor:'较差',
+    sPatient:'患者信息', sAssessment:'健康评估', sRisk:'风险评估',
+    sNutrition:'营养建议', sLifestyle:'生活方式建议',
+    sSupplements:'营养补充建议', sMeal:'7天饮食建议计划', sMonitoring:'监测计划',
     age:'年龄', gender:'性别', phone:'电话', complaint:'主诉', notes:'备注',
     keyConcerns:'主要健康问题', monitoring:'监测计划',
     riskCV:'心血管', riskMet:'代谢', riskLiver:'肝脏', riskKidney:'肾脏', riskInflam:'炎症',
-    notProvided:'未提供',
+    notProvided:'未提供', vhsScore:'VHS评分',
+    breakfast:'早餐', lunch:'午餐', dinner:'晚餐',
+    day:'日', repeatWeeks:'建议重复该计划 {n} 周',
+    mealDuration:'建议周期',
+    days:['周一','周二','周三','周四','周五','周六','周日'],
   },
   'zh-TW': {
     title:'我的健康記錄', sub:'您提交的所有健康評估記錄',
@@ -243,12 +275,19 @@ const T = {
     emptyCta:'開始評估',
     detailTitle:'評估詳情', close:'關閉', deleteRecord:'刪除此記錄',
     deleteConfirm:'確定要永久刪除此記錄嗎？此操作無法復原。',
-    deleteFailed:'刪除失敗：', needsAttention:'需要關注',
-    excellent:'優秀', good:'良好', fair:'一般', poor:'較差',
+    deleteFailed:'刪除失敗：',
+    excellent:'優秀', good:'良好', fair:'一般', needsAttention:'需要關注', poor:'較差',
+    sPatient:'患者資訊', sAssessment:'健康評估', sRisk:'風險評估',
+    sNutrition:'營養建議', sLifestyle:'生活方式建議',
+    sSupplements:'營養補充建議', sMeal:'7天飲食建議計劃', sMonitoring:'監測計劃',
     age:'年齡', gender:'性別', phone:'電話', complaint:'主訴', notes:'備註',
     keyConcerns:'主要健康問題', monitoring:'監測計劃',
     riskCV:'心血管', riskMet:'代謝', riskLiver:'肝臟', riskKidney:'腎臟', riskInflam:'發炎',
-    notProvided:'未提供',
+    notProvided:'未提供', vhsScore:'VHS評分',
+    breakfast:'早餐', lunch:'午餐', dinner:'晚餐',
+    day:'日', repeatWeeks:'建議重複該計劃 {n} 週',
+    mealDuration:'建議週期',
+    days:['週一','週二','週三','週四','週五','週六','週日'],
   },
 };
 let LANG = 'en';
@@ -268,7 +307,6 @@ function applyI18n() {
   document.getElementById('detail-close-btn').textContent = L.close;
   document.getElementById('detail-del-btn').textContent = L.deleteRecord;
   document.documentElement.lang = LANG === 'zh-CN' ? 'zh-Hans' : LANG === 'zh-TW' ? 'zh-Hant' : 'en';
-  // highlight active lang button
   ['en','zh-CN','zh-TW'].forEach(l => {
     const btn = document.getElementById('ls-' + l);
     if (btn) btn.classList.toggle('active', l === LANG);
@@ -276,27 +314,19 @@ function applyI18n() {
 }
 
 function switchLang(lang) {
-  LANG = lang;
-  L = T[LANG] || T.en;
+  LANG = lang; L = T[LANG] || T.en;
   localStorage.setItem('vhs_lang', lang);
-  applyI18n();
-  renderStats();
-  renderList();
+  applyI18n(); renderStats(); renderList();
 }
 
 async function detectLang() {
   const saved = localStorage.getItem('vhs_lang');
-  if (saved && T[saved]) {
-    LANG = saved;
-  } else {
-    try {
-      const res = await fetch('/api/lang');
-      const data = await res.json();
-      LANG = data.lang || 'en';
-    } catch(e) { LANG = 'en'; }
+  if (saved && T[saved]) { LANG = saved; }
+  else {
+    try { const res = await fetch('/api/lang'); const data = await res.json(); LANG = data.lang || 'en'; }
+    catch(e) { LANG = 'en'; }
   }
-  L = T[LANG] || T.en;
-  applyI18n();
+  L = T[LANG] || T.en; applyI18n();
 }
 
 /* ── Data ─────────────────────────────────────────────────────── */
@@ -324,6 +354,16 @@ function scoreColor(s) {
   if (s >= 60) return '#b45309';
   return '#dc2626';
 }
+function riskColor(s) {
+  return ['','#059669','#65a30d','#b45309','#dc2626','#7f1d1d'][s] || 'var(--ink-3)';
+}
+function riskLabel(s) {
+  const en = ['','Very Low','Low','Moderate','High','Very High'];
+  const cn = ['','极低','低','中等','高','极高'];
+  const tw = ['','極低','低','中等','高','極高'];
+  const arr = LANG==='zh-CN' ? cn : LANG==='zh-TW' ? tw : en;
+  return arr[s] || '—';
+}
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 async function loadRecords() {
@@ -332,8 +372,7 @@ async function loadRecords() {
     if (res.status === 401) { window.location.href = '/login'; return; }
     if (!res.ok) throw new Error('HTTP ' + res.status);
     myRecords = await res.json();
-    renderStats();
-    renderList();
+    renderStats(); renderList();
   } catch(e) {
     document.getElementById('records-list').innerHTML =
       '<div class="empty-state"><p style="color:var(--brand)">' + esc(L.loadError) + '</p></div>';
@@ -343,7 +382,7 @@ async function loadRecords() {
 function renderStats() {
   const total = myRecords.length;
   const scores = myRecords.filter(r => r.vhs_score > 0).map(r => r.vhs_score);
-  const latest = scores.length ? scores[0] : 0; // sorted desc by id already
+  const latest = scores.length ? scores[0] : 0;
   const avg = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : 0;
   document.getElementById('st-total').textContent = total;
   document.getElementById('st-latest').textContent = latest || '—';
@@ -355,7 +394,7 @@ function renderList() {
   if (myRecords.length === 0) {
     list.innerHTML = `
       <div class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <h3>${esc(L.emptyTitle)}</h3>
         <p>${esc(L.emptyBody)}</p>
         <a href="/" class="empty-cta">${esc(L.emptyCta)}</a>
@@ -384,16 +423,6 @@ function renderList() {
   });
 }
 
-function riskRow(label, score) {
-  if (!score) return '';
-  const names = ['','Very Low','Low','Moderate','High','Very High'];
-  const idx = LANG==='zh-CN' ? ['','极低','低','中等','高','极高']
-            : LANG==='zh-TW' ? ['','極低','低','中等','高','極高']
-            : names;
-  const color = ['','#059669','#65a30d','#b45309','#dc2626','#7f1d1d'][score]||'var(--ink-3)';
-  return `<div class="risk-card"><div class="risk-card-label">${label}</div><div class="risk-card-val" style="color:${color}">${idx[score]} (${score}/5)</div></div>`;
-}
-
 function openDetail(id) {
   const r = myRecords.find(x => x.id === id);
   if (!r) return;
@@ -401,35 +430,128 @@ function openDetail(id) {
   document.getElementById('detail-sub').textContent =
     new Date(r.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
-  const risks = [
-    riskRow(L.riskCV, r.risk_cardiovascular),
-    riskRow(L.riskMet, r.risk_metabolic),
-    riskRow(L.riskLiver, r.risk_liver),
-    riskRow(L.riskKidney, r.risk_kidney),
-    riskRow(L.riskInflam, r.risk_inflammation),
-  ].filter(Boolean).join('');
-
-  document.getElementById('detail-body').innerHTML = `
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-      <div style="font-size:36px;font-weight:700;color:${scoreColor(r.vhs_score)}">${r.vhs_score||'—'}</div>
-      <div>
-        <div style="font-weight:700;font-size:16px">${esc(r.name||'')}</div>
+  // ── Score hero ──
+  let html = `
+    <div class="score-hero">
+      <div class="score-num" style="color:${scoreColor(r.vhs_score)}">${r.vhs_score||'—'}</div>
+      <div class="score-info">
+        <h3>${esc(r.name||'')}</h3>
         <span class="vhs-badge ${vhsClass(r.vhs_score)}">${vhsLabel(r.vhs_score)}</span>
       </div>
-    </div>
-    <div class="detail-row"><strong>${L.age}</strong><span>${esc(r.age)||L.notProvided}</span></div>
-    <div class="detail-row"><strong>${L.gender}</strong><span>${esc(r.gender)||L.notProvided}</span></div>
-    <div class="detail-row"><strong>${L.phone}</strong><span>${esc(r.phone)||L.notProvided}</span></div>
-    ${r.complaint ? `<div class="detail-row"><strong>${L.complaint}</strong><span>${esc(r.complaint)}</span></div>` : ''}
-    ${r.notes ? `<div class="detail-row"><strong>${L.notes}</strong><span>${esc(r.notes)}</span></div>` : ''}
-    ${r.summary ? `<p style="margin-top:14px;font-size:14px;line-height:1.7;color:var(--ink-2)">${esc(r.summary)}</p>` : ''}
-    ${r.key_health_concerns ? `<div class="detail-row" style="margin-top:14px"><strong>${L.keyConcerns}</strong><span>${esc(r.key_health_concerns)}</span></div>` : ''}
-    ${risks ? `<div class="risk-grid">${risks}</div>` : ''}
-    ${r.monitoring_plan ? `<div style="margin-top:16px;padding:12px 14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);font-size:13px;color:var(--ink-2)"><strong>${L.monitoring}:</strong> ${esc(r.monitoring_plan)}</div>` : ''}
-  `;
+    </div>`;
+
+  // ── Patient info ──
+  html += `<div class="section-title">${L.sPatient}</div>`;
+  if (r.age) html += `<div class="detail-row"><strong>${L.age}</strong><span>${esc(r.age)}</span></div>`;
+  if (r.gender) html += `<div class="detail-row"><strong>${L.gender}</strong><span>${esc(r.gender)}</span></div>`;
+  if (r.phone) html += `<div class="detail-row"><strong>${L.phone}</strong><span>${esc(r.phone)}</span></div>`;
+  if (r.complaint) html += `<div class="detail-row"><strong>${L.complaint}</strong><span>${esc(r.complaint)}</span></div>`;
+  if (r.notes) html += `<div class="detail-row"><strong>${L.notes}</strong><span>${esc(r.notes)}</span></div>`;
+
+  // ── Health assessment ──
+  if (r.summary || r.key_health_concerns) {
+    html += `<div class="section-title">${L.sAssessment}</div>`;
+    if (r.summary) html += `<p style="font-size:14px;line-height:1.75;color:var(--ink-2);margin-bottom:10px">${esc(r.summary)}</p>`;
+    if (r.key_health_concerns) html += `<div class="detail-row"><strong>${L.keyConcerns}</strong><span>${esc(r.key_health_concerns)}</span></div>`;
+  }
+
+  // ── Risk profile ──
+  const riskKeys = ['risk_cardiovascular','risk_metabolic','risk_liver','risk_kidney','risk_inflammation'];
+  const riskLabels = [L.riskCV, L.riskMet, L.riskLiver, L.riskKidney, L.riskInflam];
+  const hasRisk = riskKeys.some(k => r[k] > 0);
+  if (hasRisk) {
+    html += `<div class="section-title">${L.sRisk}</div><div class="risk-grid">`;
+    riskKeys.forEach((k, i) => {
+      if (!r[k]) return;
+      const col = riskColor(r[k]);
+      html += `
+        <div class="risk-card">
+          <div class="risk-card-label">${riskLabels[i]}</div>
+          <div class="risk-bar-wrap"><div class="risk-bar" style="width:${(r[k]/5)*100}%;background:${col}"></div></div>
+          <div class="risk-card-val" style="color:${col}">${riskLabel(r[k])} (${r[k]}/5)</div>
+        </div>`;
+    });
+    html += '</div>';
+  }
+
+  // ── Nutrition ──
+  if (r.nutrition) {
+    const items = r.nutrition.split(' | ').filter(Boolean);
+    if (items.length) {
+      html += `<div class="section-title">${L.sNutrition}</div><div class="rec-list">`;
+      items.forEach(item => { html += `<div class="rec-item"><span class="rec-icon">🥗</span><span>${esc(item)}</span></div>`; });
+      html += '</div>';
+    }
+  }
+
+  // ── Lifestyle ──
+  if (r.lifestyle) {
+    const items = r.lifestyle.split(' | ').filter(Boolean);
+    if (items.length) {
+      html += `<div class="section-title">${L.sLifestyle}</div><div class="rec-list">`;
+      items.forEach(item => { html += `<div class="rec-item"><span class="rec-icon">🏃</span><span>${esc(item)}</span></div>`; });
+      html += '</div>';
+    }
+  }
+
+  // ── Supplements ──
+  if (r.supplements) {
+    const items = r.supplements.split(' | ').filter(Boolean);
+    if (items.length) {
+      html += `<div class="section-title">${L.sSupplements}</div><div class="rec-list">`;
+      items.forEach(item => { html += `<div class="rec-item"><span class="rec-icon">💊</span><span>${esc(item)}</span></div>`; });
+      html += '</div>';
+    }
+  }
+
+  // ── Meal plan ──
+  if (r.meal_plan && r.meal_plan.week) {
+    html += `<div class="section-title">${L.sMeal}</div>`;
+    if (r.meal_plan.duration_note) {
+      html += `<div class="meal-duration">📅 ${esc(r.meal_plan.duration_note)}</div>`;
+    }
+    const dayKeys = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    html += `
+      <div style="overflow-x:auto">
+      <table class="meal-table">
+        <thead><tr>
+          <th>${L.day}</th>
+          <th>🌅 ${L.breakfast}</th>
+          <th>☀️ ${L.lunch}</th>
+          <th>🌙 ${L.dinner}</th>
+        </tr></thead>
+        <tbody>`;
+    dayKeys.forEach((day, i) => {
+      const d = r.meal_plan.week[day];
+      if (!d) return;
+      const isWeekend = i >= 5;
+      html += `<tr>
+        <td class="meal-day" style="${isWeekend?'color:var(--brand)':''}">${L.days[i]}</td>
+        <td>${esc(d.breakfast||'')}</td>
+        <td>${esc(d.lunch||'')}</td>
+        <td>${esc(d.dinner||'')}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div>';
+    if (r.meal_plan.duration_weeks) {
+      html += `<p style="font-size:12px;color:var(--ink-4);margin-top:8px;text-align:center">🔄 ${L.repeatWeeks.replace('{n}', r.meal_plan.duration_weeks)}</p>`;
+    }
+  }
+
+  // ── Monitoring plan ──
+  if (r.monitoring_plan) {
+    html += `<div class="section-title">${L.sMonitoring}</div>`;
+    html += `<div class="monitoring-box">${esc(r.monitoring_plan)}</div>`;
+  }
+
+  document.getElementById('detail-body').innerHTML = html;
   document.getElementById('detail-overlay').classList.add('open');
 }
-function closeDetail() { document.getElementById('detail-overlay').classList.remove('open'); _currentDetailId = null; }
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  _currentDetailId = null;
+}
 
 async function deleteCurrentRecord() {
   if (_currentDetailId === null) return;
@@ -444,12 +566,8 @@ async function deleteCurrentRecord() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Delete failed');
     myRecords = myRecords.filter(r => r.id !== _currentDetailId);
-    closeDetail();
-    renderStats();
-    renderList();
-  } catch(e) {
-    alert(L.deleteFailed + e.message);
-  }
+    closeDetail(); renderStats(); renderList();
+  } catch(e) { alert(L.deleteFailed + e.message); }
 }
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
@@ -464,9 +582,7 @@ async function loadUser() {
     document.getElementById('user-name').textContent = u.username || u.email;
     document.getElementById('user-avatar').textContent = (u.username || u.email || '?')[0].toUpperCase();
     document.getElementById('user-badge').style.display = 'flex';
-  } catch(e) {
-    window.location.href = '/login';
-  }
+  } catch(e) { window.location.href = '/login'; }
 }
 async function doLogout() {
   await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
