@@ -1320,6 +1320,7 @@ function addFiles(fileList) {
   if (errs.length) showErr(errs.join(' '));
   renderFileList();
   document.getElementById('file-in').value = '';
+  triggerOCR();
 }
 
 function removeFile(i) { uploadedFiles.splice(i,1); renderFileList(); }
@@ -3450,6 +3451,93 @@ async function vhbGetReply(){
   _vhbLoading=false;
   document.getElementById('vhb-send-btn').disabled=false;
   document.getElementById('vhb-input').focus();
+}
+</script>
+<!-- OCR Auto-Extract -->
+<script>
+var _ocrRunning=false;
+function showOCRIndicator(){
+  var existing=document.getElementById('ocr-indicator');
+  if(existing)existing.remove();
+  var div=document.createElement('div');
+  div.id='ocr-indicator';
+  div.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:var(--radius-sm);font-size:12px;color:#1e3a8a;margin-top:8px';
+  div.innerHTML='<div style="width:14px;height:14px;border:2px solid #bfdbfe;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div><span>Extracting patient info from report\u2026</span>';
+  var fileList=document.getElementById('file-list');
+  if(fileList&&fileList.parentNode)fileList.parentNode.insertBefore(div,fileList.nextSibling);
+}
+function hideOCRIndicator(message,success){
+  var div=document.getElementById('ocr-indicator');
+  if(!div)return;
+  if(message){
+    div.style.background=success?'var(--green-bg)':'var(--bg-2)';
+    div.style.borderColor=success?'var(--green-bd)':'var(--border)';
+    div.style.color=success?'#065f46':'var(--ink-3)';
+    div.innerHTML='<span>'+(success?'\u2713 ':'')+message+'</span>';
+    setTimeout(function(){var el=document.getElementById('ocr-indicator');if(el)el.remove();},3000);
+  }else{div.remove();}
+}
+async function triggerOCR(){
+  if(_ocrRunning||!uploadedFiles.length)return;
+  var ready=uploadedFiles.filter(function(f){return f.base64!==null;});
+  if(!ready.length){setTimeout(triggerOCR,800);return;}
+  var nameVal=document.getElementById('p-name').value.trim();
+  var phoneVal=document.getElementById('p-phone').value.trim();
+  var ageVal=document.getElementById('p-age').value.trim();
+  var genderVal=document.getElementById('p-gender').value;
+  if(nameVal||phoneVal||ageVal||genderVal)return;
+  _ocrRunning=true;
+  showOCRIndicator();
+  try{
+    var file=ready[0];
+    var contentParts=[];
+    if(file.category==='pdf'){
+      contentParts.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:file.base64},title:file.name});
+    }else if(file.category==='image'){
+      contentParts.push({type:'image',source:{type:'base64',media_type:file.mimeType,data:file.base64}});
+    }else{
+      try{
+        var raw=atob(file.base64);
+        var txt=new TextDecoder('utf-8').decode(Uint8Array.from(raw,function(c){return c.charCodeAt(0);}));
+        contentParts.push({type:'text',text:'--- FILE: '+file.name+' ---\n'+txt});
+      }catch(e){hideOCRIndicator('Could not read file',false);_ocrRunning=false;return;}
+    }
+    contentParts.push({type:'text',text:'Look at this health report and extract ONLY the patient basic information.\n\nReturn ONLY a JSON object:\n{"name":"patient full name or null","phone":"phone number or null","age":"age as number or null","gender":"male or female or other or null"}\n\nRules:\n- Extract the PATIENT info not the doctor\n- name: look for \u59d3\u540d, Name, Patient Name\n- phone: look for \u7535\u8bdd, \u624b\u673a, Phone, Mobile\n- age: look for \u5e74\u9f84, Age, \u5c81 - return only the number\n- gender: look for \u6027\u522b, Gender, \u7537/\u5973 - return only: male, female, or other\n- Return ONLY the JSON, no other text'});
+    var resp=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({messages:[{role:'user',content:contentParts}],ocr_only:true})});
+    if(!resp.ok)throw new Error('API error');
+    var reader=resp.body.getReader();
+    var decoder=new TextDecoder();
+    var fullText='';
+    var buf='';
+    while(true){
+      var result=await reader.read();
+      if(result.done)break;
+      buf+=decoder.decode(result.value,{stream:true});
+      var lines=buf.split('\n');buf=lines.pop();
+      for(var i=0;i<lines.length;i++){
+        var line=lines[i];
+        if(!line.startsWith('data:'))continue;
+        try{var ev=JSON.parse(line.slice(5).trim());if(ev.t)fullText+=ev.t;}catch(e){}
+      }
+    }
+    var extracted;
+    try{extracted=JSON.parse(fullText.replace(/```json|```/g,'').trim());}
+    catch(e){hideOCRIndicator('Could not parse patient info',false);_ocrRunning=false;return;}
+    var filled=[];
+    if(extracted.name&&!document.getElementById('p-name').value.trim()){document.getElementById('p-name').value=extracted.name;filled.push('name');}
+    if(extracted.phone&&!document.getElementById('p-phone').value.trim()){document.getElementById('p-phone').value=extracted.phone;filled.push('phone');}
+    if(extracted.age&&!document.getElementById('p-age').value.trim()){document.getElementById('p-age').value=String(extracted.age).replace(/[^0-9]/g,'');filled.push('age');}
+    if(extracted.gender&&!document.getElementById('p-gender').value){
+      var g=extracted.gender.toLowerCase();
+      if(g==='male'||g==='\u7537')document.getElementById('p-gender').value='male';
+      else if(g==='female'||g==='\u5973')document.getElementById('p-gender').value='female';
+      else if(g==='other')document.getElementById('p-gender').value='other';
+      if(document.getElementById('p-gender').value)filled.push('gender');
+    }
+    if(filled.length>0){hideOCRIndicator('Auto-filled: '+filled.join(', '),true);}
+    else{hideOCRIndicator('No patient info found',false);}
+  }catch(e){hideOCRIndicator('Auto-extract failed',false);}
+  _ocrRunning=false;
 }
 </script>
 </body>
