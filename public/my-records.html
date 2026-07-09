@@ -74,6 +74,34 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .record-summary{font-size:13px;color:var(--ink-2);line-height:1.6;margin-top:6px}
 .record-date{font-size:11px;color:var(--ink-4);margin-top:8px}
 
+.person-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);cursor:pointer;transition:border-color .15s,box-shadow .15s;overflow:hidden;margin-bottom:0}
+.person-card:hover{border-color:var(--brand);box-shadow:0 4px 14px rgba(185,28,28,.08)}
+.person-card-head{display:flex;align-items:center;gap:14px;padding:1.1rem 1.4rem}
+.person-avatar{width:44px;height:44px;border-radius:50%;background:var(--brand);color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.person-info{flex:1;min-width:0}
+.person-name-big{font-size:15px;font-weight:700;color:var(--ink)}
+.person-meta-sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.person-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.person-score-big{font-size:24px;font-weight:700;line-height:1}
+.person-reports-count{font-size:11px;color:var(--ink-4)}
+.person-card-footer{padding:8px 1.4rem;background:var(--bg-2);border-top:1px solid var(--border);font-size:12px;color:var(--ink-3)}
+.person-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:24px}
+.person-overlay.open{display:flex}
+.person-modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:700px;max-height:90vh;display:flex;flex-direction:column;animation:modalIn .2s ease-out}
+.person-modal-head{display:flex;align-items:center;gap:12px;padding:18px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.person-modal-avatar{width:40px;height:40px;border-radius:50%;background:var(--brand);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.person-modal-title{font-size:16px;font-weight:700;color:var(--ink)}
+.person-modal-sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.person-modal-close{margin-left:auto;width:32px;height:32px;border-radius:6px;background:none;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:16px;transition:all .15s}
+.person-modal-close:hover{border-color:var(--brand);color:var(--brand)}
+.person-modal-body{overflow-y:auto;flex:1;padding:16px 24px;display:flex;flex-direction:column;gap:10px}
+.report-item{border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;cursor:pointer;transition:border-color .15s,background .15s}
+.report-item:hover{border-color:var(--brand);background:var(--brand-bg)}
+.report-item-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+.report-item-date{font-size:12px;font-weight:600;color:var(--ink-2)}
+.report-item-summary{font-size:12px;color:var(--ink-3);line-height:1.5;margin-top:4px}
+
+
 .empty-state{text-align:center;padding:4rem 2rem;color:var(--ink-3)}
 .empty-state svg{margin-bottom:14px;opacity:.4}
 .empty-state h3{font-size:16px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
@@ -401,27 +429,69 @@ function renderList() {
       </div>`;
     return;
   }
-  list.innerHTML = myRecords.map(r => `
-    <div class="record-card" data-id="${r.id}">
-      <div class="record-card-head">
-        <div>
-          <div class="record-name">${esc(r.name||'—')}</div>
-          <div class="record-meta">${[r.age && r.age+'y', r.gender].filter(Boolean).map(esc).join(' · ')}</div>
+  // Group records by person name
+  const groups = {};
+  myRecords.forEach(r => {
+    const key = (r.name || '—').trim();
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  });
+  // Sort each group most recent first
+  Object.values(groups).forEach(recs => recs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)));
+
+  list.innerHTML = Object.entries(groups).map(([name, recs]) => {
+    const latest = recs[0];
+    const initials = name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || name[0].toUpperCase();
+    return `
+    <div class="person-card" onclick="openPersonReports(${JSON.stringify(name).replace(/"/g,'&quot;')})">
+      <div class="person-card-head">
+        <div class="person-avatar">${esc(initials)}</div>
+        <div class="person-info">
+          <div class="person-name-big">${esc(name)}</div>
+          <div class="person-meta-sub">${[latest.age && latest.age+'y', latest.gender].filter(Boolean).map(esc).join(' · ')}</div>
         </div>
-        <div class="record-score-row">
-          <div class="record-score" style="color:${scoreColor(r.vhs_score)}">${r.vhs_score||'—'}</div>
+        <div class="person-right">
+          <div class="person-score-big" style="color:${scoreColor(latest.vhs_score)}">${latest.vhs_score||'—'}</div>
+          <span class="vhs-badge ${vhsClass(latest.vhs_score)}">${vhsLabel(latest.vhs_score)}</span>
+          <div class="person-reports-count">${recs.length} report${recs.length!==1?'s':''}</div>
+        </div>
+      </div>
+      <div class="person-card-footer">Latest: ${new Date(latest.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}${recs.length > 1 ? ' &nbsp;·&nbsp; '+recs.length+' reports total' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function openPersonReports(name) {
+  const recs = myRecords
+    .filter(r => (r.name||'—').trim() === name)
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  if (!recs.length) return;
+  const initials = name.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2) || name[0].toUpperCase();
+  document.getElementById('person-modal-avatar').textContent = initials;
+  document.getElementById('person-modal-title').textContent = name;
+  document.getElementById('person-modal-sub').textContent = recs.length + ' report' + (recs.length!==1?'s':'') + ' — most recent first';
+  const body = document.getElementById('person-modal-body');
+  body.innerHTML = recs.map((r,i) => `
+    <div class="report-item" onclick="closePersonModal();openDetail(${r.id})">
+      <div class="report-item-head">
+        <div class="report-item-date">${i===0?'<strong style=\'color:var(--brand)\'>Latest</strong> &nbsp;·&nbsp; ':''}${new Date(r.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span style="font-size:18px;font-weight:700;color:${scoreColor(r.vhs_score)}">${r.vhs_score||'—'}</span>
           <span class="vhs-badge ${vhsClass(r.vhs_score)}">${vhsLabel(r.vhs_score)}</span>
         </div>
       </div>
-      ${r.summary ? `<div class="record-summary">${esc(r.summary)}</div>` : ''}
-      <div class="record-date">${new Date(r.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+      ${r.summary ? `<div class="report-item-summary">${esc(r.summary)}</div>` : ''}
     </div>
   `).join('');
-
-  list.querySelectorAll('.record-card').forEach(card => {
-    card.addEventListener('click', () => openDetail(Number(card.dataset.id)));
-  });
+  document.getElementById('person-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
+
+function closePersonModal() {
+  document.getElementById('person-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 
 function openDetail(id) {
   const r = myRecords.find(x => x.id === id);
@@ -953,5 +1023,20 @@ async function vhbGetReply(){
   document.getElementById('vhb-input').focus();
 }
 </script>
+
+<!-- Person Reports Modal -->
+<div class="person-overlay" id="person-overlay" onclick="if(event.target===this)closePersonModal()">
+  <div class="person-modal">
+    <div class="person-modal-head">
+      <div class="person-modal-avatar" id="person-modal-avatar"></div>
+      <div>
+        <div class="person-modal-title" id="person-modal-title"></div>
+        <div class="person-modal-sub" id="person-modal-sub"></div>
+      </div>
+      <button class="person-modal-close" onclick="closePersonModal()">&#x2715;</button>
+    </div>
+    <div class="person-modal-body" id="person-modal-body"></div>
+  </div>
+</div>
 </body>
 </html>
