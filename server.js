@@ -911,6 +911,8 @@ app.post("/api/anthropic-proxy", async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) return res.status(500).json({ error:"Configuration error." });
 
+  const isStreaming = req.body && req.body.stream === true;
+
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -921,8 +923,25 @@ app.post("/api/anthropic-proxy", async (req, res) => {
       },
       body: JSON.stringify(req.body)
     });
-    const data = await r.json();
-    res.status(r.status).json(data);
+
+    if (isStreaming) {
+      // Stream the SSE response directly back to China server
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.setHeader("Connection", "keep-alive");
+      res.status(r.status);
+      const reader = r.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(decoder.decode(value, { stream: true }));
+      }
+      res.end();
+    } else {
+      const data = await r.json();
+      res.status(r.status).json(data);
+    }
   } catch(e) {
     res.status(500).json({ error: "Proxy error: " + e.message });
   }
