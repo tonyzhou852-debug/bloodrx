@@ -899,6 +899,36 @@ app.post("/api/translate", requireAuth, globalLimit, translateLimit, async (req,
 });
 
 // ══════════════════════════════════════════════════════════════
+// ANTHROPIC PROXY — for China server which cannot reach Anthropic directly
+// ══════════════════════════════════════════════════════════════
+app.post("/api/anthropic-proxy", async (req, res) => {
+  // Only allow requests from China server
+  const allowedIPs = ["8.153.73.140", "127.0.0.1", "::1"];
+  const clientIP = req.headers["x-real-ip"] || req.headers["x-forwarded-for"] || req.ip;
+  const ip = clientIP.split(",")[0].trim();
+  if (!allowedIPs.includes(ip)) return res.status(403).json({ error:"Forbidden." });
+
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return res.status(500).json({ error:"Configuration error." });
+
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify(req.body)
+    });
+    const data = await r.json();
+    res.status(r.status).json(data);
+  } catch(e) {
+    res.status(500).json({ error: "Proxy error: " + e.message });
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
 // CATCH-ALL
 // ══════════════════════════════════════════════════════════════
 app.get("*", (req, res) => {
