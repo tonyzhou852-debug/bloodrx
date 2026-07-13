@@ -23,16 +23,16 @@ async function sendResetEmail(toEmail, resetUrl) {
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
     await mailer.sendMail({
-      from: `"VANDL VHS" <${process.env.SMTP_USER}>`,
+      from: `"Vitava" <${process.env.SMTP_USER}>`,
       to: toEmail,
-      subject: "Reset your VANDL VHS password",
+      subject: "Reset your Vitava password",
       html: emailHtml(resetUrl),
     });
     return;
   }
 
   // Use Resend API (HTTPS — works on Render free tier)
-  const fromAddress = process.env.RESEND_FROM || "VANDL VHS <noreply@vandlvhs.com>";
+  const fromAddress = process.env.RESEND_FROM || "Vitava <noreply@vitava.health>";
   const resp = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -42,7 +42,7 @@ async function sendResetEmail(toEmail, resetUrl) {
     body: JSON.stringify({
       from: fromAddress,
       to: [toEmail],
-      subject: "Reset your VANDL VHS password",
+      subject: "Reset your Vitava password",
       html: emailHtml(resetUrl),
     }),
   });
@@ -56,7 +56,7 @@ function emailHtml(resetUrl) {
   return `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
       <h2 style="color:#b91c1c">Reset your password</h2>
-      <p>Click the button below to reset your VANDL Health Score password. This link expires in 1 hour.</p>
+      <p>Click the button below to reset your Vitava password. This link expires in 1 hour.</p>
       <a href="${resetUrl}" style="display:inline-block;margin:20px 0;padding:12px 24px;background:#b91c1c;color:#fff;border-radius:8px;text-decoration:none;font-weight:600">Reset Password</a>
       <p style="color:#6b7280;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
     </div>`;
@@ -133,13 +133,27 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── CORS — only allow same origin ─────────────────────────────
+// ── CORS — explicit origin allowlist ──────────────────────────
 const APP_URL = process.env.APP_URL || "";
+const ALLOWED_ORIGINS = new Set([
+  APP_URL,
+  "https://vitava.health",
+  "https://www.vitava.health",
+  "https://vitava.cn",
+  "https://www.vitava.cn",
+  "https://bloodrx.onrender.com",
+  // legacy domains — remove after full cutover
+  "https://vandlvhs.com",
+  "https://www.vandlvhs.com",
+  "https://vandlvhs.cn",
+  "https://www.vandlvhs.cn",
+  "https://cn.vandlvhs.com",
+].filter(Boolean));
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin) return cb(null, true);
-    if (APP_URL && origin === APP_URL) return cb(null, true);
-    if (!APP_URL) return cb(null, true);
+    if (ALLOWED_ORIGINS.has(origin)) return cb(null, true);
+    if (!APP_URL) return cb(null, true); // local dev fallback
     cb(new Error("CORS policy violation"), false);
   },
   credentials: true,
@@ -185,7 +199,7 @@ function adminBruteForce(req, res, next) {
   const r = _adminFails.get(ip) || { count:0, locked:0 };
   if (Date.now() < r.locked) {
     const mins = Math.ceil((r.locked - Date.now()) / 60000);
-    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
+    res.setHeader("WWW-Authenticate", 'Basic realm="Vitava Admin"');
     return res.status(429).send("Too many failed attempts. Try again in " + mins + " minutes.");
   }
   req._adminIp = ip; next();
@@ -202,14 +216,14 @@ function adminOk(ip) { _adminFails.delete(ip); }
 function adminAuth(req, res, next) {
   const auth = req.headers.authorization || "";
   if (!auth.startsWith("Basic ")) {
-    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
+    res.setHeader("WWW-Authenticate", 'Basic realm="Vitava Admin"');
     return res.status(401).send("Authentication required.");
   }
   let creds;
   try { creds = Buffer.from(auth.slice(6), "base64").toString("utf8"); }
-  catch { res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"'); return res.status(401).send("Invalid credentials."); }
+  catch { res.setHeader("WWW-Authenticate", 'Basic realm="Vitava Admin"'); return res.status(401).send("Invalid credentials."); }
   const idx = creds.indexOf(":");
-  if (idx === -1) { adminFail(req._adminIp||req.ip); res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"'); return res.status(401).send("Invalid credentials."); }
+  if (idx === -1) { adminFail(req._adminIp||req.ip); res.setHeader("WWW-Authenticate", 'Basic realm="Vitava Admin"'); return res.status(401).send("Invalid credentials."); }
   const user = creds.slice(0,idx);
   const pass = creds.slice(idx+1);
   const u1 = Buffer.from(user.padEnd(64)); const u2 = Buffer.from("admin".padEnd(64));
@@ -221,7 +235,7 @@ function adminAuth(req, res, next) {
   }
   if (!uOk || !pOk || user !== "admin") {
     adminFail(req._adminIp||req.ip);
-    res.setHeader("WWW-Authenticate", 'Basic realm="VHS Admin"');
+    res.setHeader("WWW-Authenticate", 'Basic realm="Vitava Admin"');
     return res.status(401).send("Invalid credentials.");
   }
   adminOk(req._adminIp||req.ip); next();
@@ -827,7 +841,7 @@ app.post("/api/my/records/delete", requireAuth, globalLimit, async (req, res) =>
 // ══════════════════════════════════════════════════════════════
 // BOT & TRANSLATE
 // ══════════════════════════════════════════════════════════════
-const BOT_SYSTEM = `You are the VHS Help Assistant for VANDL Health Score platform. Your ONLY job is to help users understand how to submit their health report and interpret their VHS wellness results. STRICTLY LIMITED to: form filling, file upload, VHS score meaning, risk categories, recommendation sections, starting a new assessment. REFUSE everything else. Keep responses under 3 sentences. Be friendly and clear.`;
+const BOT_SYSTEM = `You are the Vitava Assistant for Vitava Health Score platform. Your ONLY job is to help users understand how to submit their health report and interpret their Vitava wellness results. STRICTLY LIMITED to: form filling, file upload, Vitava score meaning, risk categories, recommendation sections, starting a new assessment. REFUSE everything else. Keep responses under 3 sentences. Be friendly and clear.`;
 
 app.post("/api/bot", requireAuth, globalLimit, botLimit, async (req, res) => {
   const key = process.env.ANTHROPIC_API_KEY;
@@ -965,4 +979,4 @@ app.use((err, req, res, next) => {
 });
 
 // ── Start ──────────────────────────────────────────────────────
-app.listen(PORT, () => console.log("VHS running on port " + PORT));
+app.listen(PORT, () => console.log("Vitava running on port " + PORT));
