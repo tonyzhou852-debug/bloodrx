@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VANDL VHS Admin</title>
+<title>Vitava Vitava Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -94,7 +94,7 @@ tbody tr:hover td{background:#fafafa}
 .trend-flat{color:var(--ink-4)}
 .sparkline{margin-top:10px}
 
-/* VHS badge */
+/* Vitava badge */
 .vhs-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
 .vhs-excellent{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
 .vhs-good{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd)}
@@ -186,7 +186,7 @@ tbody tr:hover td{background:#fafafa}
 }
 .filter-banner-clear:hover{background:var(--brand);color:#fff}
 
-/* VHS trend chart modal */
+/* Vitava trend chart modal */
 .chart-wrap{padding:8px 0}
 .chart-svg{width:100%;display:block}
 .chart-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px;color:var(--ink-3)}
@@ -210,7 +210,7 @@ tbody tr:hover td{background:#fef7f7}
   <div class="topbar-inner">
     <a href="/" class="logo">
       <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg></div>
-      <span class="logo-text">VANDL<em>VHS</em></span>
+      <span class="logo-text">Vita<em>va</em></span>
     </a>
     <span class="admin-badge">Admin</span>
     <div class="topbar-right">
@@ -228,7 +228,7 @@ tbody tr:hover td{background:#fef7f7}
   <div class="page-header">
     <div>
       <h1 id="page-title">Health Assessment Records</h1>
-      <p id="page-sub">All VHS wellness assessments submitted through VANDL VHS</p>
+      <p id="page-sub">All Vitava wellness assessments submitted through Vitava</p>
     </div>
     <div class="view-toggle">
       <button class="view-btn active" id="btn-grouped" onclick="setView('grouped')"><span id="tab-patients-label">&#128100; Patients</span></button>
@@ -247,8 +247,8 @@ tbody tr:hover td{background:#fef7f7}
     <div class="stat-card green" onclick="statClick('today')" title="View today's records">
       <div class="stat-label" id="lbl-today">Today</div><div class="stat-value" id="st-today">—</div>
     </div>
-    <div class="stat-card amber" onclick="statClick('avg')" title="View VHS score trend">
-      <div class="stat-label" id="lbl-avg">Avg VHS Score</div><div class="stat-value" id="st-avg">—</div>
+    <div class="stat-card amber" onclick="statClick('avg')" title="View Vitava score trend">
+      <div class="stat-label" id="lbl-avg">Avg Vitava Score</div><div class="stat-value" id="st-avg">—</div>
     </div>
     <div class="stat-card red" onclick="statClick('attention')" title="View records needing attention">
       <div class="stat-label" id="lbl-attention">Needs Attention</div><div class="stat-value" id="st-attention">—</div>
@@ -302,7 +302,7 @@ tbody tr:hover td{background:#fef7f7}
                 <input type="checkbox" id="select-all-check" style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer" onchange="toggleAll(this.checked)">
               </th>
               <th>ID</th><th>Name</th><th>Submitted By</th><th>Phone</th><th>Age</th><th>Gender</th><th>Language</th>
-              <th>Complaint</th><th>Notes</th><th>VHS Score</th><th>Key Concerns</th>
+              <th>Complaint</th><th>Notes</th><th>Vitava Score</th><th>Key Concerns</th>
               <th>CV</th><th>Met</th><th>Liver</th><th>Kidney</th><th>Inflam</th>
               <th>Nutrition</th><th>Lifestyle</th><th>Supplements</th><th>Monitoring</th>
               <th>Summary</th><th>Date</th>
@@ -316,7 +316,7 @@ tbody tr:hover td{background:#fef7f7}
     </div>
   </div><!-- /view-all -->
 
-  <footer class="site-footer">VANDL Health Score (VHS) Admin &nbsp;·&nbsp; Authorized use only &nbsp;·&nbsp; All data confidential</footer>
+  <footer class="site-footer">Vitava Admin &nbsp;·&nbsp; Authorized use only &nbsp;·&nbsp; All data confidential</footer>
 </main>
 
 <!-- Patient Profile Modal -->
@@ -388,12 +388,12 @@ tbody tr:hover td{background:#fef7f7}
   </div>
 </div>
 
-<!-- VHS Trend Chart Modal -->
+<!-- Vitava Trend Chart Modal -->
 <div class="modal-overlay" id="chart-overlay" onclick="if(event.target===this)closeChart()">
   <div class="modal">
     <div class="modal-head">
       <div>
-        <div class="modal-title">VHS Score Trend</div>
+        <div class="modal-title">Vitava Score Trend</div>
         <div class="modal-sub" id="chart-sub">Average health score over time</div>
       </div>
       <button class="modal-close" onclick="closeChart()">&#x2715;</button>
@@ -565,7 +565,7 @@ function renderGrouped() {
       <div class="patient-card-stats">
         <div class="pstat">
           <div class="pstat-val">${latestScore||'—'}</div>
-          <div class="pstat-lbl">Latest VHS</div>
+          <div class="pstat-lbl">Latest Vitava</div>
         </div>
         <div class="pstat">
           <div class="pstat-val">${trendArrow(visits)}</div>
@@ -951,7 +951,7 @@ function openDownloadPanel() {
 function closeDL() { document.getElementById('dl-overlay').classList.remove('open'); }
 
 function doDownload(mode) {
-  const headers = ['ID','Name','SubmittedBy','Phone','Age','Gender','Language','Complaint','Notes','VHS Score','Key Concerns','CV','Met','Liver','Kidney','Inflam','Nutrition','Lifestyle','Supplements','Monitoring','Summary','Date'];
+  const headers = ['ID','Name','SubmittedBy','Phone','Age','Gender','Language','Complaint','Notes','Vitava Score','Key Concerns','CV','Met','Liver','Kidney','Inflam','Nutrition','Lifestyle','Supplements','Monitoring','Summary','Date'];
   let rows;
   if (mode==='all') rows = document.querySelectorAll('#records-body tr:not([style*="display: none"])');
   else rows = Array.from(document.querySelectorAll('.row-check:checked')).map(cb=>cb.closest('tr'));
@@ -1030,7 +1030,7 @@ function statClick(type) {
           const rec = allPatients.find(p => String(p.id) === id);
           return rec ? (rec.vhs_score > 0 && rec.vhs_score < 60) : false;
         },
-        'Showing records that need attention (VHS < 60)'
+        'Showing records that need attention (Vitava < 60)'
       );
     }
   }, 50);
@@ -1056,7 +1056,7 @@ function clearFilter() {
   document.getElementById('record-count').textContent = total + ' record' + (total!==1?'s':'');
 }
 
-// ── VHS Trend Chart (scales to 100k+ records) ─────────────────
+// ── Vitava Trend Chart (scales to 100k+ records) ─────────────────
 function openChart() {
   const content = document.getElementById('chart-content');
   const sub = document.getElementById('chart-sub');
@@ -1252,46 +1252,46 @@ document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();cl
 // ── Admin i18n (IP-based) ───────────────────────────────────────
 const ADMIN_I18N = {
   en: {
-    pageTitle:'Health Assessment Records', pageSub:'All VHS wellness assessments submitted through VANDL VHS',
+    pageTitle:'Health Assessment Records', pageSub:'All Vitava wellness assessments submitted through Vitava',
     tabPatients:'👤 Patients', tabAllRecords:'📋 All Records',
-    lblUnique:'Unique Patients', lblTotal:'Total Visits', lblToday:'Today', lblAvg:'Avg VHS Score', lblAttention:'Needs Attention',
+    lblUnique:'Unique Patients', lblTotal:'Total Visits', lblToday:'Today', lblAvg:'Avg Vitava Score', lblAttention:'Needs Attention',
     hdrPatientProfiles:'Patient Profiles', hdrAllAssessments:'All Assessments',
     searchPatients:'Search patients…', filterRecords:'Filter records…',
     btnDownloadCsv:'Download CSV', btnDeleteSelected:'Delete Selected',
     loading:'Loading…',
     // modal / dynamic
-    latestVhs:'Latest VHS', avgVhs:'Avg VHS', totalVisits:'Total Visits', progress:'Progress',
-    vhsOverTime:'VHS Score Over Time',
-    improved:'VHS improved from', declined:'VHS declined from', stable:'VHS stable at', over:'over', visits2:'visits',
+    latestVhs:'Latest Vitava', avgVhs:'Avg Vitava', totalVisits:'Total Visits', progress:'Progress',
+    vhsOverTime:'Vitava Score Over Time',
+    improved:'Vitava improved from', declined:'Vitava declined from', stable:'Vitava stable at', over:'over', visits2:'visits',
     visit:'Visit', keyConcerns:'Key concerns', deleteVisit:'Delete Visit',
     excellent:'Excellent', good:'Good', fair:'Fair', needsAttention:'Needs Attention', poor:'Poor',
     deleteAll:'Delete All Records for This Patient', close:'Close',
   },
   'zh-CN': {
-    pageTitle:'健康评估记录', pageSub:'通过VANDL VHS提交的所有VHS健康评估',
+    pageTitle:'健康评估记录', pageSub:'通过Vitava提交的所有VHS健康评估',
     tabPatients:'👤 患者', tabAllRecords:'📋 所有记录',
-    lblUnique:'独特患者数', lblTotal:'总访问量', lblToday:'今日', lblAvg:'平均VHS评分', lblAttention:'需要关注',
+    lblUnique:'独特患者数', lblTotal:'总访问量', lblToday:'今日', lblAvg:'平均Vitava评分', lblAttention:'需要关注',
     hdrPatientProfiles:'患者档案', hdrAllAssessments:'所有评估',
     searchPatients:'搜索患者…', filterRecords:'筛选记录…',
     btnDownloadCsv:'下载CSV', btnDeleteSelected:'删除所选',
     loading:'加载中…',
-    latestVhs:'最新VHS', avgVhs:'平均VHS', totalVisits:'总访问次数', progress:'进展',
-    vhsOverTime:'VHS评分趋势',
+    latestVhs:'最新Vitava', avgVhs:'平均Vitava', totalVisits:'总访问次数', progress:'进展',
+    vhsOverTime:'Vitava评分趋势',
     improved:'VHS从', declined:'VHS从', stable:'VHS稳定在', over:'经过', visits2:'次访问',
     visit:'第', keyConcerns:'主要关注点', deleteVisit:'删除此记录',
     excellent:'优秀', good:'良好', fair:'一般', needsAttention:'需要关注', poor:'较差',
     deleteAll:'删除该患者的所有记录', close:'关闭',
   },
   'zh-TW': {
-    pageTitle:'健康評估記錄', pageSub:'通過VANDL VHS提交的所有VHS健康評估',
+    pageTitle:'健康評估記錄', pageSub:'通過Vitava提交的所有VHS健康評估',
     tabPatients:'👤 患者', tabAllRecords:'📋 所有記錄',
-    lblUnique:'獨特患者數', lblTotal:'總訪問量', lblToday:'今日', lblAvg:'平均VHS評分', lblAttention:'需要關注',
+    lblUnique:'獨特患者數', lblTotal:'總訪問量', lblToday:'今日', lblAvg:'平均Vitava評分', lblAttention:'需要關注',
     hdrPatientProfiles:'患者檔案', hdrAllAssessments:'所有評估',
     searchPatients:'搜尋患者…', filterRecords:'篩選記錄…',
     btnDownloadCsv:'下載CSV', btnDeleteSelected:'刪除所選',
     loading:'載入中…',
-    latestVhs:'最新VHS', avgVhs:'平均VHS', totalVisits:'總訪問次數', progress:'進展',
-    vhsOverTime:'VHS評分趨勢',
+    latestVhs:'最新Vitava', avgVhs:'平均Vitava', totalVisits:'總訪問次數', progress:'進展',
+    vhsOverTime:'Vitava評分趨勢',
     improved:'VHS從', declined:'VHS從', stable:'VHS穩定在', over:'經過', visits2:'次訪問',
     visit:'第', keyConcerns:'主要關注點', deleteVisit:'刪除此記錄',
     excellent:'優秀', good:'良好', fair:'一般', needsAttention:'需要關注', poor:'較差',
