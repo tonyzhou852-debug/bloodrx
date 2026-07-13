@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VANDL Health Score (VHS)</title>
+<title>Vitava</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap&font-display=swap" rel="stylesheet">
 <style>
@@ -797,11 +797,11 @@ input[type=file] { display: none; }
 <script>
 const TRANSLATIONS = {
   en: {
-    pageTitle: 'VHS Wellness Assessment',
-    heroTitle: 'VANDL Health Score &amp;<br><em>Wellness Assessment Platform</em>',
-    heroSub: 'Submit health documents in any format or language to receive a comprehensive wellness assessment and VHS Health Score.',
-    formHeading: 'VHS Wellness Assessment',
-    formSub: 'Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.',
+    pageTitle: 'Vitava Wellness Assessment',
+    heroTitle: 'Vitava Health Score &amp;<br><em>Wellness Assessment Platform</em>',
+    heroSub: 'Submit health documents in any format or language to receive a comprehensive wellness assessment and Vitava Health Score.',
+    formHeading: 'Vitava Wellness Assessment',
+    formSub: 'Submit health documents in any format or language to receive a comprehensive Vitava Health Score and wellness recommendations.',
     patientName: 'Patient name',
     phone: 'Phone number',
     age: 'Age',
@@ -816,22 +816,22 @@ const TRANSLATIONS = {
     uploadTitle: 'Click to select files, or drag &amp; drop here',
     uploadSub: 'PDF &nbsp;\u00b7&nbsp; JPG &nbsp;\u00b7&nbsp; PNG &nbsp;\u00b7&nbsp; TXT &nbsp;\u00b7&nbsp; CSV &nbsp;\u00b7&nbsp; Multiple files &nbsp;\u00b7&nbsp; Max 20 MB each',
     consent: 'I confirm that I am a <strong>licensed healthcare professional</strong> and I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>. I understand that all AI-generated results are for clinical decision <strong>support only</strong> and must be validated by a licensed physician before any prescribing decision.',
-    consentPipl: 'I <strong>separately consent</strong> to VANDL VHS (\u4e0a\u6d77\u88d4\u9647\u751f\u7269\u79d1\u6280\u6709\u9650\u516c\u53f8 / VANDL Biotechnology INC) collecting and processing the <strong>sensitive personal information (health and medical data)</strong> contained in my uploaded files for the purpose of generating my health assessment, and to the <strong>cross-border transfer of this data outside mainland China</strong> for AI processing, as described in the <a href="/privacy" target="_blank">Privacy Policy</a>. For health information of other individuals that I upload, I confirm I have obtained their authorization.',
+    consentPipl: 'I <strong>separately consent</strong> to Vitava (\u4e0a\u6d77\u88d4\u9647\u751f\u7269\u79d1\u6280\u6709\u9650\u516c\u53f8 / VANDL Biotechnology INC) collecting and processing the <strong>sensitive personal information (health and medical data)</strong> contained in my uploaded files for the purpose of generating my health assessment, and to the <strong>cross-border transfer of this data outside mainland China</strong> for AI processing, as described in the <a href="/privacy" target="_blank">Privacy Policy</a>. For health information of other individuals that I upload, I confirm I have obtained their authorization.',
     analyze: 'Generate Health Assessment',
-    disclaimer: 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
+    disclaimer: 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. Vitava is not a regulated medical device.',
     navNew: 'New Assessment',
     navHistory: 'My History',
     wechatBtn: 'Follow on WeChat',
-    wechatTitle: 'VANDL VHS',
+    wechatTitle: 'Vitava',
     wechatDesc: 'Scan to follow us on WeChat for health updates and report notifications.',
     wechatClose: 'Close',
   },
   'zh-CN': {
-    pageTitle: 'VHS\u5065\u5eb7\u8bc4\u4f30',
-    heroTitle: 'VANDL\u5065\u5eb7\u8bc4\u5206 &amp;<br><em>\u4f01\u4e1a\u5065\u5eb7\u7ba1\u7406\u5e73\u53f0</em>',
-    heroSub: '\u4e0a\u4f20\u4efb\u610f\u683c\u5f0f\u6216\u8bed\u8a00\u7684\u5065\u5eb7\u6587\u6863\uff0c\u83b7\u53d6\u5168\u9762\u7684VHS\u5065\u5eb7\u8bc4\u5206\u548cwellness\u5efa\u8bae\u3002',
-    formHeading: 'VHS\u5065\u5eb7\u8bc4\u4f30',
-    formSub: '\u4e0a\u4f20\u4efb\u610f\u683c\u5f0f\u6216\u8bed\u8a00\u7684\u5065\u5eb7\u6587\u6863\uff0c\u83b7\u53d6\u5168\u9762\u7684VANDL\u5065\u5eb7\u8bc4\u5206\u548cwellness\u5efa\u8bae\u3002',
+    pageTitle: 'Vitava\u5065\u5eb7\u8bc4\u4f30',
+    heroTitle: 'Vitava\u5065\u5eb7\u8bc4\u5206 &amp;<br><em>\u4f01\u4e1a\u5065\u5eb7\u7ba1\u7406\u5e73\u53f0</em>',
+    heroSub: '\u4e0a\u4f20\u4efb\u610f\u683c\u5f0f\u6216\u8bed\u8a00\u7684\u5065\u5eb7\u6587\u6863\uff0c\u83b7\u53d6\u5168\u9762\u7684Vitava\u5065\u5eb7\u8bc4\u5206\u548cwellness\u5efa\u8bae\u3002',
+    formHeading: 'Vitava\u5065\u5eb7\u8bc4\u4f30',
+    formSub: '\u4e0a\u4f20\u4efb\u610f\u683c\u5f0f\u6216\u8bed\u8a00\u7684\u5065\u5eb7\u6587\u6863\uff0c\u83b7\u53d6\u5168\u9762\u7684Vitava\u5065\u5eb7\u8bc4\u5206\u548cwellness\u5efa\u8bae\u3002',
     patientName: '\u59d3\u540d',
     phone: '\u7535\u8bdd\u53f7\u7801',
     age: '\u5e74\u9f84',
@@ -846,22 +846,22 @@ const TRANSLATIONS = {
     uploadTitle: '\u70b9\u51fb\u9009\u62e9\u6587\u4ef6\uff0c\u6216\u62d6\u62fd\u81f3\u6b64\u5904',
     uploadSub: 'PDF &nbsp;\u00b7&nbsp; JPG &nbsp;\u00b7&nbsp; PNG &nbsp;\u00b7&nbsp; TXT &nbsp;\u00b7&nbsp; CSV &nbsp;\u00b7&nbsp; \u652f\u6301\u591a\u6587\u4ef6 &nbsp;\u00b7&nbsp; \u6bcf\u4e2a\u6700\u592020MB',
     consent: '\u672c\u4eba\u786e\u8ba4\u4e3a<strong>\u6301\u724c\u533b\u7597\u4e13\u4e1a\u4eba\u5458</strong>\uff0c\u540c\u610f<a href="/terms">\u670d\u52a1\u6761\u6b3e</a>\u53ca<a href="/privacy">\u9690\u79c1\u653f\u7b56</a>\u3002\u672c\u4eba\u7406\u89e3\u6240\u6709AI\u751f\u6210\u7ed3\u679c\u4ec5\u4f9b\u4e34\u5e8a\u51b3\u7b56<strong>\u53c2\u8003</strong>\uff0c\u4efb\u4f55\u5904\u65b9\u51b3\u5b9a\u524d\u987b\u7ecf\u6301\u724c\u533b\u5e08\u9a8c\u8bc1\u3002',
-    consentPipl: '\u672c\u4eba<strong>\u5355\u72ec\u540c\u610f</strong>VANDL VHS\uff08\u4e0a\u6d77\u88d4\u9647\u751f\u7269\u79d1\u6280\u6709\u9650\u516c\u53f8\uff09\u4e3a\u751f\u6210\u5065\u5eb7\u8bc4\u4f30\u62a5\u544a\u4e4b\u76ee\u7684\uff0c\u6536\u96c6\u548c\u5904\u7406\u672c\u4eba\u4e0a\u4f20\u6587\u4ef6\u4e2d\u5305\u542b\u7684<strong>\u654f\u611f\u4e2a\u4eba\u4fe1\u606f\uff08\u5065\u5eb7\u533b\u7597\u4fe1\u606f\uff09</strong>\uff0c\u5e76\u540c\u610f\u8be5\u7b49\u4fe1\u606f<strong>\u4f20\u8f93\u81f3\u4e2d\u56fd\u5883\u5916\u670d\u52a1\u5668</strong>\u8fdb\u884cAI\u5904\u7406\uff0c\u8be6\u89c1<a href="/privacy" target="_blank">\u9690\u79c1\u653f\u7b56</a>\u3002\u5bf9\u4e8e\u672c\u4eba\u4e0a\u4f20\u7684\u4ed6\u4eba\u5065\u5eb7\u4fe1\u606f\uff0c\u672c\u4eba\u786e\u8ba4\u5df2\u83b7\u5f97\u76f8\u5173\u4e2a\u4eba\u7684\u6388\u6743\u3002',
+    consentPipl: '\u672c\u4eba<strong>\u5355\u72ec\u540c\u610f</strong>Vitava\uff08\u4e0a\u6d77\u88d4\u9647\u751f\u7269\u79d1\u6280\u6709\u9650\u516c\u53f8\uff09\u4e3a\u751f\u6210\u5065\u5eb7\u8bc4\u4f30\u62a5\u544a\u4e4b\u76ee\u7684\uff0c\u6536\u96c6\u548c\u5904\u7406\u672c\u4eba\u4e0a\u4f20\u6587\u4ef6\u4e2d\u5305\u542b\u7684<strong>\u654f\u611f\u4e2a\u4eba\u4fe1\u606f\uff08\u5065\u5eb7\u533b\u7597\u4fe1\u606f\uff09</strong>\uff0c\u5e76\u540c\u610f\u8be5\u7b49\u4fe1\u606f<strong>\u4f20\u8f93\u81f3\u4e2d\u56fd\u5883\u5916\u670d\u52a1\u5668</strong>\u8fdb\u884cAI\u5904\u7406\uff0c\u8be6\u89c1<a href="/privacy" target="_blank">\u9690\u79c1\u653f\u7b56</a>\u3002\u5bf9\u4e8e\u672c\u4eba\u4e0a\u4f20\u7684\u4ed6\u4eba\u5065\u5eb7\u4fe1\u606f\uff0c\u672c\u4eba\u786e\u8ba4\u5df2\u83b7\u5f97\u76f8\u5173\u4e2a\u4eba\u7684\u6388\u6743\u3002',
     analyze: '\u751f\u6210\u5065\u5eb7\u8bc4\u4f30\u62a5\u544a',
     disclaimer: '\u672c\u62a5\u544a\u4ec5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u6784\u6210\u533b\u7597\u8bca\u65ad\u3001\u6cbb\u7597\u5efa\u8bae\u6216\u5904\u65b9\u3002\u7528\u6237\u5728\u4f5c\u51fa\u533b\u7597\u51b3\u7b56\u524d\u5e94\u54a8\u8be2\u6301\u724c\u533b\u751f\u3002',
     navNew: '\u65b0\u5efa\u8bc4\u4f30',
     navHistory: '\u6211\u7684\u8bb0\u5f55',
     wechatBtn: '\u5173\u6ce8\u5fae\u4fe1',
-    wechatTitle: 'VANDL VHS \u5fae\u4fe1\u516c\u4f17\u53f7',
+    wechatTitle: 'Vitava \u5fae\u4fe1\u516c\u4f17\u53f7',
     wechatDesc: '\u626b\u63cf\u4e8c\u7ef4\u7801\u5173\u6ce8\u6211\u4eec\u7684\u5fae\u4fe1\u516c\u4f17\u53f7\uff0c\u83b7\u53d6\u5065\u5eb7\u8d44\u8baf\u548c\u62a5\u544a\u66f4\u65b0\u3002',
     wechatClose: '\u5173\u95ed',
   },
   'zh-TW': {
-    pageTitle: 'VHS\u5065\u5eb7\u8a55\u4f30',
-    heroTitle: 'VANDL\u5065\u5eb7\u8a55\u5206 &amp;<br><em>\u4f01\u696d\u5065\u5eb7\u7ba1\u7406\u5e73\u53f0</em>',
-    heroSub: '\u4e0a\u50b3\u4efb\u610f\u683c\u5f0f\u6216\u8a9e\u8a00\u7684\u5065\u5eb7\u6587\u4ef6\uff0c\u7372\u5f97\u5168\u9762\u7684VHS\u5065\u5eb7\u8a55\u5206\u548cwellness\u5efa\u8b70\u3002',
-    formHeading: 'VHS\u5065\u5eb7\u8a55\u4f30',
-    formSub: '\u4e0a\u50b3\u4efb\u610f\u683c\u5f0f\u6216\u8a9e\u8a00\u7684\u5065\u5eb7\u6587\u4ef6\uff0c\u7372\u5f97\u5168\u9762\u7684VANDL\u5065\u5eb7\u8a55\u5206\u548cwellness\u5efa\u8b70\u3002',
+    pageTitle: 'Vitava\u5065\u5eb7\u8a55\u4f30',
+    heroTitle: 'Vitava\u5065\u5eb7\u8a55\u5206 &amp;<br><em>\u4f01\u696d\u5065\u5eb7\u7ba1\u7406\u5e73\u53f0</em>',
+    heroSub: '\u4e0a\u50b3\u4efb\u610f\u683c\u5f0f\u6216\u8a9e\u8a00\u7684\u5065\u5eb7\u6587\u4ef6\uff0c\u7372\u5f97\u5168\u9762\u7684Vitava\u5065\u5eb7\u8a55\u5206\u548cwellness\u5efa\u8b70\u3002',
+    formHeading: 'Vitava\u5065\u5eb7\u8a55\u4f30',
+    formSub: '\u4e0a\u50b3\u4efb\u610f\u683c\u5f0f\u6216\u8a9e\u8a00\u7684\u5065\u5eb7\u6587\u4ef6\uff0c\u7372\u5f97\u5168\u9762\u7684Vitava\u5065\u5eb7\u8a55\u5206\u548cwellness\u5efa\u8b70\u3002',
     patientName: '\u59d3\u540d',
     phone: '\u96fb\u8a71\u865f\u78bc',
     age: '\u5e74\u9f61',
@@ -876,13 +876,13 @@ const TRANSLATIONS = {
     uploadTitle: '\u9ede\u64ca\u9078\u64c7\u6587\u4ef6\uff0c\u6216\u62d6\u66f3\u81f3\u6b64\u8655',
     uploadSub: 'PDF &nbsp;\u00b7&nbsp; JPG &nbsp;\u00b7&nbsp; PNG &nbsp;\u00b7&nbsp; TXT &nbsp;\u00b7&nbsp; CSV &nbsp;\u00b7&nbsp; \u652f\u63f4\u591a\u6587\u4ef6 &nbsp;\u00b7&nbsp; \u6bcf\u500b\u6700\u592020MB',
     consent: '\u672c\u4eba\u78ba\u8a8d\u70ba<strong>\u6301\u7247\u91ab\u7642\u5c08\u696d\u4eba\u54e1</strong>\uff0c\u540c\u610f<a href="/terms">\u670d\u52d9\u689d\u6b3e</a>\u53ca<a href="/privacy">\u96b1\u79c1\u653f\u7b56</a>\u3002\u672c\u4eba\u7406\u89e3\u6240\u6709AI\u751f\u6210\u7d50\u679c\u50c5\u4f9b\u81e8\u5e8a\u6c7a\u7b56<strong>\u53c3\u8003</strong>\uff0c\u4efb\u4f55\u8655\u65b9\u6c7a\u5b9a\u524d\u9808\u7d93\u6301\u7247\u91ab\u5e2b\u9a57\u8b49\u3002',
-    consentPipl: '\u672c\u4eba<strong>\u55ae\u7368\u540c\u610f</strong>VANDL VHS\uff08\u4e0a\u6d77\u88d4\u9647\u751f\u7269\u79d1\u6280\u6709\u9650\u516c\u53f8\uff09\u70ba\u751f\u6210\u5065\u5eb7\u8a55\u4f30\u5831\u544a\u4e4b\u76ee\u7684\uff0c\u6536\u96c6\u548c\u8655\u7406\u672c\u4eba\u4e0a\u50b3\u6587\u4ef6\u4e2d\u5305\u542b\u7684<strong>\u654f\u611f\u500b\u4eba\u8cc7\u8a0a\uff08\u5065\u5eb7\u91ab\u7642\u8cc7\u8a0a\uff09</strong>\uff0c\u4e26\u540c\u610f\u8a72\u7b49\u8cc7\u8a0a<strong>\u50b3\u8f38\u81f3\u4e2d\u570b\u5883\u5916\u4f3a\u670d\u5668</strong>\u9032\u884cAI\u8655\u7406\uff0c\u8a73\u898b<a href="/privacy" target="_blank">\u96b1\u79c1\u653f\u7b56</a>\u3002\u5c0d\u65bc\u672c\u4eba\u4e0a\u50b3\u7684\u4ed6\u4eba\u5065\u5eb7\u8cc7\u8a0a\uff0c\u672c\u4eba\u78ba\u8a8d\u5df2\u7372\u5f97\u76f8\u95dc\u500b\u4eba\u7684\u6388\u6b0a\u3002',
+    consentPipl: '\u672c\u4eba<strong>\u55ae\u7368\u540c\u610f</strong>Vitava\uff08\u4e0a\u6d77\u88d4\u9647\u751f\u7269\u79d1\u6280\u6709\u9650\u516c\u53f8\uff09\u70ba\u751f\u6210\u5065\u5eb7\u8a55\u4f30\u5831\u544a\u4e4b\u76ee\u7684\uff0c\u6536\u96c6\u548c\u8655\u7406\u672c\u4eba\u4e0a\u50b3\u6587\u4ef6\u4e2d\u5305\u542b\u7684<strong>\u654f\u611f\u500b\u4eba\u8cc7\u8a0a\uff08\u5065\u5eb7\u91ab\u7642\u8cc7\u8a0a\uff09</strong>\uff0c\u4e26\u540c\u610f\u8a72\u7b49\u8cc7\u8a0a<strong>\u50b3\u8f38\u81f3\u4e2d\u570b\u5883\u5916\u4f3a\u670d\u5668</strong>\u9032\u884cAI\u8655\u7406\uff0c\u8a73\u898b<a href="/privacy" target="_blank">\u96b1\u79c1\u653f\u7b56</a>\u3002\u5c0d\u65bc\u672c\u4eba\u4e0a\u50b3\u7684\u4ed6\u4eba\u5065\u5eb7\u8cc7\u8a0a\uff0c\u672c\u4eba\u78ba\u8a8d\u5df2\u7372\u5f97\u76f8\u95dc\u500b\u4eba\u7684\u6388\u6b0a\u3002',
     analyze: '\u751f\u6210\u5065\u5eb7\u8a55\u4f30\u5831\u544a',
     disclaimer: '\u672c\u5831\u544a\u50c5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u69cb\u6210\u91ab\u7642\u8a3a\u65b7\u3001\u6cbb\u7642\u5efa\u8b70\u6216\u8655\u65b9\u3002\u7528\u6236\u5728\u4f5c\u51fa\u91ab\u7642\u6c7a\u5b9a\u524d\u61c9\u8af8\u8a62\u6301\u7247\u91ab\u751f\u3002',
     navNew: '\u65b0\u5efa\u8a55\u4f30',
     navHistory: '\u6211\u7684\u8a18\u9304',
     wechatBtn: '\u95dc\u6ce8\u5fae\u4fe1',
-    wechatTitle: 'VANDL VHS \u5fae\u4fe1\u516c\u773e\u865f',
+    wechatTitle: 'Vitava \u5fae\u4fe1\u516c\u773e\u865f',
     wechatDesc: '\u6383\u63cf\u4e8c\u7dad\u78bc\u95dc\u6ce8\u6211\u5011\u7684\u5fae\u4fe1\u516c\u773e\u865f\uff0c\u7372\u53d6\u5065\u5eb7\u8cc7\u8a0a\u548c\u5831\u544a\u66f4\u65b0\u3002',
     wechatClose: '\u95dc\u9589',
   }
@@ -974,11 +974,11 @@ document.addEventListener('DOMContentLoaded', detectLang);
 
 <nav class="topbar" aria-label="Site navigation">
   <div class="topbar-inner">
-    <a href="#" class="logo" aria-label="VANDL VHS home">
+    <a href="#" class="logo" aria-label="Vitava home">
       <div class="logo-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg>
       </div>
-      <span class="logo-text">VANDL<em>VHS</em></span>
+      <span class="logo-text">Vita<em>va</em></span>
     </a>
     <span class="topbar-tag">Clinical AI</span>
 
@@ -1014,8 +1014,8 @@ document.addEventListener('DOMContentLoaded', detectLang);
     For licensed clinicians only
     <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
   </div>
-  <h1 id="hero-title">VANDL Health Score &amp;<br><em>Wellness Assessment Platform</em></h1>
-  <p class="hero-sub" id="hero-sub">Submit health documents in any format or language to receive a comprehensive wellness assessment and VHS Health Score.</p>
+  <h1 id="hero-title">Vitava Health Score &amp;<br><em>Wellness Assessment Platform</em></h1>
+  <p class="hero-sub" id="hero-sub">Submit health documents in any format or language to receive a comprehensive wellness assessment and Vitava Health Score.</p>
   <div class="capability-chips" role="list" aria-label="Supported capabilities">
     <span class="chip" role="listitem">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 3h6v1H5V8zm0 3h4v1H5v-1z"/></svg>
@@ -1043,8 +1043,8 @@ document.addEventListener('DOMContentLoaded', detectLang);
 <main class="page" id="main-form">
 
   <div class="page-heading" id="form-heading">
-    <h1 id="form-heading-h1">VHS Wellness Assessment</h1>
-    <p id="form-heading-p">Submit health documents in any format or language to receive a comprehensive VANDL Health Score and wellness recommendations.</p>
+    <h1 id="form-heading-h1">Vitava Wellness Assessment</h1>
+    <p id="form-heading-p">Submit health documents in any format or language to receive a comprehensive Vitava Health Score and wellness recommendations.</p>
   </div>
 
   <div id="form-section">
@@ -1200,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
         <div id="pipl-consent-box" class="consent-box" style="margin-top:10px">
           <label class="consent-label" for="pipl-check">
             <input type="checkbox" id="pipl-check" onchange="updateAnalyzeBtn()">
-            <span id="pipl-text">I <strong>separately consent</strong> to VANDL VHS (上海裔陇生物科技有限公司 / VANDL Biotechnology INC) collecting and processing the <strong>sensitive personal information (health and medical data)</strong> contained in my uploaded files for the purpose of generating my health assessment, and to the <strong>cross-border transfer of this data outside mainland China</strong> for AI processing, as described in the <a href="/privacy" target="_blank">Privacy Policy</a>. For health information of other individuals that I upload, I confirm I have obtained their authorization.</span>
+            <span id="pipl-text">I <strong>separately consent</strong> to Vitava (上海裔陇生物科技有限公司 / VANDL Biotechnology INC) collecting and processing the <strong>sensitive personal information (health and medical data)</strong> contained in my uploaded files for the purpose of generating my health assessment, and to the <strong>cross-border transfer of this data outside mainland China</strong> for AI processing, as described in the <a href="/privacy" target="_blank">Privacy Policy</a>. For health information of other individuals that I upload, I confirm I have obtained their authorization.</span>
           </label>
         </div>
 
@@ -1220,7 +1220,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
 
     <div class="disclaimer" id="analyze-disclaimer">
       <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-      <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.</span>
+      <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. Vitava is not a regulated medical device.</span>
     </div>
 
   </div>
@@ -1397,14 +1397,14 @@ const STEPS_EN = [
   'Reading and parsing documents',
   'Detecting language — translating markers',
   'Extracting and normalising lab values',
-  'Calculating VHS Health Score',
+  'Calculating Vitava Health Score',
   'Generating wellness recommendations',
 ];
 const STEPS_ZH = [
   '正在读取和解析文档',
   '正在检测语言并翻译指标',
   '正在提取和标准化检验值',
-  '正在计算VHS健康评分',
+  '正在计算Vitava健康评分',
   '正在生成健康建议',
 ];
 let STEPS = [];
@@ -1536,7 +1536,7 @@ INSTRUCTIONS:
 3. Apply international reference ranges appropriate for age and gender.
 4. Focus on wellness optimization only. Do NOT provide medication names, dosages, antibiotic recommendations or treatment prescriptions.
 
-VHS HEALTH SCORE (0-100): Calculate based on markers within optimal range. Labels should also be in ${outputLang} where applicable.
+Vitava HEALTH SCORE (0-100): Calculate based on markers within optimal range. Labels should also be in ${outputLang} where applicable.
 RISK PROFILES: Score each 1-5 (1=Very Low, 5=Very High). Write the label and note in ${outputLang}.
 
 Return ONLY valid JSON:
@@ -1665,7 +1665,7 @@ function uiT(key) {
   const isChinese = currentLang === 'zh-CN' || currentLang === 'zh-TW';
   const trad = currentLang === 'zh-TW';
   const labels = {
-    reportTitle:     isChinese ? 'VHS\u5065\u5eb7\u62a5\u544a' : 'VHS Wellness Report',
+    reportTitle:     isChinese ? 'Vitava\u5065\u5eb7\u62a5\u544a' : 'Vitava Wellness Report',
     healthAssessment:isChinese ? (trad?'\u5065\u5eb7\u8a55\u4f30\u6458\u8981':'\u5065\u5eb7\u8bc4\u4f30\u6458\u8981') : 'Health Assessment Summary',
     keyConcerns:     isChinese ? (trad?'\u4e3b\u8981\u5065\u5eb7\u554f\u984c':'\u4e3b\u8981\u5065\u5eb7\u95ee\u9898') : 'Key Health Concerns',
     riskProfile:     isChinese ? (trad?'\u98a8\u96aa\u8a55\u4f30':'\u98ce\u9669\u8bc4\u4f30') : 'Risk Profile',
@@ -1680,10 +1680,10 @@ function uiT(key) {
     lunch:           isChinese ? '\u5348\u9910' : 'Lunch',
     dinner:          isChinese ? '\u665a\u9910' : 'Dinner',
     repeatWeeks:     isChinese ? '\u5efa\u8bae\u91cd\u590d\u8be5\u8ba1\u5212 {n} \u5468' : 'Repeat this plan for {n} weeks',
-    vhsScore:        isChinese ? 'VHS\u8bc4\u5206' : 'VHS Score',
+    vhsScore:        isChinese ? 'Vitava\u8bc4\u5206' : 'Vitava Score',
     newAssessment:   isChinese ? (trad?'\u2190 \u65b0\u8a55\u4f30':'\u2190 \u65b0\u8bc4\u4f30') : '\u2190 New Assessment',
     aiGenerated:     isChinese ? 'AI\u751f\u6210\u5185\u5bb9' : 'AI-Generated Content',
-    disclaimer:      isChinese ? (trad?'\u672c\u5831\u544a\u7531AI\u751f\u6210\uff0c\u50c5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u69cb\u6210\u91ab\u7642\u8a3a\u65b7\u3001\u6cbb\u7642\u5efa\u8b70\u6216\u8655\u65b9\u3002\u4f5c\u51fa\u91ab\u7642\u6c7a\u5b9a\u524d\u8acb\u8af8\u8a62\u5408\u8cc7\u683c\u91ab\u751f\u3002':'\u672c\u62a5\u544a\u7531AI\u751f\u6210\uff0c\u4ec5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u6784\u6210\u533b\u7597\u8bca\u65ad\u3001\u6cbb\u7597\u5efa\u8bae\u6216\u5904\u65b9\u3002\u5728\u4f5c\u51fa\u533b\u7597\u51b3\u5b9a\u524d\u8bf7\u54a8\u8be2\u5408\u8d44\u683c\u533b\u751f\u3002') : 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.',
+    disclaimer:      isChinese ? (trad?'\u672c\u5831\u544a\u7531AI\u751f\u6210\uff0c\u50c5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u69cb\u6210\u91ab\u7642\u8a3a\u65b7\u3001\u6cbb\u7642\u5efa\u8b70\u6216\u8655\u65b9\u3002\u4f5c\u51fa\u91ab\u7642\u6c7a\u5b9a\u524d\u8acb\u8af8\u8a62\u5408\u8cc7\u683c\u91ab\u751f\u3002':'\u672c\u62a5\u544a\u7531AI\u751f\u6210\uff0c\u4ec5\u4f9b\u5065\u5eb7\u6559\u80b2\u548c\u5065\u5eb7\u7ba1\u7406\u76ee\u7684\uff0c\u4e0d\u6784\u6210\u533b\u7597\u8bca\u65ad\u3001\u6cbb\u7597\u5efa\u8bae\u6216\u5904\u65b9\u3002\u5728\u4f5c\u51fa\u533b\u7597\u51b3\u5b9a\u524d\u8bf7\u54a8\u8be2\u5408\u8d44\u683c\u533b\u751f\u3002') : 'This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. Vitava is not a regulated medical device.',
     detectedLang:    isChinese ? '\u68c0\u6d4b\u8bed\u8a00' : 'Detected language',
     translated:      isChinese ? '\u6240\u6709\u6570\u503c\u5df2\u7ffb\u8bd1\u4e3a\u4e2d\u6587\u8fdb\u884c\u5206\u6790' : 'all values translated to English for analysis',
   };
@@ -1946,7 +1946,7 @@ function renderResults(r, p) {
 
     <div class="disclaimer" role="note">
       <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--amber)"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-      <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. VANDL VHS is not a regulated medical device.</span>
+      <span>This report is AI-generated for health education and wellness purposes only. It does not constitute medical advice, diagnosis, or prescription in any jurisdiction. Consult a qualified healthcare provider before making any health decisions. Vitava is not a regulated medical device.</span>
     </div>
   `;
 
@@ -1991,7 +1991,7 @@ function resetForm() {
 </script>
 
 <footer class="site-footer">
-  <p>VANDL Health Score (VHS) &nbsp;\u00b7&nbsp;
+  <p>Vitava &nbsp;\u00b7&nbsp;
     <a href="/terms">Terms of Service</a> &nbsp;\u00b7&nbsp;
     <a href="/privacy">Privacy Policy</a> &nbsp;\u00b7&nbsp;
     <button class="bot-trigger" onclick="openBot()">&#x1F4AC; Help</button>
@@ -2000,13 +2000,13 @@ function resetForm() {
 </footer>
 
 <div class="bot-overlay" id="bot-overlay" onclick="if(event.target===this)closeBot()">
-  <div class="bot-window" role="dialog" aria-label="VHS Help Assistant" aria-modal="true">
+  <div class="bot-window" role="dialog" aria-label="Vitava Assistant" aria-modal="true">
     <div class="bot-head">
       <div class="bot-avatar">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
       </div>
       <div class="bot-head-text">
-        <div class="bot-head-name">VHS Help Assistant</div>
+        <div class="bot-head-name">Vitava Assistant</div>
         <div class="bot-head-status">AI Assistant \u00b7 Not a human</div>
       </div>
       <button class="bot-close" onclick="closeBot()" aria-label="Close help">&#x2715;</button>
@@ -2014,14 +2014,14 @@ function resetForm() {
 
     <div class="bot-messages" id="bot-messages">
       <div class="bot-msg bot">
-        <div class="bot-msg-bubble">Hi! I can help you submit your health report and understand your VHS results. What would you like to know?</div>
+        <div class="bot-msg-bubble">Hi! I can help you submit your health report and understand your Vitava results. What would you like to know?</div>
       </div>
     </div>
 
     <div class="bot-suggestions" id="bot-suggestions">
       <button class="bot-chip" onclick="askBot('How do I upload my blood report?')">How to upload?</button>
       <button class="bot-chip" onclick="askBot('What file formats are accepted?')">File formats?</button>
-      <button class="bot-chip" onclick="askBot('What does the VHS score mean?')">VHS score?</button>
+      <button class="bot-chip" onclick="askBot('What does the Vitava score mean?')">Vitava score?</button>
       <button class="bot-chip" onclick="askBot('What is the risk profile?')">Risk profile?</button>
     </div>
 
@@ -2036,7 +2036,7 @@ function resetForm() {
   </div>
 </div>
 <script>
-const BOT_SYSTEM = `You are the VHS Help Assistant for VANDL Health Score platform. Your ONLY job is to help users understand how to submit their health report and interpret their VHS wellness results on this page.
+const BOT_SYSTEM = `You are the Vitava Assistant for Vitava Health Score platform. Your ONLY job is to help users understand how to submit their health report and interpret their Vitava wellness results on this page.
 
 You are STRICTLY LIMITED to these topics:
 1. How to fill in the patient information form (name, phone, age, gender, complaint, notes)
@@ -2044,7 +2044,7 @@ You are STRICTLY LIMITED to these topics:
 3. How to select the document language
 4. What the consent checkbox means
 5. How to click "Generate Health Assessment"
-6. What the VHS Health Score (0-100) means: 90-100 Excellent, 75-89 Good, 60-74 Fair, 40-59 Needs Attention, 0-39 Poor
+6. What the Vitava Health Score (0-100) means: 90-100 Excellent, 75-89 Good, 60-74 Fair, 40-59 Needs Attention, 0-39 Poor
 7. What the 5 risk categories mean: Cardiovascular, Metabolic, Liver, Kidney, Inflammation \u2014 each scored 1-5
 8. What Nutrition Recommendations, Lifestyle Recommendations, Suggested Nutritional Support, and Monitoring Plan sections mean
 9. Why results are in English (translation happens automatically)
@@ -2057,7 +2057,7 @@ You must REFUSE to answer anything about:
 - Technical issues unrelated to the report submission page
 - Any other topic not listed above
 
-If asked anything outside your scope, respond: "I can only help with submitting your health report and understanding your VHS results. For other questions, please contact support."
+If asked anything outside your scope, respond: "I can only help with submitting your health report and understanding your Vitava results. For other questions, please contact support."
 
 Keep responses short, clear, and friendly. Maximum 3 sentences per response.`;
 
@@ -2155,7 +2155,7 @@ async function getBotReply() {
       <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     </div>
     <h2 id="age-gate-title">Age Verification Required</h2>
-    <p>VANDL Health Score (VHS) is intended for use by adults aged 18 and over. By continuing, you confirm that you are at least 18 years old and agree to our Terms of Service and Privacy Policy.</p>
+    <p>Vitava is intended for use by adults aged 18 and over. By continuing, you confirm that you are at least 18 years old and agree to our Terms of Service and Privacy Policy.</p>
     <div class="age-gate-btns">
       <button class="age-gate-confirm" onclick="confirmAge()">I am 18 years or older \u2014 Continue</button>
       <button class="age-gate-deny" onclick="denyAge()">I am under 18 \u2014 Exit</button>
@@ -2873,11 +2873,11 @@ function renderFdDetail(memberId, records) {
   // i18n labels
   const isCN = currentLang === 'zh-CN' || currentLang === 'zh-TW';
   const labels = {
-    latestVhs: isCN ? '最新VHS' : 'Latest VHS',
-    avgVhs: isCN ? '平均VHS' : 'Avg VHS',
-    bestVhs: isCN ? '最佳VHS' : 'Best VHS',
+    latestVhs: isCN ? '最新Vitava' : 'Latest Vitava',
+    avgVhs: isCN ? '平均Vitava' : 'Avg Vitava',
+    bestVhs: isCN ? '最佳Vitava' : 'Best Vitava',
     reports: isCN ? '报告总数' : 'Total Reports',
-    vhsOverTime: isCN ? 'VHS评分趋势' : 'VHS Score Over Time',
+    vhsOverTime: isCN ? 'Vitava评分趋势' : 'Vitava Score Over Time',
     overallSummary: isCN ? '综合健康评估' : 'Overall Health Summary',
     riskProfile: isCN ? '平均风险概况' : 'Average Risk Profile',
     basedOn: isCN ? `基于 ${totalReports} 份报告` : `Based on ${totalReports} report${totalReports>1?'s':''}`,
@@ -3006,8 +3006,8 @@ function buildFdContext(member, records, latest_rec, scores, avgRisks, riskLabel
   return `You are a health wellness advisor. You have access to the following health data for ${member.name} (${member.relation}, age ${member.age||'unknown'}, ${member.gender||'unknown'}).
 
 HEALTH DATA SUMMARY:
-- Latest VHS Score: ${latest}/100
-- Average VHS Score: ${avg}/100
+- Latest Vitava Score: ${latest}/100
+- Average Vitava Score: ${avg}/100
 - Total Reports: ${records.length}
 - Risk Profile (average): ${riskSummary || 'No data'}
 - Latest Health Assessment: ${latest_rec?.summary || 'Not available'}
@@ -3153,7 +3153,7 @@ function buildVhsChart(records, scores) {
   <div style="background:var(--surface);border-radius:var(--radius-xl);box-shadow:0 24px 64px rgba(0,0,0,.25);width:100%;max-width:340px;padding:32px 24px;text-align:center;animation:botIn .2s ease-out">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="#07c160"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.11.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.49.49 0 0 1 .177-.554C22.888 18.35 24 16.74 24 14.98c0-3.21-2.931-5.837-7.063-6.122zm-3.494 3.138c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
-      <span id="wechat-modal-title" style="font-size:18px;font-weight:700;color:var(--ink)">VANDL VHS</span>
+      <span id="wechat-modal-title" style="font-size:18px;font-weight:700;color:var(--ink)">Vitava</span>
     </div>
     <p id="wechat-modal-desc" style="font-size:13px;color:var(--ink-3);margin-bottom:20px;line-height:1.6"></p>
     <img src="/wechat-qr.png" alt="WeChat QR Code" style="width:200px;height:200px;object-fit:contain;border-radius:var(--radius);border:1px solid var(--border);padding:8px">
@@ -3165,7 +3165,7 @@ function buildVhsChart(records, scores) {
 <script>
 function openWechatQR() {
   const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
-  document.getElementById('wechat-modal-title').textContent = t.wechatTitle || 'VANDL VHS';
+  document.getElementById('wechat-modal-title').textContent = t.wechatTitle || 'Vitava';
   document.getElementById('wechat-modal-desc').textContent = t.wechatDesc || 'Scan to follow us on WeChat for health updates and report notifications.';
   document.getElementById('wechat-modal-close').textContent = t.wechatClose || 'Close';
   const el = document.getElementById('wechat-overlay');
@@ -3177,7 +3177,7 @@ function closeWechatQR() {
   document.body.style.overflow = '';
 }
 </script>
-<!-- VHB — Vandl Health Bot -->
+<!-- Vitava Assistant — Vitava Assistant -->
 <style>
 .vhb-fab{position:fixed;bottom:28px;right:28px;z-index:400;width:56px;height:56px;border-radius:50%;background:var(--brand);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(185,28,28,.35);display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform .2s,box-shadow .2s;font-family:inherit}
 .vhb-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(185,28,28,.45)}
@@ -3237,14 +3237,14 @@ function closeWechatQR() {
 @media(max-width:600px){.vhb-overlay{padding:0;align-items:flex-end}.vhb-window{max-width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:80vh}.vhb-fab{bottom:16px;right:16px}}
 </style>
 
-<button class="vhb-fab" onclick="openVHB()" aria-label="Open VHB Health Bot">&#x1F916;<span class="vhb-fab-label">Ask VHB</span></button>
+<button class="vhb-fab" onclick="openVHB()" aria-label="Open Vitava Assistant">&#x1F916;<span class="vhb-fab-label">Ask Vitava Assistant</span></button>
 
 <div class="vhb-overlay" id="vhb-overlay" onclick="if(event.target===this)closeVHB()">
   <div class="vhb-window">
     <div class="vhb-head">
       <div class="vhb-avatar">&#x1F916;</div>
       <div class="vhb-head-text">
-        <div class="vhb-head-name">VHB &mdash; Vandl Health Bot</div>
+        <div class="vhb-head-name">Vitava Assistant</div>
         <div class="vhb-head-sub" id="vhb-head-sub">Choose who to ask about</div>
       </div>
       <button class="vhb-close" onclick="closeVHB()">&#x2715;</button>
@@ -3388,12 +3388,12 @@ async function loadVHBPersons(){
 
 function buildVHBContext(name,records){
   if(!records||records.length===0){
-    return 'You are VHB (Vandl Health Bot). You are answering questions about '+name+'. They have no health assessments yet.';
+    return 'You are the Vitava Assistant. You are answering questions about '+name+'. They have no health assessments yet.';
   }
   var latest=records[0];
   var scores=records.filter(function(r){return r.vhs_score>0}).map(function(r){return r.vhs_score});
   var avg=scores.length?Math.round(scores.reduce(function(a,b){return a+b},0)/scores.length):0;
-  return 'You are VHB (Vandl Health Bot). Answer questions about '+name+'.\n\nHealth data:\n- Total assessments: '+records.length+'\n- Latest VHS Score: '+latest.vhs_score+'/100\n- Average VHS Score: '+avg+'/100\n- Summary: '+(latest.summary||'Not available')+'\n- Key concerns: '+(latest.key_health_concerns||'None')+'\n- Cardiovascular risk: '+(latest.risk_cardiovascular||0)+'/5\n- Metabolic risk: '+(latest.risk_metabolic||0)+'/5\n- Liver risk: '+(latest.risk_liver||0)+'/5\n- Kidney risk: '+(latest.risk_kidney||0)+'/5\n- Inflammation risk: '+(latest.risk_inflammation||0)+'/5\n- Nutrition: '+(latest.nutrition||'None')+'\n- Lifestyle: '+(latest.lifestyle||'None')+'\n- Supplements: '+(latest.supplements||'None')+'\n- Monitoring: '+(latest.monitoring_plan||'None')+'\n\nRULES: Answer ONLY health questions. Max 3-4 sentences. Never prescribe or diagnose. Respond in same language as user.';
+  return 'You are the Vitava Assistant. Answer questions about '+name+'.\n\nHealth data:\n- Total assessments: '+records.length+'\n- Latest Vitava Score: '+latest.vhs_score+'/100\n- Average Vitava Score: '+avg+'/100\n- Summary: '+(latest.summary||'Not available')+'\n- Key concerns: '+(latest.key_health_concerns||'None')+'\n- Cardiovascular risk: '+(latest.risk_cardiovascular||0)+'/5\n- Metabolic risk: '+(latest.risk_metabolic||0)+'/5\n- Liver risk: '+(latest.risk_liver||0)+'/5\n- Kidney risk: '+(latest.risk_kidney||0)+'/5\n- Inflammation risk: '+(latest.risk_inflammation||0)+'/5\n- Nutrition: '+(latest.nutrition||'None')+'\n- Lifestyle: '+(latest.lifestyle||'None')+'\n- Supplements: '+(latest.supplements||'None')+'\n- Monitoring: '+(latest.monitoring_plan||'None')+'\n\nRULES: Answer ONLY health questions. Max 3-4 sentences. Never prescribe or diagnose. Respond in same language as user.';
 }
 
 function scoreColor(s){
@@ -3474,10 +3474,10 @@ function selectVHBPerson(key){
 
   var records=person.records;
   if(!records||records.length===0){
-    vhbAppendMsg('bot','Hi! I\'m VHB. '+person.name+' has no health assessments yet. Submit a report for them first.');
+    vhbAppendMsg('bot','Hi! I\'m Vitava Assistant. '+person.name+' has no health assessments yet. Submit a report for them first.');
   } else {
     var latest=records[0];
-    vhbAppendMsg('bot','Hi! I\'m VHB. I\'ve reviewed '+person.name+'\'s '+records.length+' health assessment'+(records.length!==1?'s':'')+'. Their latest VHS score is '+latest.vhs_score+'/100. What would you like to know?');
+    vhbAppendMsg('bot','Hi! I\'m Vitava Assistant. I\'ve reviewed '+person.name+'\'s '+records.length+' health assessment'+(records.length!==1?'s':'')+'. Their latest Vitava score is '+latest.vhs_score+'/100. What would you like to know?');
   }
 
   showVHBChat();
@@ -3522,7 +3522,7 @@ async function vhbGetReply(){
   document.getElementById('vhb-send-btn').disabled=true;
   vhbShowTyping();
   try{
-    var context=_vhbContexts[_vhbCurrentKey]||'You are VHB, a health assistant.';
+    var context=_vhbContexts[_vhbCurrentKey]||'You are Vitava Assistant, a health assistant.';
     var history=_vhbHistories[_vhbCurrentKey]||[];
     var resp=await fetch('/api/bot',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({messages:history.slice(-8),system:context})});
     var data=await resp.json();
@@ -3534,6 +3534,7 @@ async function vhbGetReply(){
   document.getElementById('vhb-send-btn').disabled=false;
   document.getElementById('vhb-input').focus();
 }
+</script>
 
 </body>
 </html>
