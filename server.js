@@ -83,6 +83,10 @@ if (!process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD.length < 12)
   console.error("WARNING: ADMIN_PASSWORD should be at least 12 characters");
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(32).toString("hex");
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "")
+  .split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+if (!ADMIN_EMAILS.length)
+  console.error("WARNING: ADMIN_EMAILS not set - admin panel is disabled until it is configured");
 
 // ── MongoDB ────────────────────────────────────────────────────
 let _db = null;
@@ -241,25 +245,7 @@ function adminAuth(req, res, next) {
   adminOk(req._adminIp||req.ip); next();
 }
 
-// ── Admin token exchange ───────────────────────────────────────
-const _adminTokens = new Map();
-setInterval(() => { const now=Date.now(); for(const[t,e] of _adminTokens) if(now>e) _adminTokens.delete(t); }, 300000);
-
-app.get("/api/admin/token", adminBruteForce, adminLimit, adminAuth, (req, res) => {
-  const token = crypto.randomBytes(32).toString("hex");
-  _adminTokens.set(token, Date.now() + 3600000);
-  res.json({ token });
-});
-
-function adminAuthOrToken(req, res, next) {
-  const t = req.headers["x-admin-token"];
-  if (t) {
-    const exp = _adminTokens.get(t);
-    if (exp && Date.now() < exp) return next();
-    return res.status(401).json({ error: "Invalid or expired admin token." });
-  }
-  adminBruteForce(req, res, () => adminAuth(req, res, next));
-}
+// ── Admin auth now uses requireAdmin (Google login + ADMIN_EMAILS allowlist) ──
 
 // ── JWT auth ───────────────────────────────────────────────────
 function requireAuth(req, res, next) {
@@ -267,6 +253,28 @@ function requireAuth(req, res, next) {
   if (!token) return res.status(401).json({ error: "Not authenticated." });
   try { req.user = jwt.verify(token, JWT_SECRET); next(); }
   catch { res.clearCookie("vhs_token"); return res.status(401).json({ error: "Session expired." }); }
+}
+
+// ── Admin authorization: logged-in user whose email is on the allowlist ──
+function requireAdmin(req, res, next) {
+  const wantsPage = req.path === "/admin";
+  const token = req.cookies?.vhs_token;
+  if (!token) {
+    if (wantsPage) return res.redirect("/login");
+    return res.status(401).json({ error: "Not authenticated." });
+  }
+  try { req.user = jwt.verify(token, JWT_SECRET); }
+  catch {
+    res.clearCookie("vhs_token");
+    if (wantsPage) return res.redirect("/login");
+    return res.status(401).json({ error: "Session expired." });
+  }
+  const email = String(req.user.email || "").toLowerCase();
+  if (!ADMIN_EMAILS.length || !ADMIN_EMAILS.includes(email)) {
+    if (wantsPage) return res.status(403).send("Forbidden: this account is not an administrator.");
+    return res.status(403).json({ error: "Not an administrator." });
+  }
+  next();
 }
 
 // ── Input sanitization ─────────────────────────────────────────
@@ -764,11 +772,11 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, checkMonthlyLi
 // ══════════════════════════════════════════════════════════════
 // ADMIN
 // ══════════════════════════════════════════════════════════════
-app.get("/admin", adminBruteForce, adminLimit, adminAuth, (req, res) => {
+app.get("/admin", adminLimit, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname,"public","admin.html"));
 });
 
-app.get("/api/admin/patients", adminLimit, adminAuthOrToken, async (req, res) => {
+app.get("/api/admin/patients", adminLimit, requireAdmin, async (req, res) => {
   try {
     const db = await getDB();
     const rows = await db.collection("patients").find({},{ projection:{_id:0,ip:0} }).sort({id:-1}).limit(1000).toArray();
@@ -777,7 +785,7 @@ app.get("/api/admin/patients", adminLimit, adminAuthOrToken, async (req, res) =>
 });
 
 // ── Delete ALL records for a patient (bulk by ids) ─────────────
-app.post("/api/admin/patients/delete", adminLimit, adminAuthOrToken, async (req, res) => {
+app.post("/api/admin/patients/delete", adminLimit, requireAdmin, async (req, res) => {
   const { ids } = req.body||{};
   if (!ids||!Array.isArray(ids)||!ids.length||ids.length>100) return res.status(400).json({ error:"Invalid request." });
   const nums = ids.map(Number).filter(n=>Number.isFinite(n)&&n>0);
@@ -790,7 +798,7 @@ app.post("/api/admin/patients/delete", adminLimit, adminAuthOrToken, async (req,
 });
 
 // ── Delete a SINGLE visit record by id ────────────────────────
-app.post("/api/admin/records/delete-one", adminLimit, adminAuthOrToken, async (req, res) => {
+app.post("/api/admin/records/delete-one", adminLimit, requireAdmin, async (req, res) => {
   const { id } = req.body || {};
   const num = Number(id);
   if (!Number.isFinite(num) || num <= 0) return res.status(400).json({ error: "Invalid ID." });
@@ -802,7 +810,7 @@ app.post("/api/admin/records/delete-one", adminLimit, adminAuthOrToken, async (r
   } catch(e) { res.status(500).json({ error: "Delete failed." }); }
 });
 
-app.get("/api/admin/users", adminLimit, adminAuthOrToken, async (req, res) => {
+app.get("/api/admin/users", adminLimit, requireAdmin, async (req, res) => {
   try {
     const db = await getDB();
     const users = await db.collection("users").find({},{ projection:{_id:0,passwordHash:0} }).sort({id:-1}).limit(500).toArray();
