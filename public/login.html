@@ -91,6 +91,11 @@ input::placeholder{color:var(--ink-4)}
 .remember-row label{font-size:13px;color:var(--ink-3);cursor:pointer;margin:0;font-weight:400}
 .forgot-link{margin-left:auto;background:none;border:none;font-size:12px;color:var(--ink-3);cursor:pointer;font-family:inherit;text-decoration:underline;text-decoration-style:dotted;padding:0;white-space:nowrap}
 .forgot-link:hover{color:var(--brand)}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:42px !important}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;color:var(--ink-3);display:flex;align-items:center;justify-content:center;border-radius:6px;transition:color .15s}
+.pw-eye:hover{color:var(--ink)}
+.pw-eye svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
@@ -120,7 +125,7 @@ input::placeholder{color:var(--ink-4)}
       </div>
       <div class="form-group">
         <label for="login-password" id="label-login-password">Password</label>
-        <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="pw-wrap"><input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"><button type="button" class="pw-eye" onclick="togglePw('login-password', this)" aria-label="Show password" tabindex="-1"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
       <div class="remember-row">
         <input type="checkbox" id="remember-me" checked>
@@ -170,7 +175,7 @@ input::placeholder{color:var(--ink-4)}
       </div>
       <div class="form-group">
         <label for="reg-password" id="label-reg-password">Password</label>
-        <input type="password" id="reg-password" placeholder="Min. 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
+        <div class="pw-wrap"><input type="password" id="reg-password" placeholder="Min. 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"><button type="button" class="pw-eye" onclick="togglePw('reg-password', this)" aria-label="Show password" tabindex="-1"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
       </div>
       <button class="btn-primary" id="register-btn" onclick="doRegister()">Create Account</button>
 
@@ -437,6 +442,17 @@ function googleLogin() {
 }
 
 detectLoginLang();
+
+function togglePw(inputId, btn) {
+  var inp = document.getElementById(inputId);
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  btn.innerHTML = show
+    ? '<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  inp.focus();
+}
 </script>
 </body>
 </html>
