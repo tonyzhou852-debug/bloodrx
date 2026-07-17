@@ -295,6 +295,17 @@ function applyLoginI18n() {
   document.documentElement.lang = LOGIN_LANG === 'zh-CN' ? 'zh-Hans' : LOGIN_LANG === 'zh-TW' ? 'zh-Hant' : 'en';
 }
 
+// Hide Google login on China domains — Google is unreachable from mainland servers/users
+(function(){
+  var h = window.location.hostname;
+  if (/\.cn$/i.test(h) || h === 'cn.vandlvhs.com') {
+    ['google-login-btn','google-register-btn','divider-login','divider-register'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+})();
+
 async function detectLoginLang() {
   try {
     const res = await fetch('/api/lang');
