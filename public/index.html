@@ -1068,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
           <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1;align-items:center">
             <select id="family-select" onchange="onFamilySelect()" style="flex:1;min-width:160px;height:36px;min-height:36px"><option value="self">Myself</option></select>
             <button type="button" onclick="openFamilyManager()" style="padding:6px 12px;height:36px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:inherit;color:var(--ink-3);cursor:pointer;white-space:nowrap">+ Manage</button>
-            <button type="button" onclick="openFamilyDashboard()" style="padding:6px 12px;height:36px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;white-space:nowrap">👨‍👩‍👧 Family Status</button>
+            
           </div>
         </div>
 
@@ -1136,13 +1136,13 @@ document.addEventListener('DOMContentLoaded', detectLang);
 
         <div class="field-group">
           <label class="field-label" for="p-complaint" id="label-complaint">Chief Complaint / Symptoms</label>
-          <div class="field-hint">Write in any language \u2014 automatically translated for analysis</div>
+          <div class="field-hint" id="hint-complaint">Write in any language \u2014 automatically translated for analysis</div>
           <textarea id="p-complaint" name="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough"></textarea>
         </div>
 
         <div class="field-group">
           <label class="field-label" for="p-notes" id="label-notes">Clinical Notes</label>
-          <div class="field-hint">Allergies, current medications, comorbidities \u2014 any language. Include known drug allergies; this directly influences antibiotic selection.</div>
+          <div class="field-hint" id="hint-notes">Allergies, current medications, comorbidities \u2014 any language. Include known drug allergies; this directly influences antibiotic selection.</div>
           <textarea id="p-notes" name="p-notes" rows="3" dir="auto" placeholder="e.g. Penicillin allergy, Type 2 diabetes, on Metformin"></textarea>
         </div>
 
@@ -1838,7 +1838,6 @@ function renderResults(r, p) {
           </div>
         </div>
         <button class="new-analysis-btn" onclick="resetForm()" type="button">${uiT("newAssessment")}</button>
-        ${familyMembers.length ? `<button class="new-analysis-btn" onclick="openFamilyDashboard()" type="button" style="background:var(--brand-bg);border-color:var(--brand-bd);color:var(--brand)">👨‍👩‍👧 ${currentLang==='zh-CN'?'家庭状态':currentLang==='zh-TW'?'家庭狀態':'Family Status'}</button>` : ''}
         <button class="new-analysis-btn" onclick="openWechatQR()" type="button" style="background:#f0faf4;border-color:#b7e8c8;color:#07c160;display:flex;align-items:center;gap:6px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#07c160"><path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.11.24-.247 0-.06-.023-.12-.038-.177l-.327-1.233a.49.49 0 0 1 .177-.554C22.888 18.35 24 16.74 24 14.98c0-3.21-2.931-5.837-7.063-6.122zm-3.494 3.138c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982zm4.844 0c.535 0 .969.44.969.982a.976.976 0 0 1-.969.983.976.976 0 0 1-.969-.983c0-.542.434-.982.969-.982z"/></svg>
           ${currentLang==='zh-CN'||currentLang==='zh-TW' ? (TRANSLATIONS[currentLang]?.wechatBtn||'关注微信') : 'Follow on WeChat'}
