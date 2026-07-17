@@ -408,34 +408,19 @@ tbody tr:hover td{background:#fef7f7}
 let allPatients = [];
 let currentView = 'grouped';
 
-let _adminToken = sessionStorage.getItem('vhs_admin_token') || '';
-
-async function getAdminToken() {
-  const res = await fetch('/api/admin/token', { credentials: 'include' });
-  if (!res.ok) { window.location.href = '/admin'; return; }
-  const data = await res.json();
-  _adminToken = data.token;
-  sessionStorage.setItem('vhs_admin_token', _adminToken);
-  return _adminToken;
-}
+sessionStorage.removeItem('vhs_admin_token'); // legacy token no longer used
 
 async function adminFetch(url, opts = {}) {
-  if (!_adminToken) await getAdminToken();
-  const headers = { 'X-Admin-Token': _adminToken, ...(opts.headers || {}) };
-  const res = await fetch(url, { ...opts, headers, credentials: 'include' });
-  if (res.status === 401) {
-    sessionStorage.removeItem('vhs_admin_token');
-    _adminToken = '';
-    window.location.href = '/admin';
-    return res;
+  const res = await fetch(url, { ...opts, headers: { ...(opts.headers || {}) }, credentials: 'include' });
+  if (res.status === 401) { window.location.href = '/login'; throw new Error('not-authenticated'); }
+  if (res.status === 403) {
+    document.body.innerHTML = '<div style="font-family:Inter,-apple-system,sans-serif;text-align:center;padding:90px 24px;color:#111827"><h2 style="margin-bottom:8px">Not authorized</h2><p style="color:#6b7280">This account is not an administrator.</p><p style="margin-top:18px"><a href="/" style="color:#b91c1c">&larr; Back to Vitava</a></p></div>';
+    throw new Error('forbidden');
   }
   return res;
 }
 
 async function loadPatients() {
-  try {
-    if (!_adminToken) await getAdminToken();
-  } catch(e) { return; }
   try {
     const res = await adminFetch('/api/admin/patients');
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -699,7 +684,7 @@ async function deleteVisit(visitId, visitNum, patientKey) {
   try {
     const resp = await adminFetch('/api/admin/records/delete-one', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Token': _adminToken },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: visitId })
     });
     const data = await resp.json();
@@ -769,7 +754,7 @@ function deletePatientProfile() {
   const ids = visits.map(v => String(v.id)).filter(Boolean);
   adminFetch('/api/admin/patients/delete', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Admin-Token': _adminToken },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids })
   }).then(r => r.json()).then(data => {
     if (data.deleted !== undefined) {
@@ -980,7 +965,7 @@ async function doDelete() {
   const ids = checked.map(cb => cb.closest('tr').dataset.id).filter(Boolean);
   if (!ids.length) return;
   try {
-    const resp = await adminFetch('/api/admin/patients/delete', { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Token':_adminToken}, body:JSON.stringify({ids}) });
+    const resp = await adminFetch('/api/admin/patients/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids}) });
     const data = await resp.json();
     if (!resp.ok) throw new Error(data.error||'Delete failed');
     checked.forEach(cb => cb.closest('tr').remove());
