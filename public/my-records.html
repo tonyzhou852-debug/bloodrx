@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My Records — VANDL VHS</title>
+<title>My Records — Vitava</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -85,6 +85,9 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .person-score-big{font-size:24px;font-weight:700;line-height:1}
 .person-reports-count{font-size:11px;color:var(--ink-4)}
 .person-card-footer{padding:8px 1.4rem;background:var(--bg-2);border-top:1px solid var(--border);font-size:12px;color:var(--ink-3)}
+.person-trend{display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto;margin-right:14px}
+.trend-delta{font-size:11px;font-weight:600}
+@media(max-width:560px){.person-trend{display:none}}
 .person-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:24px}
 .person-overlay.open{display:flex}
 .person-modal{background:var(--surface);border-radius:var(--radius-lg);box-shadow:0 24px 64px rgba(0,0,0,.2);width:100%;max-width:700px;max-height:90vh;display:flex;flex-direction:column;animation:modalIn .2s ease-out}
@@ -181,7 +184,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
   <div class="topbar-inner">
     <a href="/" class="logo">
       <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L8 9H3l4.5 5.5L5 22l7-4.5L19 22l-2.5-7.5L21 9h-5L12 2z"/></svg></div>
-      <span class="logo-text">VANDL<em>VHS</em></span>
+      <span class="logo-text">Vita<em>va</em></span>
     </a>
     <div class="view-toggle" id="view-toggle">
       <a href="/" id="toggle-upload">
@@ -218,8 +221,8 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 
   <div class="stats-grid">
     <div class="stat-card brand"><div class="stat-label" id="stat-total-label">Total Assessments</div><div class="stat-value" id="st-total">—</div></div>
-    <div class="stat-card"><div class="stat-label" id="stat-latest-label">Latest VHS Score</div><div class="stat-value" id="st-latest">—</div></div>
-    <div class="stat-card"><div class="stat-label" id="stat-avg-label">Average VHS Score</div><div class="stat-value" id="st-avg">—</div></div>
+    <div class="stat-card"><div class="stat-label" id="stat-latest-label">Latest Vitava Score</div><div class="stat-value" id="st-latest">—</div></div>
+    <div class="stat-card"><div class="stat-label" id="stat-avg-label">Average Vitava Score</div><div class="stat-value" id="st-avg">—</div></div>
   </div>
 
   <div class="records-list" id="records-list">
@@ -250,7 +253,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 const T = {
   en: {
     title:'My Health Records', sub:'All wellness assessments you have submitted',
-    statTotal:'Total Assessments', statLatest:'Latest VHS Score', statAvg:'Average VHS Score',
+    statTotal:'Total Assessments', statLatest:'Latest Vitava Score', statAvg:'Average Vitava Score',
     newAssessment:'New Assessment', myHistory:'My History', signOut:'Sign Out',
     loading:'Loading your records…', loadError:'Failed to load your records. Please refresh.',
     emptyTitle:'No assessments yet', emptyBody:'Submit your first health document to see results here.',
@@ -265,7 +268,7 @@ const T = {
     age:'Age', gender:'Gender', phone:'Phone', complaint:'Chief Complaint', notes:'Clinical Notes',
     keyConcerns:'Key Health Concerns', monitoring:'Monitoring Plan',
     riskCV:'Cardiovascular', riskMet:'Metabolic', riskLiver:'Liver', riskKidney:'Kidney', riskInflam:'Inflammation',
-    notProvided:'Not provided', vhsScore:'VHS Score',
+    notProvided:'Not provided', vhsScore:'Vitava Score',
     breakfast:'Breakfast', lunch:'Lunch', dinner:'Dinner',
     day:'Day', repeatWeeks:'Repeat this plan for {n} weeks',
     mealDuration:'Recommended duration',
@@ -273,7 +276,7 @@ const T = {
   },
   'zh-CN': {
     title:'我的健康记录', sub:'您提交的所有健康评估记录',
-    statTotal:'评估总数', statLatest:'最新VHS评分', statAvg:'平均VHS评分',
+    statTotal:'评估总数', statLatest:'最新Vitava评分', statAvg:'平均Vitava评分',
     newAssessment:'新建评估', myHistory:'我的记录', signOut:'退出登录',
     loading:'正在加载您的记录…', loadError:'加载记录失败，请刷新页面。',
     emptyTitle:'暂无评估记录', emptyBody:'提交您的第一份健康文档即可在此查看结果。',
@@ -288,7 +291,7 @@ const T = {
     age:'年龄', gender:'性别', phone:'电话', complaint:'主诉', notes:'备注',
     keyConcerns:'主要健康问题', monitoring:'监测计划',
     riskCV:'心血管', riskMet:'代谢', riskLiver:'肝脏', riskKidney:'肾脏', riskInflam:'炎症',
-    notProvided:'未提供', vhsScore:'VHS评分',
+    notProvided:'未提供', vhsScore:'Vitava评分',
     breakfast:'早餐', lunch:'午餐', dinner:'晚餐',
     day:'日', repeatWeeks:'建议重复该计划 {n} 周',
     mealDuration:'建议周期',
@@ -296,7 +299,7 @@ const T = {
   },
   'zh-TW': {
     title:'我的健康記錄', sub:'您提交的所有健康評估記錄',
-    statTotal:'評估總數', statLatest:'最新VHS評分', statAvg:'平均VHS評分',
+    statTotal:'評估總數', statLatest:'最新Vitava評分', statAvg:'平均Vitava評分',
     newAssessment:'新建評估', myHistory:'我的記錄', signOut:'退出登入',
     loading:'正在載入您的記錄…', loadError:'載入記錄失敗，請重新整理頁面。',
     emptyTitle:'暫無評估記錄', emptyBody:'提交您的第一份健康文件即可在此查看結果。',
@@ -311,7 +314,7 @@ const T = {
     age:'年齡', gender:'性別', phone:'電話', complaint:'主訴', notes:'備註',
     keyConcerns:'主要健康問題', monitoring:'監測計劃',
     riskCV:'心血管', riskMet:'代謝', riskLiver:'肝臟', riskKidney:'腎臟', riskInflam:'發炎',
-    notProvided:'未提供', vhsScore:'VHS評分',
+    notProvided:'未提供', vhsScore:'Vitava評分',
     breakfast:'早餐', lunch:'午餐', dinner:'晚餐',
     day:'日', repeatWeeks:'建議重複該計劃 {n} 週',
     mealDuration:'建議週期',
@@ -437,6 +440,32 @@ function renderList() {
     groups[key].push(r);
   });
   // Sort each group most recent first
+function trendSVG(recs) {
+  // recs: newest-first; build oldest-first score series
+  const pts = recs.slice().reverse().filter(r => r.vhs_score > 0).map(r => r.vhs_score);
+  if (pts.length < 2) return '';
+  const W = 120, H = 34, P = 3;
+  const min = Math.min(...pts), max = Math.max(...pts), span = (max - min) || 1;
+  const step = (W - 2*P) / (pts.length - 1);
+  const xy = pts.map((v,i) => [P + i*step, H - P - ((v - min)/span)*(H - 2*P)]);
+  const path = xy.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const lastPt = xy[xy.length-1];
+  const delta = pts[pts.length-1] - pts[0];
+  const col = delta >= 0 ? 'var(--green, #059669)' : 'var(--brand)';
+  return '<svg class="trend-spark" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true">'
+    + '<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '<circle cx="'+lastPt[0].toFixed(1)+'" cy="'+lastPt[1].toFixed(1)+'" r="2.6" fill="'+col+'"/></svg>';
+}
+function trendDelta(recs) {
+  const pts = recs.slice().reverse().filter(r => r.vhs_score > 0).map(r => r.vhs_score);
+  if (pts.length < 2) return '';
+  const d = pts[pts.length-1] - pts[0];
+  const sign = d > 0 ? '+' : '';
+  const col = d >= 0 ? 'var(--green, #059669)' : 'var(--brand)';
+  const word = LANG==='zh-CN' ? '\u8d8b\u52bf' : LANG==='zh-TW' ? '\u8da8\u52e2' : 'trend';
+  return '<span class="trend-delta" style="color:'+col+'">'+sign+d+' \u00b7 '+pts.length+' '+(LANG==='en'?'pts':'\u6b21')+'</span>';
+}
+
   Object.values(groups).forEach(recs => recs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)));
 
   list.innerHTML = Object.entries(groups).map(([name, recs]) => {
@@ -450,6 +479,7 @@ function renderList() {
           <div class="person-name-big">${esc(name)}</div>
           <div class="person-meta-sub">${[latest.age && latest.age+'y', latest.gender].filter(Boolean).map(esc).join(' · ')}</div>
         </div>
+        <div class="person-trend">${trendSVG(recs)}${trendDelta(recs)}</div>
         <div class="person-right">
           <div class="person-score-big" style="color:${scoreColor(latest.vhs_score)}">${latest.vhs_score||'—'}</div>
           <span class="vhs-badge ${vhsClass(latest.vhs_score)}">${vhsLabel(latest.vhs_score)}</span>
@@ -665,7 +695,7 @@ async function doLogout() {
   await loadRecords();
 })();
 </script>
-<!-- VHB — Vandl Health Bot for My Records page -->
+<!-- Vitava Assistant — Vitava Assistant for My Records page -->
 <style>
 .vhb-fab{position:fixed;bottom:28px;right:28px;z-index:400;width:56px;height:56px;border-radius:50%;background:var(--brand);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(185,28,28,.35);display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform .2s,box-shadow .2s;font-family:inherit}
 .vhb-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(185,28,28,.45)}
@@ -725,14 +755,14 @@ async function doLogout() {
 @media(max-width:600px){.vhb-overlay{padding:0;align-items:flex-end}.vhb-window{max-width:100%;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:80vh}.vhb-fab{bottom:16px;right:16px}}
 </style>
 
-<button class="vhb-fab" onclick="openVHB()" aria-label="Open VHB Health Bot">&#x1F916;<span class="vhb-fab-label">Ask VHB</span></button>
+<button class="vhb-fab" onclick="openVHB()" aria-label="Open Vitava Assistant">&#x1F916;<span class="vhb-fab-label">Ask Vitava Assistant</span></button>
 
 <div class="vhb-overlay" id="vhb-overlay" onclick="if(event.target===this)closeVHB()">
   <div class="vhb-window">
     <div class="vhb-head">
       <div class="vhb-avatar">&#x1F916;</div>
       <div class="vhb-head-text">
-        <div class="vhb-head-name">VHB &mdash; Vandl Health Bot</div>
+        <div class="vhb-head-name">Vitava Assistant</div>
         <div class="vhb-head-sub" id="vhb-head-sub">Choose who to ask about</div>
       </div>
       <button class="vhb-close" onclick="closeVHB()">&#x2715;</button>
@@ -876,12 +906,12 @@ async function loadVHBPersons(){
 
 function buildVHBContext(name,records){
   if(!records||records.length===0){
-    return 'You are VHB (Vandl Health Bot). You are answering questions about '+name+'. They have no health assessments yet.';
+    return 'You are the Vitava Assistant. You are answering questions about '+name+'. They have no health assessments yet.';
   }
   var latest=records[0];
   var scores=records.filter(function(r){return r.vhs_score>0}).map(function(r){return r.vhs_score});
   var avg=scores.length?Math.round(scores.reduce(function(a,b){return a+b},0)/scores.length):0;
-  return 'You are VHB (Vandl Health Bot). Answer questions about '+name+'.\n\nHealth data:\n- Total assessments: '+records.length+'\n- Latest VHS Score: '+latest.vhs_score+'/100\n- Average VHS Score: '+avg+'/100\n- Summary: '+(latest.summary||'Not available')+'\n- Key concerns: '+(latest.key_health_concerns||'None')+'\n- Cardiovascular risk: '+(latest.risk_cardiovascular||0)+'/5\n- Metabolic risk: '+(latest.risk_metabolic||0)+'/5\n- Liver risk: '+(latest.risk_liver||0)+'/5\n- Kidney risk: '+(latest.risk_kidney||0)+'/5\n- Inflammation risk: '+(latest.risk_inflammation||0)+'/5\n- Nutrition: '+(latest.nutrition||'None')+'\n- Lifestyle: '+(latest.lifestyle||'None')+'\n- Supplements: '+(latest.supplements||'None')+'\n- Monitoring: '+(latest.monitoring_plan||'None')+'\n\nRULES: Answer ONLY health questions. Max 3-4 sentences. Never prescribe or diagnose. Respond in same language as user.';
+  return 'You are the Vitava Assistant. Answer questions about '+name+'.\n\nHealth data:\n- Total assessments: '+records.length+'\n- Latest Vitava Score: '+latest.vhs_score+'/100\n- Average Vitava Score: '+avg+'/100\n- Summary: '+(latest.summary||'Not available')+'\n- Key concerns: '+(latest.key_health_concerns||'None')+'\n- Cardiovascular risk: '+(latest.risk_cardiovascular||0)+'/5\n- Metabolic risk: '+(latest.risk_metabolic||0)+'/5\n- Liver risk: '+(latest.risk_liver||0)+'/5\n- Kidney risk: '+(latest.risk_kidney||0)+'/5\n- Inflammation risk: '+(latest.risk_inflammation||0)+'/5\n- Nutrition: '+(latest.nutrition||'None')+'\n- Lifestyle: '+(latest.lifestyle||'None')+'\n- Supplements: '+(latest.supplements||'None')+'\n- Monitoring: '+(latest.monitoring_plan||'None')+'\n\nRULES: Answer ONLY health questions. Max 3-4 sentences. Never prescribe or diagnose. Respond in same language as user.';
 }
 
 function scoreColor(s){
@@ -962,10 +992,10 @@ function selectVHBPerson(key){
 
   var records=person.records;
   if(!records||records.length===0){
-    vhbAppendMsg('bot','Hi! I\'m VHB. '+person.name+' has no health assessments yet. Submit a report for them first.');
+    vhbAppendMsg('bot','Hi! I\'m Vitava Assistant. '+person.name+' has no health assessments yet. Submit a report for them first.');
   } else {
     var latest=records[0];
-    vhbAppendMsg('bot','Hi! I\'m VHB. I\'ve reviewed '+person.name+'\'s '+records.length+' health assessment'+(records.length!==1?'s':'')+'. Their latest VHS score is '+latest.vhs_score+'/100. What would you like to know?');
+    vhbAppendMsg('bot','Hi! I\'m Vitava Assistant. I\'ve reviewed '+person.name+'\'s '+records.length+' health assessment'+(records.length!==1?'s':'')+'. Their latest Vitava score is '+latest.vhs_score+'/100. What would you like to know?');
   }
 
   showVHBChat();
@@ -1010,7 +1040,7 @@ async function vhbGetReply(){
   document.getElementById('vhb-send-btn').disabled=true;
   vhbShowTyping();
   try{
-    var context=_vhbContexts[_vhbCurrentKey]||'You are VHB, a health assistant.';
+    var context=_vhbContexts[_vhbCurrentKey]||'You are Vitava Assistant, a health assistant.';
     var history=_vhbHistories[_vhbCurrentKey]||[];
     var resp=await fetch('/api/bot',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({messages:history.slice(-8),system:context})});
     var data=await resp.json();
