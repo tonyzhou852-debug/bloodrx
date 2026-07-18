@@ -96,7 +96,7 @@ async function getDB() {
     serverSelectionTimeoutMS: 5000, maxPoolSize: 10,
   });
   await client.connect();
-  _db = client.db("bloodrx");
+  _db = client.db(process.env.MONGODB_DB || "bloodrx");
   await _db.collection("users").createIndex({ email: 1 }, { unique: true });
   await _db.collection("users").createIndex({ username: 1 }, { unique: true, sparse: true });
   await _db.collection("patients").createIndex({ id: 1 });
