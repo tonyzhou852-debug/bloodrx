@@ -312,6 +312,8 @@ app.use((req, res, next) => {
 });
 
 // ── Google OAuth ───────────────────────────────────────────────
+const GOOGLE_AUTH_DISABLED = ["1","true","yes"].includes(String(process.env.DISABLE_GOOGLE_AUTH||"").toLowerCase());
+if (GOOGLE_AUTH_DISABLED) console.log("Google auth is DISABLED on this server (DISABLE_GOOGLE_AUTH set)");
 app.use(passport.initialize());
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
   passport.use(new GoogleStrategy({
@@ -595,8 +597,12 @@ app.post("/api/auth/reset-password", globalLimit, authLimit, async (req, res) =>
   }
 });
 
-app.get("/auth/google", passport.authenticate("google", { scope:["profile","email"], session:false }));
+app.get("/auth/google", (req, res, next) => {
+  if (GOOGLE_AUTH_DISABLED) return res.redirect("/login");
+  next();
+}, passport.authenticate("google", { scope:["profile","email"], session:false }));
 app.get("/auth/google/callback",
+  (req, res, next) => { if (GOOGLE_AUTH_DISABLED) return res.redirect("/login"); next(); },
   passport.authenticate("google", { session:false, failureRedirect:"/login?error=google" }),
   (req, res) => {
     const u = req.user;
