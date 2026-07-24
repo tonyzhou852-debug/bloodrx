@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store">
 <title>Vitava</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap&font-display=swap" rel="stylesheet">
@@ -1054,7 +1055,6 @@ document.addEventListener('DOMContentLoaded', detectLang);
 <script>
 // Reset demo state — runs at DOMContentLoaded AND window.load AND after 500ms safety net
 function _resetDemoState() {
-  console.log("[Vitava] _resetDemoState running at", Date.now());
   var mf = document.getElementById('main-form');
   var dw = document.getElementById('demo-btn-wrap');
   var db = document.getElementById('demo-btn');
@@ -1064,9 +1064,7 @@ function _resetDemoState() {
   var fs = document.getElementById('form-section');
   var fh = document.getElementById('form-heading');
   var banner = document.getElementById('demo-banner');
-  console.log("[Vitava] main-form before reset:", mf ? mf.style.display : "NOT FOUND");
   if (mf) { mf.style.display = ''; mf.style.removeProperty('display'); }
-  console.log("[Vitava] main-form after reset:", mf ? mf.style.display : "NOT FOUND");
   if (dw) dw.style.display = 'block';
   if (db) db.style.display = '';
   if (bf) { bf.style.display = 'none'; }
@@ -1078,6 +1076,15 @@ function _resetDemoState() {
 }
 document.addEventListener('DOMContentLoaded', _resetDemoState);
 window.addEventListener('load', _resetDemoState);
+// pageshow fires after bfcache restore — critical for Chrome tab restore
+window.addEventListener('pageshow', function(e) {
+  _resetDemoState();
+  if (e.persisted) {
+    // Page was restored from bfcache — force full reset
+    setTimeout(_resetDemoState, 50);
+    setTimeout(_resetDemoState, 200);
+  }
+});
 setTimeout(_resetDemoState, 100);
 setTimeout(_resetDemoState, 500);
 </script>
