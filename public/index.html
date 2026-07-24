@@ -1019,6 +1019,7 @@ function showDemoReport() {
 
 function backToForm() {
   document.getElementById("results").style.display = "none";
+  document.getElementById("loading").style.display = "none";
   document.getElementById("main-form").style.display = "";
   document.getElementById("demo-btn").style.display = "";
   document.getElementById("back-to-form").classList.remove("visible");
@@ -1307,7 +1308,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
 
   </div>
 
-  <div id="loading" aria-live="polite" aria-atomic="true" role="status">
+  <div id="loading" aria-live="polite" aria-atomic="true" role="status" style="display:none">
     <div class="loading-card">
       <div class="loading-progress-track">
         <div class="loading-progress-bar" id="progress-bar"></div>
@@ -1318,7 +1319,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
     </div>
   </div>
 
-  <div id="results"></div>
+  <div id="results" style="display:none"></div>
 
 </main>
 <script>
