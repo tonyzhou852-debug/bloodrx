@@ -342,7 +342,7 @@ input[type=file] { display: none; }
 .analyze-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 .demo-btn{display:inline-flex;align-items:center;gap:8px;margin:18px auto 0;padding:11px 22px;background:transparent;border:2px solid rgba(185,28,28,.35);border-radius:var(--radius-lg);font-size:14px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .2s}
 .demo-btn:hover{background:var(--brand-bg);border-color:var(--brand);transform:translateY(-1px)}
-.back-to-form{display:none;align-items:center;gap:6px;padding:6px 12px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .15s}
+.back-to-form{display:none;align-items:center;gap:6px;padding:6px 12px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .15s}.back-to-form.visible{display:flex!important}
 .back-to-form:hover{background:var(--brand);color:#fff}
 .back-to-form.visible{display:flex}
 .demo-btn svg{flex-shrink:0;width:16px;height:16px}
@@ -1003,6 +1003,8 @@ function showDemoReport() {
 
   document.getElementById("main-form").style.display = "none";
   document.getElementById("demo-btn").style.display = "none";
+  document.getElementById("demo-btn-wrap").style.display = "none";
+  document.getElementById("back-to-form").style.display = "flex";
   document.getElementById("back-to-form").classList.add("visible");
   const resultsEl = document.getElementById("results");
   resultsEl.style.display = "block";
@@ -1022,6 +1024,8 @@ function backToForm() {
   document.getElementById("loading").style.display = "none";
   document.getElementById("main-form").style.display = "";
   document.getElementById("demo-btn").style.display = "";
+  document.getElementById("demo-btn-wrap").style.display = "block";
+  document.getElementById("back-to-form").style.display = "none";
   document.getElementById("back-to-form").classList.remove("visible");
   const b = document.getElementById("demo-banner");
   if (b) b.remove();
@@ -1062,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
     var ld = document.getElementById('loading');
     if (mf) mf.style.display = '';
     if (db) db.style.display = '';
-    if (bf) bf.classList.remove('visible');
+    if (bf) { bf.classList.remove('visible'); bf.style.display = 'none'; }
     if (res) res.style.display = 'none';
     if (ld) ld.style.display = 'none';
     var banner = document.getElementById('demo-banner');
@@ -1080,7 +1084,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
       <span class="logo-text">Vita<em>va</em></span>
     </a>
 
-    <button class="back-to-form" id="back-to-form" onclick="backToForm()">
+    <button class="back-to-form" id="back-to-form" onclick="backToForm()" style="display:none">
       ← Back to assessment
     </button>
     <div class="view-toggle" id="view-toggle">
@@ -1137,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
   </div>
 </div>
 
-<div style="text-align:center;padding:4px 0 8px">
+<div id="demo-btn-wrap" style="text-align:center;padding:4px 0 8px;display:block">
   <button class="demo-btn" id="demo-btn" onclick="showDemoReport()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
     <span id="demo-btn-text">See a sample report →</span>
