@@ -342,6 +342,9 @@ input[type=file] { display: none; }
 .analyze-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 .demo-btn{display:inline-flex;align-items:center;gap:8px;margin:18px auto 0;padding:11px 22px;background:transparent;border:2px solid rgba(185,28,28,.35);border-radius:var(--radius-lg);font-size:14px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .2s}
 .demo-btn:hover{background:var(--brand-bg);border-color:var(--brand);transform:translateY(-1px)}
+.back-to-form{display:none;align-items:center;gap:6px;padding:6px 12px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .15s}
+.back-to-form:hover{background:var(--brand);color:#fff}
+.back-to-form.visible{display:flex}
 .demo-btn svg{flex-shrink:0;width:16px;height:16px}
 
 .disclaimer {
@@ -999,6 +1002,8 @@ function showDemoReport() {
   const patient = {name:d.name,age:d.age,gender:d.gender,complaint:d.complaint,notes:""};
 
   document.getElementById("main-form").style.display = "none";
+  document.getElementById("demo-btn").style.display = "none";
+  document.getElementById("back-to-form").classList.add("visible");
   const resultsEl = document.getElementById("results");
   resultsEl.style.display = "block";
   renderResults(result, patient);
@@ -1007,9 +1012,19 @@ function showDemoReport() {
   const banner = document.createElement("div");
   banner.id = "demo-banner";
   banner.style.cssText = "background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:8px";
-  banner.innerHTML = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4M12 8h.01\"/></svg><span><strong>Sample Report</strong> \u2014 This is a demonstration using fictional data. <a href=\"#\" onclick=\"document.getElementById('main-form').style.display='';document.getElementById('results').style.display='none';document.getElementById('demo-banner').remove();return false\" style=\"color:#b45309;font-weight:600\">Upload your own documents \u2192</a></span>";
+  banner.innerHTML = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4M12 8h.01\"/></svg><span><strong>Sample Report</strong> \u2014 This is a demonstration using fictional data. <a href=\"#\" onclick=\"backToForm();return false\" style=\"color:#b45309;font-weight:600\">Upload your own documents \u2192</a></span>";
   resultsEl.insertBefore(banner, resultsEl.firstChild);
   resultsEl.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function backToForm() {
+  document.getElementById("results").style.display = "none";
+  document.getElementById("main-form").style.display = "";
+  document.getElementById("demo-btn").style.display = "";
+  document.getElementById("back-to-form").classList.remove("visible");
+  const b = document.getElementById("demo-banner");
+  if (b) b.remove();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function detectLang() {
@@ -1043,8 +1058,10 @@ document.addEventListener('DOMContentLoaded', detectLang);
       </div>
       <span class="logo-text">Vita<em>va</em></span>
     </a>
-    <span class="topbar-tag">Clinical AI</span>
 
+    <button class="back-to-form" id="back-to-form" onclick="backToForm()">
+      ← Back to assessment
+    </button>
     <div class="view-toggle" id="view-toggle">
       <a href="/" class="active" id="nav-new">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -2055,9 +2072,9 @@ function resetForm() {
 </script>
 
 <footer class="site-footer">
-  <p>Vitava &nbsp;\u00b7&nbsp;
-    <a href="/terms">Terms of Service</a> &nbsp;\u00b7&nbsp;
-    <a href="/privacy">Privacy Policy</a> &nbsp;\u00b7&nbsp;
+  <p>Vitava &nbsp;&middot;&nbsp;
+    <a href="/terms">Terms of Service</a> &nbsp;&middot;&nbsp;
+    <a href="/privacy">Privacy Policy</a> &nbsp;&middot;&nbsp;
     <button class="bot-trigger" onclick="openBot()">&#x1F4AC; Help</button>
   </p>
   <p style="margin-top:6px">This report is for health education and wellness management only. Not a medical diagnosis or prescription.</p>
