@@ -342,9 +342,8 @@ input[type=file] { display: none; }
 .analyze-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
 .demo-btn{display:inline-flex;align-items:center;gap:8px;margin:18px auto 0;padding:11px 22px;background:transparent;border:2px solid rgba(185,28,28,.35);border-radius:var(--radius-lg);font-size:14px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .2s}
 .demo-btn:hover{background:var(--brand-bg);border-color:var(--brand);transform:translateY(-1px)}
-.back-to-form{display:none;align-items:center;gap:6px;padding:6px 12px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .15s}.back-to-form.visible{display:flex!important}
+.back-to-form{display:none;align-items:center;gap:6px;padding:6px 12px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .15s}
 .back-to-form:hover{background:var(--brand);color:#fff}
-.back-to-form.visible{display:flex}
 .demo-btn svg{flex-shrink:0;width:16px;height:16px}
 
 .disclaimer {
@@ -1005,7 +1004,6 @@ function showDemoReport() {
   document.getElementById("demo-btn").style.display = "none";
   document.getElementById("demo-btn-wrap").style.display = "none";
   document.getElementById("back-to-form").style.display = "flex";
-  document.getElementById("back-to-form").classList.add("visible");
   const resultsEl = document.getElementById("results");
   resultsEl.style.display = "block";
   renderResults(result, patient);
@@ -1026,7 +1024,6 @@ function backToForm() {
   document.getElementById("demo-btn").style.display = "";
   document.getElementById("demo-btn-wrap").style.display = "block";
   document.getElementById("back-to-form").style.display = "none";
-  document.getElementById("back-to-form").classList.remove("visible");
   const b = document.getElementById("demo-banner");
   if (b) b.remove();
   window.scrollTo({ top: 0, behavior: "smooth" });
