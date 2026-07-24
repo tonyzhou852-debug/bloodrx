@@ -1216,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
           </div>
           <div>
             <label class="field-label" for="p-phone" id="label-phone">Phone number</label>
-            <div class="field-hint">Optional \u2014 for follow-up</div>
+            <div class="field-hint">Optional — for follow-up</div>
             <input type="tel" id="p-phone" name="p-phone" placeholder="e.g. +1 555 000 0000" autocomplete="tel" />
           </div>
         </div>
@@ -1239,13 +1239,13 @@ document.addEventListener('DOMContentLoaded', detectLang);
 
         <div class="field-group">
           <label class="field-label" for="p-complaint" id="label-complaint">Chief Complaint / Symptoms</label>
-          <div class="field-hint" id="hint-complaint">Write in any language \u2014 automatically translated for analysis</div>
+          <div class="field-hint" id="hint-complaint">Write in any language — automatically translated for analysis</div>
           <textarea id="p-complaint" name="p-complaint" rows="2" dir="auto" placeholder="e.g. Fever and cough"></textarea>
         </div>
 
         <div class="field-group">
           <label class="field-label" for="p-notes" id="label-notes">Clinical Notes</label>
-          <div class="field-hint" id="hint-notes">Allergies, current medications, comorbidities \u2014 any language. Include known drug allergies; this directly influences antibiotic selection.</div>
+          <div class="field-hint" id="hint-notes">Allergies, current medications, comorbidities — any language. Include known drug allergies; this directly influences antibiotic selection.</div>
           <textarea id="p-notes" name="p-notes" rows="3" dir="auto" placeholder="e.g. Penicillin allergy, Type 2 diabetes, on Metformin"></textarea>
         </div>
 
@@ -1273,7 +1273,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
             <svg id="dz-svg" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
           </div>
           <p id="dz-text">Click to select files, or drag &amp; drop here</p>
-          <p class="dz-sub">PDF &nbsp;\u00b7&nbsp; JPG &nbsp;\u00b7&nbsp; PNG &nbsp;\u00b7&nbsp; TXT &nbsp;\u00b7&nbsp; CSV &nbsp;\u00b7&nbsp; Multiple files &nbsp;\u00b7&nbsp; Max 20 MB each</p>
+          <p class="dz-sub">PDF &nbsp;·&nbsp; JPG &nbsp;·&nbsp; PNG &nbsp;·&nbsp; TXT &nbsp;·&nbsp; CSV &nbsp;·&nbsp; Multiple files &nbsp;·&nbsp; Max 20 MB each</p>
           <label for="file-in" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Choose files to upload</label>
           <input type="file" id="file-in" multiple
             accept=".pdf,.jpg,.jpeg,.png,.txt,.csv,application/pdf,image/jpeg,image/png,text/plain,text/csv"
@@ -1296,7 +1296,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
         <div id="consent-box" class="consent-box">
           <label class="consent-label" for="consent-check">
             <input type="checkbox" id="consent-check" onchange="updateAnalyzeBtn()">
-            <span id="consent-text">I am 18 years or older and agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this platform uses AI to generate wellness assessments for <strong>educational purposes only</strong> \u2014 not medical diagnosis or prescription. I consent to my data being processed as described in the Privacy Policy.</span>
+            <span id="consent-text">I am 18 years or older and agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a>. I understand this platform uses AI to generate wellness assessments for <strong>educational purposes only</strong> — not medical diagnosis or prescription. I consent to my data being processed as described in the Privacy Policy.</span>
           </label>
         </div>
 
@@ -2109,7 +2109,7 @@ function resetForm() {
       </div>
       <div class="bot-head-text">
         <div class="bot-head-name">Vitava Assistant</div>
-        <div class="bot-head-status">AI Assistant \u00b7 Not a human</div>
+        <div class="bot-head-status">AI Assistant · Not a human</div>
       </div>
       <button class="bot-close" onclick="closeBot()" aria-label="Close help">&#x2715;</button>
     </div>
@@ -2259,8 +2259,8 @@ async function getBotReply() {
     <h2 id="age-gate-title">Age Verification Required</h2>
     <p>Vitava is intended for use by adults aged 18 and over. By continuing, you confirm that you are at least 18 years old and agree to our Terms of Service and Privacy Policy.</p>
     <div class="age-gate-btns">
-      <button class="age-gate-confirm" onclick="confirmAge()">I am 18 years or older \u2014 Continue</button>
-      <button class="age-gate-deny" onclick="denyAge()">I am under 18 \u2014 Exit</button>
+      <button class="age-gate-confirm" onclick="confirmAge()">I am 18 years or older — Continue</button>
+      <button class="age-gate-deny" onclick="denyAge()">I am under 18 — Exit</button>
     </div>
     <p class="age-gate-legal">By clicking continue you agree to our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a>. We do not knowingly collect data from individuals under 18.</p>
   </div>
