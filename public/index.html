@@ -1052,29 +1052,31 @@ document.addEventListener('DOMContentLoaded', detectLang);
 
 <a href="#main-form" class="skip-link">Skip to main form</a>
 <script>
-// Reset any stale demo state immediately on page load
-(function() {
-  // This runs before any other JS — ensures clean initial state
-  document.addEventListener('DOMContentLoaded', function() {
-    var mf = document.getElementById('main-form');
-    var db = document.getElementById('demo-btn');
-    var bf = document.getElementById('back-to-form');
-    var res = document.getElementById('results');
-    var ld = document.getElementById('loading');
-    if (mf) mf.style.display = '';
-    if (db) db.style.display = '';
-    if (bf) { bf.classList.remove('visible'); bf.style.display = 'none'; }
-    if (res) res.style.display = 'none';
-    if (ld) ld.style.display = 'none';
-    var banner = document.getElementById('demo-banner');
-    if (banner) banner.remove();
-    // Ensure form sections are visible
-    var fs = document.getElementById('form-section');
-    var fh = document.getElementById('form-heading');
-    if (fs) fs.style.display = 'block';
-    if (fh) fh.style.display = 'block';
-  });
-})();
+// Reset demo state — runs at DOMContentLoaded AND window.load AND after 500ms safety net
+function _resetDemoState() {
+  var mf = document.getElementById('main-form');
+  var dw = document.getElementById('demo-btn-wrap');
+  var db = document.getElementById('demo-btn');
+  var bf = document.getElementById('back-to-form');
+  var res = document.getElementById('results');
+  var ld = document.getElementById('loading');
+  var fs = document.getElementById('form-section');
+  var fh = document.getElementById('form-heading');
+  var banner = document.getElementById('demo-banner');
+  if (mf) mf.style.cssText = mf.style.cssText.replace(/display\s*:\s*[^;]+;?/,'') || (mf.style.display = '');
+  if (dw) dw.style.display = 'block';
+  if (db) db.style.display = '';
+  if (bf) { bf.style.display = 'none'; }
+  if (res) res.style.display = 'none';
+  if (ld) ld.style.display = 'none';
+  if (fs) fs.style.display = 'block';
+  if (fh) fh.style.display = 'block';
+  if (banner) banner.remove();
+}
+document.addEventListener('DOMContentLoaded', _resetDemoState);
+window.addEventListener('load', _resetDemoState);
+setTimeout(_resetDemoState, 100);
+setTimeout(_resetDemoState, 500);
 </script>
 
 <nav class="topbar" aria-label="Site navigation">
