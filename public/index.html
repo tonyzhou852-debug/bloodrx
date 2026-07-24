@@ -1068,6 +1068,11 @@ document.addEventListener('DOMContentLoaded', detectLang);
     if (ld) ld.style.display = 'none';
     var banner = document.getElementById('demo-banner');
     if (banner) banner.remove();
+    // Ensure form sections are visible
+    var fs = document.getElementById('form-section');
+    var fh = document.getElementById('form-heading');
+    if (fs) fs.style.display = 'block';
+    if (fh) fh.style.display = 'block';
   });
 })();
 </script>
@@ -1146,12 +1151,12 @@ document.addEventListener('DOMContentLoaded', detectLang);
 </div>
 <main class="page" id="main-form">
 
-  <div class="page-heading" id="form-heading">
+  <div class="page-heading" id="form-heading" style="display:block">
     <h1 id="form-heading-h1">Vitava Wellness Assessment</h1>
     <p id="form-heading-p">Submit health documents in any format or language to receive a comprehensive Vitava Health Score and wellness recommendations.</p>
   </div>
 
-  <div id="form-section">
+  <div id="form-section" style="display:block">
 
     <div class="section-card" role="region" aria-labelledby="patient-heading">
       <div class="section-header">
