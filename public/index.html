@@ -1054,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
 <script>
 // Reset demo state — runs at DOMContentLoaded AND window.load AND after 500ms safety net
 function _resetDemoState() {
+  console.log("[Vitava] _resetDemoState running at", Date.now());
   var mf = document.getElementById('main-form');
   var dw = document.getElementById('demo-btn-wrap');
   var db = document.getElementById('demo-btn');
@@ -1063,7 +1064,9 @@ function _resetDemoState() {
   var fs = document.getElementById('form-section');
   var fh = document.getElementById('form-heading');
   var banner = document.getElementById('demo-banner');
-  if (mf) mf.style.cssText = mf.style.cssText.replace(/display\s*:\s*[^;]+;?/,'') || (mf.style.display = '');
+  console.log("[Vitava] main-form before reset:", mf ? mf.style.display : "NOT FOUND");
+  if (mf) { mf.style.display = ''; mf.style.removeProperty('display'); }
+  console.log("[Vitava] main-form after reset:", mf ? mf.style.display : "NOT FOUND");
   if (dw) dw.style.display = 'block';
   if (db) db.style.display = '';
   if (bf) { bf.style.display = 'none'; }
