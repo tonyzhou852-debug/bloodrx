@@ -1050,6 +1050,26 @@ document.addEventListener('DOMContentLoaded', detectLang);
 <body>
 
 <a href="#main-form" class="skip-link">Skip to main form</a>
+<script>
+// Reset any stale demo state immediately on page load
+(function() {
+  // This runs before any other JS — ensures clean initial state
+  document.addEventListener('DOMContentLoaded', function() {
+    var mf = document.getElementById('main-form');
+    var db = document.getElementById('demo-btn');
+    var bf = document.getElementById('back-to-form');
+    var res = document.getElementById('results');
+    var ld = document.getElementById('loading');
+    if (mf) mf.style.display = '';
+    if (db) db.style.display = '';
+    if (bf) bf.classList.remove('visible');
+    if (res) res.style.display = 'none';
+    if (ld) ld.style.display = 'none';
+    var banner = document.getElementById('demo-banner');
+    if (banner) banner.remove();
+  });
+})();
+</script>
 
 <nav class="topbar" aria-label="Site navigation">
   <div class="topbar-inner">
