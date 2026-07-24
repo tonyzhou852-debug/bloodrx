@@ -340,6 +340,9 @@ input[type=file] { display: none; }
 .analyze-btn:focus-visible { box-shadow: 0 0 0 3px rgba(185,28,28,.3); outline: none; }
 .analyze-btn:disabled { background: var(--ink-4); cursor: not-allowed; transform: none; }
 .analyze-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+.demo-btn{display:inline-flex;align-items:center;gap:8px;margin:18px auto 0;padding:11px 22px;background:transparent;border:2px solid rgba(185,28,28,.35);border-radius:var(--radius-lg);font-size:14px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .2s}
+.demo-btn:hover{background:var(--brand-bg);border-color:var(--brand);transform:translateY(-1px)}
+.demo-btn svg{flex-shrink:0;width:16px;height:16px}
 
 .disclaimer {
   display: flex; gap: 10px; align-items: flex-start;
@@ -949,6 +952,66 @@ function updateLangButtons(lang) {
   });
 }
 
+/* ── Demo Report ─────────────────────────────────────────────── */
+const DEMO_DATA = {
+  name:"Alex Chen",age:35,gender:"Male",
+  complaint:"Annual checkup — mild fatigue, occasional headaches",
+  vhs_score:71,vhs_label:"Fair",
+  summary:"Your results indicate moderately elevated LDL cholesterol and fasting glucose trending toward pre-diabetic range. Liver and kidney function are within normal limits. Cardiovascular risk is low-moderate and manageable with lifestyle adjustments. Overall, targeted dietary changes and increased physical activity could meaningfully improve your Vitava score within 3 months.",
+  key_health_concerns:"LDL cholesterol 148 mg/dL (borderline high) | Fasting glucose 102 mg/dL (pre-diabetic range) | BMI 26.2 (slightly overweight)",
+  risk_cardiovascular:2,risk_metabolic:3,risk_liver:1,risk_kidney:1,risk_inflammation:2,
+  nutrition:"Reduce saturated fat — swap red meat for fish/legumes 4x/week | Increase soluble fiber — oats, beans, apples daily | Limit refined carbs — choose whole grains | Add plant sterols — 2g/day from fortified foods",
+  lifestyle:"30 min brisk walking 5x/week — reduces LDL by 5-10% | Limit alcohol to 2 drinks/week | 7-8 hours sleep — poor sleep raises fasting glucose | 10-min daily meditation — cortisol elevates blood sugar",
+  supplements:"Omega-3 fish oil 1g/day — cardiovascular support | Magnesium glycinate 300mg/night — improves insulin sensitivity | Berberine 500mg 2x/day with meals — clinically shown to lower blood glucose",
+  monitoring_plan:"Retest lipid panel in 3 months after dietary changes. Monitor fasting glucose monthly. Consider HbA1c at next checkup to assess 3-month glucose average.",
+  meal_plan:{
+    week:{
+      monday:{breakfast:"Oats with berries + walnuts",lunch:"Grilled salmon salad, olive oil",dinner:"Stir-fried tofu with broccoli + brown rice"},
+      tuesday:{breakfast:"Greek yogurt + flaxseed + apple",lunch:"Lentil soup + whole-grain bread",dinner:"Baked chicken + roasted vegetables"},
+      wednesday:{breakfast:"Avocado toast + 2 eggs",lunch:"Quinoa bowl with chickpeas",dinner:"Steamed fish + bok choy + brown rice"},
+      thursday:{breakfast:"Oats with banana + chia seeds",lunch:"Black bean burrito (whole wheat)",dinner:"Grilled lean steak + sweet potato"},
+      friday:{breakfast:"Smoothie: spinach, banana, almond milk",lunch:"Tuna salad with mixed greens",dinner:"Whole-wheat pasta + tomato sauce + veg"},
+      saturday:{breakfast:"Whole-grain pancakes + fresh fruit",lunch:"Hummus + vegetable platter + pita",dinner:"Baked salmon + asparagus + quinoa"},
+      sunday:{breakfast:"Veggie omelette + whole-grain toast",lunch:"Minestrone soup + salad",dinner:"Roast chicken + roasted root vegetables"}
+    },
+    duration_weeks:4,
+    duration_note:"Follow this plan for 4 weeks, then retest fasting glucose and LDL levels."
+  }
+};
+
+function showDemoReport() {
+  const d = DEMO_DATA;
+  const rL = ["Very Low","Low","Moderate","High","Very High"];
+  const result = {
+    vhs_score:d.vhs_score, vhs_label:d.vhs_label, summary:d.summary,
+    key_health_concerns:d.key_health_concerns, findings:[],
+    risk_profile:{
+      cardiovascular:{score:d.risk_cardiovascular,label:rL[d.risk_cardiovascular-1],note:"Low-moderate risk — manageable with lifestyle changes."},
+      metabolic:     {score:d.risk_metabolic,     label:rL[d.risk_metabolic-1],     note:"Pre-diabetic glucose trend — dietary intervention recommended."},
+      liver:         {score:d.risk_liver,          label:rL[d.risk_liver-1],          note:"Within normal range."},
+      kidney:        {score:d.risk_kidney,         label:rL[d.risk_kidney-1],         note:"Within normal range."},
+      inflammation:  {score:d.risk_inflammation,   label:rL[d.risk_inflammation-1],   note:"Mildly elevated — monitor with anti-inflammatory diet."}
+    },
+    nutrition:d.nutrition.split(" | "), lifestyle:d.lifestyle.split(" | "),
+    supplements:d.supplements.split(" | "), monitoring_plan:d.monitoring_plan,
+    meal_plan:d.meal_plan, detected_languages:null
+  };
+  const patient = {name:d.name,age:d.age,gender:d.gender,complaint:d.complaint,notes:""};
+
+  document.getElementById("main-form").style.display = "none";
+  const resultsEl = document.getElementById("results");
+  resultsEl.style.display = "block";
+  renderResults(result, patient);
+
+  // Insert demo banner at top
+  const banner = document.createElement("div");
+  banner.id = "demo-banner";
+  banner.style.cssText = "background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:13px;color:#92400e;display:flex;align-items:center;gap:8px";
+  banner.innerHTML = "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"M12 16v-4M12 8h.01\"/></svg><span><strong>Sample Report</strong> \u2014 This is a demonstration using fictional data. <a href=\"#\" onclick=\"document.getElementById('main-form').style.display='';document.getElementById('results').style.display='none';document.getElementById('demo-banner').remove();return false\" style=\"color:#b45309;font-weight:600\">Upload your own documents \u2192</a></span>";
+  resultsEl.insertBefore(banner, resultsEl.firstChild);
+  resultsEl.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
 async function detectLang() {
   const saved = localStorage.getItem('vhs_lang');
   let lang = 'en';
@@ -1009,11 +1072,7 @@ document.addEventListener('DOMContentLoaded', detectLang);
 </nav>
 
 <div class="hero" role="banner">
-  <div class="hero-eyebrow" aria-hidden="true">
-    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
-    For licensed clinicians only
-    <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="#7fa8c4"/></svg>
-  </div>
+  
   <h1 id="hero-title">Vitava Health Score &amp;<br><em>Wellness Assessment Platform</em></h1>
   <p class="hero-sub" id="hero-sub">Submit health documents in any format or language to receive a comprehensive wellness assessment and Vitava Health Score.</p>
   <div class="capability-chips" role="list" aria-label="Supported capabilities">
@@ -1040,6 +1099,12 @@ document.addEventListener('DOMContentLoaded', detectLang);
   </div>
 </div>
 
+<div style="text-align:center;padding:4px 0 8px">
+  <button class="demo-btn" id="demo-btn" onclick="showDemoReport()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    <span id="demo-btn-text">See a sample report →</span>
+  </button>
+</div>
 <main class="page" id="main-form">
 
   <div class="page-heading" id="form-heading">
@@ -1257,8 +1322,8 @@ const FILE_ICONS = {
   csv:   `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>`,
   other: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`,
 };
-const DZ_UPLOAD_SVG = `<svg id="dz-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>`;
-const DZ_CHECK_SVG  = `<svg id="dz-svg" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const DZ_UPLOAD_SVG = `<svg class="dz-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>`;
+const DZ_CHECK_SVG  = `<svg class="dz-svg-icon" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
 function detectType(file) {
   const mt = (file.type||'').toLowerCase();
