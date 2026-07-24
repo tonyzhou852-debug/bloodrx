@@ -1001,7 +1001,6 @@ function showDemoReport() {
   };
   const patient = {name:d.name,age:d.age,gender:d.gender,complaint:d.complaint,notes:""};
 
-  document.getElementById("main-form").style.display = "none";
   document.getElementById("demo-btn").style.display = "none";
   document.getElementById("demo-btn-wrap").style.display = "none";
   document.getElementById("back-to-form").style.display = "flex";
@@ -1021,7 +1020,6 @@ function showDemoReport() {
 function backToForm() {
   document.getElementById("results").style.display = "none";
   document.getElementById("loading").style.display = "none";
-  document.getElementById("main-form").style.display = "";
   document.getElementById("demo-btn").style.display = "";
   document.getElementById("demo-btn-wrap").style.display = "block";
   document.getElementById("back-to-form").style.display = "none";
