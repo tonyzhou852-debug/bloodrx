@@ -5,23 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vitava Vitava Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap&font-display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --ink:#111827;--ink-2:#374151;--ink-3:#6b7280;--ink-4:#9ca3af;
-  --border:#e5e7eb;--surface:#fff;--bg:#f7f8f9;--bg-2:#f3f4f6;
-  --brand:#b91c1c;--brand-bg:#fff1f1;--brand-bd:#fecaca;
-  --green:#059669;--green-bg:#ecfdf5;--green-bd:#a7f3d0;
-  --amber:#b45309;--amber-bg:#fffbeb;--amber-bd:#fde68a;
-  --red:#dc2626;--red-bg:#fef2f2;--red-bd:#fecaca;
-  --blue:#2563eb;--blue-bg:#eff6ff;--blue-bd:#bfdbfe;
-  --radius-sm:6px;--radius:10px;--radius-lg:14px;
-  --shadow-sm:0 1px 2px rgba(0,0,0,.05);
-  --shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+:root {
+  --color-bg:#f4f6fa; --color-surface:#ffffff; --color-surface-2:#f0f2f7;
+  --color-ink:#0c1a3d; --color-ink-2:#1e2d56; --color-ink-3:#5a6a8a; --color-ink-4:#767068;
+  --color-border:#dde2ee; --color-border-2:#c8d0e4;
+  --color-brand:#0c1a3d; --color-brand-dark:#070f24;
+  --color-brand-bg:#eef1f8; --color-brand-bd:#b0bcda;
+  --color-gold:#c9980a; --color-gold-2:#e6b20e;
+  --color-gold-bg:#fdf8e8; --color-gold-bd:#f0d070;
+  --color-green:#059669; --color-green-2:#10b981;
+  --color-green-bg:#ecfdf5; --color-green-bd:#a7f3d0;
+  --color-amber:#b45309; --color-amber-bg:#fffbeb; --color-amber-bd:#fde68a;
+  --color-red:#b91c1c; --color-red-bg:#fef2f2; --color-red-bd:#fecaca;
+  /* Legacy aliases — keeps all existing code working */
+  --ink:var(--color-ink); --ink-2:var(--color-ink-2);
+  --ink-3:var(--color-ink-3); --ink-4:var(--color-ink-4);
+  --border:var(--color-border); --border-2:var(--color-border-2);
+  --surface:var(--color-surface); --bg:var(--color-bg);
+  --brand:var(--color-brand); --brand-dark:var(--color-brand-dark);
+  --brand-bg:var(--color-brand-bg); --brand-bd:var(--color-brand-bd);
+  --green:var(--color-green); --green-bg:var(--color-green-bg); --green-bd:var(--color-green-bd);
+  --amber:var(--color-amber); --amber-bg:var(--color-amber-bg); --amber-bd:var(--color-amber-bd);
+  --red:var(--color-red); --red-bg:var(--color-red-bg); --red-bd:var(--color-red-bd);
+  --radius-sm:10px; --radius:12px; --radius-lg:20px; --radius-xl:24px;
+  --shadow-sm:0 1px 3px rgba(12,26,61,.07),0 1px 2px rgba(12,26,61,.05);
+  --shadow:0 4px 20px rgba(12,26,61,.10),0 2px 8px rgba(12,26,61,.06);
+  --shadow-lg:0 20px 48px rgba(12,26,61,.16);
+  --sp-1:8px; --sp-2:16px; --sp-3:24px; --sp-4:32px; --sp-6:48px; --sp-8:64px;
 }
 html{scroll-behavior:smooth}
-body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6;color:var(--ink);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+body{font-family:'Space Grotesk',-apple-system,sans-serif;font-size:14px;line-height:1.6;color:var(--color-ink);background:var(--color-bg);-webkit-font-smoothing:antialiased}
 
 /* Nav */
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm)}
@@ -31,7 +47,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 .logo-icon svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .logo-text{font-size:15px;font-weight:700;color:var(--ink)}
 .logo-text em{color:var(--brand);font-style:normal}
-.admin-badge{font-size:10px;font-weight:600;letter-spacing:.05em;background:var(--brand-bg);color:var(--brand);border:1px solid var(--brand-bd);border-radius:4px;padding:2px 8px;text-transform:uppercase}
+.admin-badge{padding:3px 10px;background:rgba(201,152,10,.2);border:1px solid rgba(201,152,10,.4);border-radius:6px;font-size:11px;font-weight:700;color:#f0d070;letter-spacing:.05em}
 .topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .back-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;min-height:36px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:500;color:var(--ink-2);text-decoration:none;transition:border-color .15s,color .15s}
 .back-btn:hover{border-color:var(--brand);color:var(--brand)}
@@ -49,7 +65,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 
 /* Stats */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;box-shadow:var(--shadow-sm);cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s}
+.stat-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;box-shadow:var(--shadow-sm)}
 .stat-card:hover{border-color:var(--brand);box-shadow:0 4px 16px rgba(185,28,28,.1);transform:translateY(-1px)}
 .stat-card:active{transform:translateY(0)}
 .stat-label{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
@@ -61,7 +77,7 @@ body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.6
 
 /* Table card */
 .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden}
-.table-card-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg);flex-wrap:wrap;gap:8px}
+.table-card-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border);background:var(--color-bg);flex-wrap:wrap;gap:8px}
 .table-card-head h2{font-size:13px;font-weight:600;color:var(--ink)}
 .head-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .record-count{font-size:12px;font-weight:500;color:var(--ink-3);background:var(--bg-2);border:1px solid var(--border);border-radius:20px;padding:2px 10px}
@@ -124,12 +140,12 @@ tbody tr:hover td{background:#fafafa}
 
 /* Profile modal styles */
 .profile-summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px}
-.profile-stat{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;flex:1;min-width:100px;text-align:center}
+.profile-stat{background:var(--color-bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;flex:1;min-width:100px;text-align:center}
 .profile-stat-val{font-size:22px;font-weight:700;line-height:1}
 .profile-stat-lbl{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
 
 .visits-list{display:flex;flex-direction:column;gap:10px}
-.visit-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.visit-card{background:var(--color-bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
 .visit-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px}
 .visit-date{font-size:12px;color:var(--ink-3)}
 .visit-score{display:flex;align-items:center;gap:8px}
@@ -152,7 +168,7 @@ tbody tr:hover td{background:#fafafa}
 .visit-del-btn:disabled{opacity:.4;cursor:not-allowed}
 
 /* Chart */
-.sparkline-wrap{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px}
+.sparkline-wrap{background:var(--color-bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px}
 .sparkline-title{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
 
 /* Download / delete panel */
@@ -613,7 +629,7 @@ function openProfile(patientKey) {
       <div class="profile-stat"><div class="profile-stat-val">${visits.length}</div><div class="profile-stat-lbl">${AT.totalVisits}</div></div>
       <div class="profile-stat"><div class="profile-stat-val">${diff>0?'↑ +'+diff:diff<0?'↓ '+diff:'→'}</div><div class="profile-stat-lbl">${AT.progress}</div></div>
     </div>
-    ${progressMsg ? `<div style="font-size:13px;color:var(--ink-3);margin-bottom:14px;padding:10px 14px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border)">${progressMsg}</div>` : ''}
+    ${progressMsg ? `<div style="font-size:13px;color:var(--ink-3);margin-bottom:14px;padding:10px 14px;background:var(--color-bg);border-radius:var(--radius);border:1px solid var(--border)">${progressMsg}</div>` : ''}
     ${scores.length >= 2 ? `<div class="sparkline-wrap"><div class="sparkline-title">${AT.vhsOverTime}</div>${makeSVGSparkline(visits)}</div>` : ''}
     <div class="visits-list" id="visits-list-${esc(patientKey.replace(/\s/g,'_'))}">
       ${[...visits].reverse().map((v, i) => renderVisitCard(v, visits.length - i, visits.length)).join('')}
