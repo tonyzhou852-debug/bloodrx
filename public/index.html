@@ -800,6 +800,22 @@ input[type=file] { display: none; }
 const TRANSLATIONS = {
   en: {
     pageTitle: 'Vitava Wellness Assessment',
+    patientHeading: 'Patient Information',
+    patientSub: 'Demographic and clinical context',
+    docsHeading: 'Documents & Reports',
+    docsSub: 'Upload one or more files in any format or language',
+    forWhom: 'For whom?',
+    manage: '+ Manage',
+    myself: 'Myself',
+    autoDetect: 'Auto-detect (recommended)',
+    nameHint: 'Any script accepted',
+    phoneHint: 'Optional — for follow-up',
+    namePh: 'Full name',
+    agePh: 'Years',
+    phonePh: 'e.g. +1 555 000 0000',
+    demoBtn: 'See a sample report →',
+    addMore: '+ Add more files',
+
     heroTitle: 'Know Your Health.<br><em>Before It Matters.</em>',
     heroSub: 'Submit health documents in any format or language to receive a comprehensive wellness assessment and Vitava Health Score.',
     formHeading: 'Vitava Wellness Assessment',
@@ -830,6 +846,22 @@ const TRANSLATIONS = {
   },
   'zh-CN': {
     pageTitle: 'Vitava健康评估',
+    patientHeading: '基本信息',
+    patientSub: '人口学与临床背景信息',
+    docsHeading: '文件与报告',
+    docsSub: '上传一个或多个任意格式或语言的文件',
+    forWhom: '为谁评估？',
+    manage: '+ 管理',
+    myself: '本人',
+    autoDetect: '自动识别（推荐）',
+    nameHint: '支持任何文字',
+    phoneHint: '选填 — 用于后续联系',
+    namePh: '姓名',
+    agePh: '岁',
+    phonePh: '例如 +86 138 0000 0000',
+    demoBtn: '查看示例报告 →',
+    addMore: '+ 添加更多文件',
+
     heroTitle: 'Vitava健康评分 &amp;<br><em>企业健康管理平台</em>',
     heroSub: '上传任意格式或语言的健康文档，获取全面的Vitava健康评分和wellness建议。',
     formHeading: 'Vitava健康评估',
@@ -860,6 +892,22 @@ const TRANSLATIONS = {
   },
   'zh-TW': {
     pageTitle: 'Vitava健康評估',
+    patientHeading: '基本資訊',
+    patientSub: '人口學與臨床背景資訊',
+    docsHeading: '文件與報告',
+    docsSub: '上傳一個或多個任意格式或語言的文件',
+    forWhom: '為誰評估？',
+    manage: '+ 管理',
+    myself: '本人',
+    autoDetect: '自動識別（推薦）',
+    nameHint: '支援任何文字',
+    phoneHint: '選填 — 用於後續聯繫',
+    namePh: '姓名',
+    agePh: '歲',
+    phonePh: '例如 +886 912 000 000',
+    demoBtn: '查看範例報告 →',
+    addMore: '+ 添加更多文件',
+
     heroTitle: 'Vitava健康評分 &amp;<br><em>企業健康管理平台</em>',
     heroSub: '上傳任意格式或語言的健康文件，獲得全面的Vitava健康評分和wellness建議。',
     formHeading: 'Vitava健康評估',
@@ -925,6 +973,21 @@ function applyLang(lang) {
   document.querySelectorAll('.disclaimer span').forEach(el => el.textContent = t.disclaimer);
   setText('nav-new-text', t.navNew);
   setText('nav-history-text', t.navHistory);
+  setText('patient-heading', t.patientHeading);
+  setText('patient-sub', t.patientSub);
+  set('docs-heading', t.docsHeading.replace('&','&amp;'));
+  setText('docs-sub', t.docsSub);
+  setText('label-for-whom', t.forWhom);
+  setText('manage-btn', t.manage);
+  setText('demo-btn-text', t.demoBtn);
+  setText('opt-autodetect', t.autoDetect);
+  setText('hint-name', t.nameHint);
+  setText('hint-phone', t.phoneHint);
+  setText('add-more-btn', t.addMore);
+  const _ph = (id,v)=>{const el=document.getElementById(id); if(el) el.placeholder=v;};
+  _ph('p-name', t.namePh); _ph('p-age', t.agePh); _ph('p-phone', t.phonePh);
+  const fSel = document.getElementById('family-select');
+  if (fSel && fSel.options.length && fSel.options[0].value==='self') fSel.options[0].text = t.myself;
 
   const gSel = document.getElementById('p-gender');
   if (gSel) {
@@ -1171,7 +1234,7 @@ setTimeout(_resetDemoState, 500);
         </div>
         <div>
           <h2 id="patient-heading">Patient Information</h2>
-          <p>Demographic and clinical context</p>
+          <p id="patient-sub">Demographic and clinical context</p>
         </div>
       </div>
       <div class="section-body">
@@ -1182,7 +1245,7 @@ setTimeout(_resetDemoState, 500);
           <label style="font-size:12px;font-weight:600;color:var(--ink-2);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;margin-top:8px" id="label-for-whom">For whom?</label>
           <div style="display:flex;flex-wrap:wrap;gap:6px;flex:1;align-items:center">
             <select id="family-select" onchange="onFamilySelect()" style="flex:1;min-width:160px;height:36px;min-height:36px"><option value="self">Myself</option></select>
-            <button type="button" onclick="openFamilyManager()" style="padding:6px 12px;height:36px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:inherit;color:var(--ink-3);cursor:pointer;white-space:nowrap">+ Manage</button>
+            <button type="button" onclick="openFamilyManager()" style="padding:6px 12px;height:36px;background:none;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;font-family:inherit;color:var(--ink-3);cursor:pointer;white-space:nowrap" id="manage-btn">+ Manage</button>
             
           </div>
         </div>
@@ -1191,7 +1254,7 @@ setTimeout(_resetDemoState, 500);
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
           <label for="report-lang" id="label-doclang">Document language</label>
           <select id="report-lang" name="report-lang">
-            <option value="auto">Auto-detect (recommended)</option>
+            <option value="auto" id="opt-autodetect">Auto-detect (recommended)</option>
             <option value="English">English</option>
             <option value="Arabic">Arabic / العربية</option>
             <option value="French">French / Français</option>
@@ -1223,12 +1286,12 @@ setTimeout(_resetDemoState, 500);
         <div class="grid-2 field-group">
           <div>
             <label class="field-label" for="p-name" id="label-name">Patient name</label>
-            <div class="field-hint">Any script accepted</div>
+            <div class="field-hint" id="hint-name">Any script accepted</div>
             <input type="text" id="p-name" name="p-name" dir="auto" placeholder="Full name" autocomplete="off" />
           </div>
           <div>
             <label class="field-label" for="p-phone" id="label-phone">Phone number</label>
-            <div class="field-hint">Optional — for follow-up</div>
+            <div class="field-hint" id="hint-phone">Optional — for follow-up</div>
             <input type="tel" id="p-phone" name="p-phone" placeholder="e.g. +1 555 000 0000" autocomplete="tel" />
           </div>
         </div>
@@ -1271,7 +1334,7 @@ setTimeout(_resetDemoState, 500);
         </div>
         <div>
           <h2 id="docs-heading">Documents &amp; Reports</h2>
-          <p>Upload one or more files in any format or language</p>
+          <p id="docs-sub">Upload one or more files in any format or language</p>
         </div>
       </div>
       <div class="section-body">
@@ -2576,7 +2639,8 @@ function updateFamilySelect() {
   const sel = document.getElementById('family-select');
   if (!sel) return;
   const current = sel.value;
-  sel.innerHTML = '<option value="self">Myself</option>' +
+  const _t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+  sel.innerHTML = '<option value="self">' + (_t.myself || 'Myself') + '</option>' +
     familyMembers.map(m => `<option value="${m.id}">${escHtml(m.name)} (${escHtml(m.relation)})</option>`).join('');
   if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
   onFamilySelect();
