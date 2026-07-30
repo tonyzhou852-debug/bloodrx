@@ -6,52 +6,86 @@
 <meta http-equiv="Cache-Control" content="no-store">
 <title>Vitava</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap&font-display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Serif+Display&family=Public+Sans:wght@300;400;500;600;700&display=swap&font-display=swap" rel="stylesheet">
 <style>
 /* ─── Reset & Tokens ───────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --ink:        #111827;
-  --ink-2:      #374151;
-  --ink-3:      #6b7280;
-  --ink-4:      #9ca3af;
-  --border:     #e5e7eb;
-  --border-2:   #d1d5db;
-  --surface:    #ffffff;
-  --bg:         #f7f8f9;
-  --bg-2:       #f3f4f6;
+  /* ── Midnight + Gold — bold, premium, memorable ── */
+  --color-bg:          #f4f6fa;
+  --color-surface:     #ffffff;
+  --color-surface-2:   #f0f2f7;
+  --color-surface-3:   #e4e7ef;
+  --color-ink:         #0c1a3d;
+  --color-ink-2:       #1e2d56;
+  --color-ink-3:       #5a6a8a;
+  --color-ink-4:       #8896b0;
+  --color-border:      #dde2ee;
+  --color-border-2:    #c8d0e4;
 
-  --brand:      #b91c1c;
-  --brand-dark: #991b1b;
-  --brand-bg:   #fff1f1;
-  --brand-bd:   #fecaca;
+  /* Brand: midnight navy — serious, authoritative */
+  --color-brand:       #0c1a3d;
+  --color-brand-dark:  #070f24;
+  --color-brand-bg:    #eef1f8;
+  --color-brand-bd:    #b0bcda;
 
-  --green:      #059669;
-  --green-bg:   #ecfdf5;
-  --green-bd:   #a7f3d0;
-  --amber:      #b45309;
-  --amber-bg:   #fffbeb;
-  --amber-bd:   #fde68a;
-  --red:        #dc2626;
-  --red-bg:     #fef2f2;
-  --red-bd:     #fecaca;
-  --blue:       #2563eb;
-  --blue-bg:    #eff6ff;
-  --blue-bd:    #bfdbfe;
-  --purple:     #7c3aed;
-  --purple-bg:  #f5f3ff;
-  --purple-bd:  #ddd6fe;
+  /* Gold accent — premium, warm, memorable */
+  --color-gold:        #c9980a;
+  --color-gold-2:      #e6b20e;
+  --color-gold-bg:     #fdf8e8;
+  --color-gold-bd:     #f0d070;
+  --color-gold-light:  #fef9ed;
 
-  --radius-sm:  6px;
-  --radius:     10px;
-  --radius-lg:  14px;
-  --radius-xl:  18px;
-  --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
-  --shadow:     0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+  /* Health semantics — unchanged */
+  --color-green:       #059669;
+  --color-green-text:  #0a7a54;
+  --color-green-bg:    #ecfdf5;
+  --color-green-bd:    #a7f3d0;
+  --color-green-2:     #10b981;
+  --color-amber:       #b45309;
+  --color-amber-text:  #8a5a09;
+  --color-amber-bg:    #fffbeb;
+  --color-amber-bd:    #fde68a;
+  --color-red:         #b91c1c;   /* WCAG AA 5.91:1 on red-bg */
+  --color-red-bg:      #fef2f2;
+  --color-red-bd:      #fecaca;
+  --color-blue:        #1d4ed8;
+  --color-blue-bg:     #eff6ff;
+  --color-blue-bd:     #bfdbfe;
+  --color-purple:      #7c3aed;
+  --color-purple-bg:   #f5f3ff;
+  --color-purple-bd:   #ddd6fe;
 
-  --t-fast: 150ms;
-  --t-mid:  250ms;
-  --ease-out: cubic-bezier(0,0,.2,1);
+  /* Hero */
+  --color-hero-bg:     #0c1a3d;
+  --color-hero-mid:    #0f2255;
+
+  /* Legacy aliases */
+  --ink: var(--color-ink); --ink-2: var(--color-ink-2);
+  --ink-3: var(--color-ink-3); --ink-4: var(--color-ink-4);
+  --border: var(--color-border); --border-2: var(--color-border-2);
+  --surface: var(--color-surface); --bg: var(--color-bg);
+  --bg-2: var(--color-surface-2);
+  --brand: var(--color-brand); --brand-dark: var(--color-brand-dark);
+  --brand-bg: var(--color-brand-bg); --brand-bd: var(--color-brand-bd);
+  --green: var(--color-green); --green-bg: var(--color-green-bg);
+  --green-bd: var(--color-green-bd); --green-2: var(--color-green-2);
+  --amber: var(--color-amber); --amber-bg: var(--color-amber-bg);
+  --amber-bd: var(--color-amber-bd);
+  --red: var(--color-red); --red-bg: var(--color-red-bg);
+  --red-bd: var(--color-red-bd);
+  --blue: var(--color-blue); --blue-bg: var(--color-blue-bg);
+  --blue-bd: var(--color-blue-bd);
+  --purple: var(--color-purple); --purple-bg: var(--color-purple-bg);
+  --purple-bd: var(--color-purple-bd);
+  --sp-1:8px; --sp-2:16px; --sp-3:24px; --sp-4:32px;
+  --sp-5:40px; --sp-6:48px; --sp-8:64px; --sp-10:80px;
+  --shadow-1: 0 1px 3px rgba(12,26,61,.07), 0 1px 2px rgba(12,26,61,.05);
+  --shadow-2: 0 4px 20px rgba(12,26,61,.10), 0 2px 8px rgba(12,26,61,.06);
+  --shadow-3: 0 20px 48px rgba(12,26,61,.16), 0 8px 20px rgba(12,26,61,.09);
+  --shadow-card: 0 8px 32px rgba(12,26,61,.14), 0 2px 8px rgba(12,26,61,.08);
+  --shadow-sm: var(--shadow-1); --shadow: var(--shadow-2); --shadow-lg: var(--shadow-3);
+  --radius-sm:10px; --radius:12px; --radius-lg:20px; --radius-xl:24px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -64,22 +98,12 @@
   padding: 8px 16px; border-radius: var(--radius-sm);
   font-size: 14px; font-weight: 500; z-index: 9999; text-decoration: none;
 }
-.skip-link:focus { top: 12px; }
+.skip-link:focus { top: 12px; outline: 4px solid #fff; outline-offset: 2px; }
 
 html { scroll-behavior: smooth; }
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 16px; line-height: 1.6;
-  color: var(--ink); background: var(--bg);
-  min-height: 100dvh; -webkit-font-smoothing: antialiased;
-}
+body { font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.75; color: var(--color-ink); background: var(--color-bg); min-height: 100dvh; -webkit-font-smoothing: antialiased; }
 
-.topbar {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 50;
-  box-shadow: var(--shadow-sm);
-}
+.topbar { background:rgba(255,255,255,.97); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border-bottom:1px solid var(--color-border); border-top:2px solid var(--color-gold); position:sticky; top:0; z-index:50; box-shadow:var(--shadow-1); }
 .topbar-inner {
   max-width: 1100px; margin: 0 auto;
   padding: 0 1.5rem; height: 60px;
@@ -125,48 +149,45 @@ body {
   background: var(--green); display: inline-block;
 }
 
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,152,10,.7), transparent);
+}
 .hero {
-  background: var(--ink);
-  padding: 48px 24px 44px; text-align: center;
+  background: linear-gradient(150deg, #0c1a3d 0%, #0f2255 55%, #091530 100%);
+  padding: 80px 24px 72px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 .hero-eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 11px; font-weight: 500; letter-spacing: .1em;
   text-transform: uppercase; color: #7fa8c4; margin-bottom: 18px;
 }
-.hero h1 {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(28px, 5vw, 38px); font-weight: 400;
-  line-height: 1.15; letter-spacing: -.01em;
-  margin-bottom: 12px; color: #fff;
-}
-.hero h1 em { color: #f4a99a; font-style: normal; }
-.hero-sub {
-  font-size: 16px; color: #8aafc9;
-  max-width: 500px; margin: 0 auto 28px; line-height: 1.65;
-}
+.hero h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: clamp(34px, 5vw, 58px); font-weight: 400; letter-spacing: -.01em; line-height: 1.1; color: #fff; margin-bottom: 20px; }
+.hero h1 em { color: #6ee7b7; font-style: italic; }
+.hero-sub { font-family: 'Public Sans', sans-serif; font-size: 18px; color: rgba(255,255,255,.78); max-width: 520px; margin: 0 auto 32px; line-height: 1.65; font-weight: 400; }
 .capability-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 500; color: #8aafc9;
-  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
-  border-radius: 20px; padding: 5px 13px;
-}
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 100px; background: rgba(255,255,255,.11); border: 1px solid rgba(255,255,255,.2); font-size: 14px; font-weight: 500; color: rgba(255,255,255,.88); }
 .chip svg { width: 12px; height: 12px; flex-shrink: 0; }
 
-.page { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.page { max-width: 860px; margin: 0 auto; padding: var(--sp-5) var(--sp-3) var(--sp-10); }
 
 .page-heading { margin-bottom: 1.75rem; }
 .page-heading h1 { font-size: 22px; font-weight: 700; letter-spacing: -.3px; color: var(--ink); }
 .page-heading p  { font-size: 14px; color: var(--ink-3); margin-top: 4px; }
 
 .section-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-gold);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4) var(--sp-4);
+  box-shadow: var(--shadow-card);
 }
 .section-header {
   padding: 1.1rem 1.5rem;
@@ -194,26 +215,15 @@ body {
 .field-group { margin-bottom: 1.1rem; }
 .field-group:last-child { margin-bottom: 0; }
 
-.field-label {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 600;
-  color: var(--ink-2); margin-bottom: 5px;
-  text-transform: uppercase; letter-spacing: .04em;
-}
+.field-label { font-family: 'Public Sans', 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--color-ink-2); margin-bottom: var(--sp-1); display: block; letter-spacing: .01em; }
 .field-hint { font-size: 12px; color: var(--ink-4); margin-bottom: 7px; line-height: 1.5; }
 
-input[type=text], input[type=number], select, textarea {
-  width: 100%; padding: 10px 12px; min-height: 44px;
-  border: 1px solid var(--border-2); border-radius: var(--radius-sm);
-  font-size: 15px; font-family: inherit; color: var(--ink);
-  background: var(--surface);
-  transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
-  box-shadow: var(--shadow-sm);
-  touch-action: manipulation;
-}
+input[type=text], input[type=number], select, input, select, textarea { background: #fff; border: 2px solid var(--color-border-2); color: var(--color-ink); border-radius: 10px; padding: 12px 16px; font-family: inherit; font-size: 16px; width: 100%; transition: border-color .15s, outline .15s; line-height: 1.4; min-height: 44px; }
 input:focus, select:focus, textarea:focus {
-  outline: none; border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(185,28,28,.12);
+  outline: 3px solid rgba(201,152,10,.5);
+  outline-offset: 2px;
+  border-color: var(--color-gold);
+  box-shadow: none;
 }
 textarea { resize: vertical; min-height: 80px; }
 select {
@@ -325,25 +335,15 @@ input[type=file] { display: none; }
 .consent-label a { color: var(--brand); }
 .consent-label a:hover { text-decoration: underline; }
 
-.analyze-btn {
-  width: 100%; padding: 14px; min-height: 52px;
-  background: var(--brand); color: #fff;
-  border: none; border-radius: var(--radius);
-  font-size: 16px; font-weight: 600; font-family: inherit;
-  cursor: pointer; margin-top: 0.75rem;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  letter-spacing: -.1px;
-  transition: background var(--t-fast) var(--ease-out), transform var(--t-fast);
-  touch-action: manipulation;
-}
-.analyze-btn:hover:not(:disabled) { background: var(--brand-dark); }
+.analyze-btn { width:100%; padding:17px 24px; background:var(--color-brand); color:#fff; border:none; border-radius:var(--radius); font-size:16px; font-weight:600; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:9px; transition:all .2s; letter-spacing:.02em; text-transform:uppercase; box-shadow:0 4px 16px rgba(12,26,61,.35); }
+.analyze-btn:hover:not(:disabled) { background:var(--color-brand-dark); transform:translateY(-1px); box-shadow:0 8px 24px rgba(12,26,61,.45); }
 .analyze-btn:active:not(:disabled) { transform: scale(0.98); }
 .analyze-btn:focus-visible { box-shadow: 0 0 0 3px rgba(185,28,28,.3); outline: none; }
 .analyze-btn:disabled { background: var(--ink-4); cursor: not-allowed; transform: none; }
 .analyze-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
-.demo-btn{display:inline-flex;align-items:center;gap:8px;margin:18px auto 0;padding:11px 22px;background:transparent;border:2px solid rgba(185,28,28,.35);border-radius:var(--radius-lg);font-size:14px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .2s}
-.demo-btn:hover{background:var(--brand-bg);border-color:var(--brand);transform:translateY(-1px)}
-.back-to-form{display:none;align-items:center;gap:6px;padding:6px 12px;background:var(--brand-bg);border:1px solid var(--brand-bd);border-radius:var(--radius-sm);font-size:12px;font-weight:600;font-family:inherit;color:var(--brand);cursor:pointer;transition:all .15s}
+.demo-btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 28px; background: rgba(255,255,255,.09); border: 1.5px solid rgba(255,255,255,.22); border-radius: var(--radius-xl); font-size: 15px; font-weight: 500; font-family: inherit; color: rgba(255,255,255,.88); cursor: pointer; transition: all .2s; }
+.demo-btn:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.4); transform: translateY(-1px); color: #fff; }
+.back-to-form { display: none; align-items: center; gap: 7px; padding: 7px 14px; background: var(--color-brand-bg); border: 1.5px solid var(--color-brand-bd); border-radius: 10px; font-size: 13px; font-weight: 600; font-family: inherit; color: var(--color-brand); cursor: pointer; transition: all .15s; }
 .back-to-form:hover{background:var(--brand);color:#fff}
 .demo-btn svg{flex-shrink:0;width:16px;height:16px}
 
@@ -555,12 +555,7 @@ input[type=file] { display: none; }
   border-radius: 6px; padding: 3px 9px; font-size: 11px; font-weight: 500;
 }
 
-.site-footer {
-  max-width: 860px; margin: 0 auto;
-  padding: 1.5rem; text-align: center;
-  font-size: 12px; color: var(--ink-4);
-  border-top: 1px solid var(--border); margin-top: 2rem;
-}
+.site-footer { text-align: center; padding: 2.5rem 1.5rem; font-size: 14px; color: var(--color-ink-3); border-top: 1px solid var(--color-border); background: var(--color-surface); }
 .site-footer a { color: var(--ink-3); text-decoration: none; }
 .site-footer a:hover { color: var(--brand); }
 
@@ -804,7 +799,7 @@ input[type=file] { display: none; }
 const TRANSLATIONS = {
   en: {
     pageTitle: 'Vitava Wellness Assessment',
-    heroTitle: 'Vitava Health Score &amp;<br><em>Wellness Assessment Platform</em>',
+    heroTitle: 'Know Your Health.<br><em>Before It Matters.</em>',
     heroSub: 'Submit health documents in any format or language to receive a comprehensive wellness assessment and Vitava Health Score.',
     formHeading: 'Vitava Wellness Assessment',
     formSub: 'Submit health documents in any format or language to receive a comprehensive Vitava Health Score and wellness recommendations.',
@@ -1128,7 +1123,7 @@ setTimeout(_resetDemoState, 500);
 <div class="hero" role="banner">
   
   <h1 id="hero-title">Vitava Health Score &amp;<br><em>Wellness Assessment Platform</em></h1>
-  <p class="hero-sub" id="hero-sub">Submit health documents in any format or language to receive a comprehensive wellness assessment and Vitava Health Score.</p>
+  <p class="hero-sub" id="hero-sub">Upload your health documents. Get a clear, personalised assessment — in minutes.</p>
   <div class="capability-chips" role="list" aria-label="Supported capabilities">
     <span class="chip" role="listitem">
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 2a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H4zm1 3h6v1H5V5zm0 3h6v1H5V8zm0 3h4v1H5v-1z"/></svg>
@@ -1159,7 +1154,7 @@ setTimeout(_resetDemoState, 500);
     <span id="demo-btn-text">See a sample report →</span>
   </button>
 </div>
-<main class="page" id="main-form">
+<main class="page animate-in" id="main-form">
 
   <div class="page-heading" id="form-heading" style="display:block">
     <h1 id="form-heading-h1">Vitava Wellness Assessment</h1>
@@ -1858,6 +1853,51 @@ function tryRenderPartial(text, p) {
   } catch(e) { /* not enough data yet */ }
 }
 
+
+/* ── DESIGN.md: Score Ring — the signature moment ── */
+function buildScoreRing(score) {
+  const sc = Math.round(score) || 0;
+  // Color follows DESIGN.md color semantics
+  const col = sc >= 80 ? '#0d9668' : sc >= 60 ? '#c07c10' : '#c8392b';
+  const bgCol = sc >= 80 ? '#edfaf4' : sc >= 60 ? '#fef8ec' : '#fef3f2';
+  const bdCol = sc >= 80 ? '#86efcb' : sc >= 60 ? '#fad890' : '#fbb4ac';
+  const label = sc >= 90 ? 'Excellent' : sc >= 75 ? 'Good' : sc >= 60 ? 'Fair' : sc >= 40 ? 'Needs Attention' : 'Poor';
+  // Ring geometry: starts at 8 o'clock (200°), ends at 4 o'clock (340°)
+  // This is a 280° arc — like a speedometer / doctor chart range
+  // offset 200° = circ * 200/360; only 280/360 of circ is the active range
+  const R = 58, circ = 2 * Math.PI * R;
+  const arcFraction = 280 / 360; // 280° active arc
+  const activeDash = arcFraction * circ;
+  const filled = (sc / 100) * activeDash;
+  const empty = circ - filled;
+  const offset = -(200 / 360) * circ; // start at 8 o'clock
+
+  return '<div class="score-ring-wrap">'
+    + '<svg width="160" height="160" viewBox="0 0 160 160" aria-label="Health score ' + sc + ' out of 100">'
+    // Track (unfilled arc)
+    + '<circle cx="80" cy="80" r="' + R + '" fill="none" stroke="#f1f5f9" stroke-width="10"'
+    + ' stroke-dasharray="' + activeDash.toFixed(1) + ' ' + (circ - activeDash).toFixed(1) + '"'
+    + ' stroke-dashoffset="' + offset.toFixed(1) + '"'
+    + ' stroke-linecap="round"/>'
+    // Filled arc — animates in via CSS transition
+    + '<circle cx="80" cy="80" r="' + R + '" fill="none" stroke="' + col + '" stroke-width="10"'
+    + ' stroke-dasharray="' + filled.toFixed(1) + ' ' + empty.toFixed(1) + '"'
+    + ' stroke-dashoffset="' + offset.toFixed(1) + '"'
+    + ' stroke-linecap="round"'
+    + ' style="transition: stroke-dasharray 0.9s cubic-bezier(0.4,0,0.2,1)"/>'
+    // Score number — DM Serif Display, the typographic signature
+    + '<text x="80" y="72" text-anchor="middle" fill="' + col + '"'
+    + ' font-size="46" font-weight="400" font-family="DM Serif Display,Georgia,serif"'
+    + ' letter-spacing="-1">' + sc + '</text>'
+    + '<text x="80" y="92" text-anchor="middle" fill="#94a3b8"'
+    + ' font-size="12" font-weight="500" font-family="Space Grotesk,sans-serif"'
+    + ' letter-spacing="2">/ 100</text>'
+    + '</svg>'
+      + (function(){var tc=sc>=80?'#065f46':sc>=60?'#78350f':'#b91c1c';return '<span class="score-ring-label" style="background:'+bgCol+';color:'+tc+';border:1px solid '+bdCol+'">'+label+'</span>';}())
+    + '<p class="score-ring-title">Vitava Health Score</p>'
+    + '</div>';
+}
+
 function renderResults(r, p) {
   _rawResult = r;
   _rawPatient = p;
@@ -1885,7 +1925,7 @@ function renderResults(r, p) {
   const valIco = { normal:'\u2194', high:'\u2191', low:'\u2193', critical:'\u26a0' };
 
   const score = r.vhs_score || 0;
-  const scoreColor = score >= 90 ? '#059669' : score >= 75 ? '#2563eb' : score >= 60 ? '#b45309' : score >= 40 ? '#dc2626' : '#7f1d1d';
+  const scoreColor = score >= 80 ? '#0d9668' : score >= 60 ? '#c07c10' : '#c8392b';
 
   const riskColors = ['#059669','#65a30d','#b45309','#dc2626','#7f1d1d'];
   const riskHtml = r.risk_profile ? Object.entries(r.risk_profile).map(([key, val]) => `
@@ -1965,6 +2005,7 @@ function renderResults(r, p) {
     </div>
 
     ${sourcesHtml}${langHtml}
+    ${buildScoreRing(score)}
 
     <div class="patient-card" role="region" aria-label="Individual summary">
       <div class="patient-avatar" aria-hidden="true">${escHtml(initials)}</div>
