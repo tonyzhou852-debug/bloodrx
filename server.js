@@ -2,6 +2,7 @@
 const express    = require("express");
 const cors       = require("cors");
 const path       = require("path");
+const fs         = require("fs");
 const crypto     = require("crypto");
 const nodemailer = require("nodemailer");
 
@@ -441,6 +442,42 @@ app.post("/api/auth/login", globalLimit, authLimit, async (req, res) => {
   }
 });
 
+app.post("/api/wechat-login", globalLimit, async (req, res) => {
+  const { code } = req.body || {};
+  if (!code) return res.status(400).json({ error: "Missing code." });
+  try {
+    const params = new URLSearchParams({
+      appid: process.env.WECHAT_APPID,
+      secret: process.env.WECHAT_SECRET,
+      js_code: code,
+      grant_type: "authorization_code"
+    });
+    const wxRes = await new Promise((resolve, reject) => {
+      require("https").get(`https://api.weixin.qq.com/sns/jscode2session?${params}`, r => {
+        let data = "";
+        r.on("data", c => data += c);
+        r.on("end", () => resolve(JSON.parse(data)));
+      }).on("error", reject);
+    });
+    if (wxRes.errcode) {
+      console.error("WeChat login error:", wxRes.errmsg);
+      return res.status(401).json({ error: "WeChat auth failed." });
+    }
+    const { openid } = wxRes;
+    const db = await getDB();
+    let user = await db.collection("users").findOne({ wechatOpenId: openid });
+    if (!user) {
+      user = { id: crypto.randomUUID(), wechatOpenId: openid, username: `微信用户${openid.slice(-6)}`, createdAt: new Date() };
+      await db.collection("users").insertOne(user);
+    }
+    const token = jwt.sign({ id: user.id, username: user.username, wechatOpenId: openid }, JWT_SECRET, { expiresIn: "30d" });
+    res.json({ ok: true, token, user: { username: user.username } });
+  } catch (e) {
+    console.error("WeChat login error:", e.message);
+    res.status(500).json({ error: "Login failed." });
+  }
+});
+
 app.post("/api/auth/logout", (req, res) => {
   res.clearCookie("vhs_token", { httpOnly:true, secure:true, sameSite:"lax" });
   res.json({ ok:true });
@@ -453,6 +490,13 @@ app.get("/api/auth/me", requireAuth, (req, res) => {
 const MONTHLY_LIMIT = 20;
 
 async function checkMonthlyLimit(req, res, next) {
+  // Unlimited accounts (team/admin) skip the monthly cap
+  try {
+    const _db = await getDB();
+    const _u = await _db.collection("users").findOne({ id: req.user.id }, { projection: { unlimitedAnalysis: 1 } });
+    if (_u && _u.unlimitedAnalysis === true) return next();
+  } catch (e) {}
+
   try {
     const db = await getDB();
     const now = new Date();
@@ -481,8 +525,11 @@ app.get("/api/usage", requireAuth, globalLimit, async (req, res) => {
     const db = await getDB();
     const now = new Date();
     const monthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const user = await db.collection("users").findOne({ id: req.user.id }, { projection: { usageMonthly: 1 } });
+    const user = await db.collection("users").findOne({ id: req.user.id }, { projection: { usageMonthly: 1, unlimitedAnalysis: 1 } });
     const used = user?.usageMonthly?.[monthKey] || 0;
+    if (user && user.unlimitedAnalysis === true) {
+      return res.json({ used, limit: 999999, remaining: 999999, monthKey, unlimited: true });
+    }
     res.json({ used, limit: MONTHLY_LIMIT, remaining: Math.max(0, MONTHLY_LIMIT - used), monthKey });
   } catch(e) { res.status(500).json({ error: "Failed." }); }
 });
@@ -646,13 +693,33 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, checkMonthlyLi
 
     // Count images to adjust output limits
     const msgContent = req.body.messages?.[0]?.content || [];
+    const recordId = Date.now();
+    const savedFiles = [];
+    try {
+      const uploadDir = path.join(__dirname, "uploads", String(recordId));
+      const itemsToSave = Array.isArray(msgContent) ? msgContent.filter(p => (p.type === "image" || p.type === "document") && p.source?.data) : [];
+      if (itemsToSave.length) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+        itemsToSave.forEach((item, idx) => {
+          const mediaType = item.source.media_type || "application/octet-stream";
+          const ext = mediaType.split("/")[1]?.split("+")[0] || "bin";
+          const fileName = `file${idx + 1}.${ext}`;
+          const filePath = path.join(uploadDir, fileName);
+          fs.writeFileSync(filePath, Buffer.from(item.source.data, "base64"));
+          savedFiles.push({ fileName, mediaType, size: fs.statSync(filePath).size });
+        });
+      }
+    } catch (fileErr) {
+      console.error("File save error:", fileErr.message);
+    }
+
     const imageCount = Array.isArray(msgContent) ? msgContent.filter(p => p.type === 'image').length : 0;
     const maxTokens = 8000; // Always 8000 — meal plan needs the room
     const sizeNote = imageCount >= 2
       ? 'Multiple images: max 3 findings, all non-meal text under 80 chars, max 2 recommendations each.'
       : 'max 5 findings, all non-meal text fields under 120 chars, recommendations max 3 items each under 100 chars.';
 
-    const upstream = await fetch("https://api.anthropic.com/v1/messages", {
+    const upstream = await fetch("https://bloodrx.onrender.com/api/anthropic-proxy", {
       method:"POST",
       headers:{ "Content-Type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01" },
       signal: abortCtrl.signal,
@@ -748,7 +815,9 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, checkMonthlyLi
     const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
     const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
     const record = {
-      id: Date.now(), userId: req.user.id, submittedBy: req.user.username,
+      id: (typeof recordId !== "undefined" ? recordId : Date.now()), userId: req.user.id, submittedBy: req.user.username,
+      shareToken: crypto.randomUUID().replace(/-/g, ""),
+      filePaths: (typeof savedFiles !== "undefined" ? savedFiles : []), filesExpireAt: new Date(Date.now() + 180*24*60*60*1000).toISOString(),
       familyMemberId: sanitize(g("FamilyMemberId") || ""),
       familyMemberName: sanitize(g("FamilyMemberName") || ""),
       name: sanitize(g("Name")) || "Unknown",
@@ -791,6 +860,96 @@ app.get("/api/admin/patients", adminLimit, requireAdmin, async (req, res) => {
 });
 
 // ── Delete ALL records for a patient (bulk by ids) ─────────────
+// ── File download for user's own records ──────────────────────
+app.get("/api/records/:id/files", requireAuth, globalLimit, async (req, res) => {
+  try {
+    const db = await getDB();
+    const record = await db.collection("patients").findOne({ id: Number(req.params.id), userId: req.user.id });
+    if (!record) return res.status(404).json({ error: "Record not found." });
+    res.json({ files: record.filePaths || [], expiresAt: record.filesExpireAt || null });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to list files." });
+  }
+});
+
+app.get("/api/records/:id/files/:fileName", requireAuth, globalLimit, async (req, res) => {
+  try {
+    const db = await getDB();
+    const record = await db.collection("patients").findOne({ id: Number(req.params.id), userId: req.user.id });
+    if (!record) return res.status(404).json({ error: "Record not found." });
+    const safeFileName = path.basename(req.params.fileName);
+    const filePath = path.join(__dirname, "uploads", String(record.id), safeFileName);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found or expired." });
+    res.download(filePath, safeFileName);
+  } catch (e) {
+    res.status(500).json({ error: "Failed to download file." });
+  }
+});
+
+// ── Public shareable report page (for SMS links) ───────────────
+function escHtmlPub(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+app.get("/r/:id", globalLimit, async (req, res) => {
+  try {
+    const token = String(req.query.t || "");
+    if (!token || token.length < 16) return res.status(404).send("Report not found.");
+    const db = await getDB();
+    const record = await db.collection("patients").findOne({ id: Number(req.params.id), shareToken: token });
+    if (!record) return res.status(404).send("Report not found or link expired.");
+
+    const name = escHtmlPub(record.patientName || "用户");
+    const date = escHtmlPub(String(record.createdAt || "").slice(0, 10));
+    const summary = escHtmlPub(record.summary || record.overall_summary || record.vhs_label || "");
+    const findings = Array.isArray(record.findings) ? record.findings : [];
+    const recs = Array.isArray(record.recommendations) ? record.recommendations : [];
+
+    const findingsHtml = findings.map(f => {
+      const t = escHtmlPub(typeof f === "string" ? f : (f.title || ""));
+      const d = escHtmlPub(typeof f === "object" && f ? (f.description || "") : "");
+      return `<div class="item"><div class="dot"></div><div><div class="item-t">${t}</div>${d ? `<div class="item-d">${d}</div>` : ""}</div></div>`;
+    }).join("");
+
+    const recsHtml = recs.map((r, i) => {
+      const t = escHtmlPub(typeof r === "string" ? r : (r.text || r.title || ""));
+      return `<div class="item"><div class="num">${i + 1}</div><div class="item-t rec">${t}</div></div>`;
+    }).join("");
+
+    res.send(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vitava 健康报告</title>
+<style>
+  body{margin:0;font-family:-apple-system,'PingFang SC','Helvetica Neue',sans-serif;background:#F7FAF9;color:#102A2E;}
+  .wrap{max-width:640px;margin:0 auto;padding:24px 20px 48px;}
+  .brand{display:flex;align-items:center;gap:8px;margin-bottom:20px;}
+  .mark{width:16px;height:16px;border-radius:5px;background:#0E9384;}
+  .brand-t{font-size:17px;font-weight:700;}
+  .card{background:#fff;border-radius:16px;padding:22px;margin-bottom:14px;box-shadow:0 3px 12px rgba(16,42,46,.05);}
+  h1{font-size:20px;margin:0 0 4px;}
+  .meta{font-size:13px;color:#7C9296;margin-bottom:10px;}
+  .summary{font-size:14px;color:#33454A;line-height:1.75;}
+  h2{font-size:15px;margin:0 0 14px;padding-left:10px;border-left:4px solid #0E9384;}
+  .item{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start;}
+  .dot{width:8px;height:8px;border-radius:50%;background:#0E9384;margin-top:6px;flex-shrink:0;}
+  .num{width:22px;height:22px;border-radius:50%;background:#E7F5F2;color:#0E9384;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .item-t{font-size:14px;font-weight:600;}
+  .item-t.rec{font-weight:400;line-height:1.7;}
+  .item-d{font-size:13px;color:#7C9296;margin-top:2px;line-height:1.6;}
+  .foot{font-size:11px;color:#9DAFB2;text-align:center;line-height:1.8;margin-top:28px;}
+</style></head><body><div class="wrap">
+  <div class="brand"><div class="mark"></div><div class="brand-t">Vitava 健康</div></div>
+  <div class="card"><h1>${name} 的健康解读</h1><div class="meta">${date}</div>
+  ${summary ? `<div class="summary">${summary}</div>` : ""}</div>
+  ${findingsHtml ? `<div class="card"><h2>主要发现</h2>${findingsHtml}</div>` : ""}
+  ${recsHtml ? `<div class="card"><h2>健康建议</h2>${recsHtml}</div>` : ""}
+  <div class="foot">本报告仅用于健康教育与wellness管理，不构成医疗诊断或处方。<br>沪ICP备2026036977号-1 · 上海裔陇生物科技有限公司</div>
+</div></body></html>`);
+  } catch (e) {
+    console.error("Public report error:", e.message);
+    res.status(500).send("Failed to load report.");
+  }
+});
+
 app.post("/api/admin/patients/delete", adminLimit, requireAdmin, async (req, res) => {
   const { ids } = req.body||{};
   if (!ids||!Array.isArray(ids)||!ids.length||ids.length>100) return res.status(400).json({ error:"Invalid request." });
@@ -862,23 +1021,23 @@ app.post("/api/bot", requireAuth, globalLimit, botLimit, async (req, res) => {
   if (!key) return res.status(500).json({ error:"Configuration error." });
   const { messages, translate, system: customSystem } = req.body||{};
   if (!messages||!Array.isArray(messages)||!messages.length||messages.length>12) return res.status(400).json({ error:"Invalid request." });
-  const limit = translate ? 8000 : (customSystem ? 2000 : 1000);
+  const limit = translate ? 8000 : (customSystem ? 6000 : 1000);
   for (const m of messages) {
     if (!["user","assistant"].includes(m.role)||typeof m.content!=="string"||m.content.length>limit) return res.status(400).json({ error:"Invalid message." });
   }
   // Use custom system prompt for family health chat, otherwise use default bot system
-  const systemPrompt = (customSystem && typeof customSystem === 'string' && customSystem.length < 3000 && !translate)
+  const systemPrompt = (customSystem && typeof customSystem === 'string' && customSystem.length < 6000 && !translate)
     ? customSystem
     : translate ? "You are a professional medical translator. Return ONLY valid JSON with same keys." : BOT_SYSTEM;
-  const maxTok = translate ? 2000 : (customSystem ? 500 : 300);
+  const maxTok = translate ? 2000 : (customSystem ? 1000 : 300);
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const r = await fetch("https://bloodrx.onrender.com/api/anthropic-proxy", {
       method:"POST",
       headers:{ "Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01" },
       body:JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:maxTok, system:systemPrompt, messages:messages.slice(-8) }),
     });
     const data = await r.json();
-    if (!r.ok) return res.status(500).json({ error:"Bot unavailable." });
+    if (!r.ok) { console.error("Bot API error:", JSON.stringify(data)); return res.status(500).json({ error:"Bot unavailable." }); }
     res.json({ reply:data.content?.[0]?.text||"Sorry, I could not respond." });
   } catch(e) { res.status(500).json({ error:"Bot unavailable." }); }
 });
@@ -891,7 +1050,7 @@ app.post("/api/translate/public", globalLimit, makeRateLimiter(30, 60000, "Trans
   if (text.length > 6000) return res.status(400).json({ error:"Text too long." });
   if (targetLang.length > 50) return res.status(400).json({ error:"Invalid language." });
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const r = await fetch("https://bloodrx.onrender.com/api/anthropic-proxy", {
       method:"POST",
       headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01"},
       body:JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:6000,
@@ -913,7 +1072,7 @@ app.post("/api/translate", requireAuth, globalLimit, translateLimit, async (req,
   const safe = {};
   for (const k of allowed) { if (fields[k]) safe[k]=String(fields[k]).slice(0,2000); }
   try {
-    const r = await fetch("https://api.anthropic.com/v1/messages", {
+    const r = await fetch("https://bloodrx.onrender.com/api/anthropic-proxy", {
       method:"POST",
       headers:{ "Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01" },
       body:JSON.stringify({ model:"claude-haiku-4-5-20251001", max_tokens:1500, system:"Medical translator. Return ONLY valid JSON same keys. Keep marker names in English.", messages:[{ role:"user", content:"Translate all values to "+targetLang+". Return only valid JSON:\n"+JSON.stringify(safe) }] }),
