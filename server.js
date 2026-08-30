@@ -87,7 +87,7 @@ function getAliyunSmsClient() {
   return _aliyunSmsClient;
 }
 
-async function sendReportSms(rawPhone, patientName, reportUrl) {
+async function sendReportSms(rawPhone, patientName, reportId, shareToken) {
   const accessKeyId     = process.env.ALIYUN_ACCESS_KEY_ID;
   const accessKeySecret = process.env.ALIYUN_ACCESS_KEY_SECRET;
   const signName        = process.env.ALIYUN_SMS_SIGN;
@@ -109,7 +109,7 @@ async function sendReportSms(rawPhone, patientName, reportUrl) {
       phoneNumbers: phone,
       signName: signName,
       templateCode: templateCode,
-      templateParam: JSON.stringify({ name: (patientName || "Patient").slice(0, 20), link: reportUrl }),
+      templateParam: JSON.stringify({ name: (patientName || "用户").slice(0, 20), ReportID: String(reportId), shareToken: String(shareToken) }),
     });
     const resp = await client.sendSmsWithOptions(req, new AliyunTeaUtil.RuntimeOptions({}));
     const body = resp.body || {};
@@ -310,11 +310,15 @@ function adminAuth(req, res, next) {
 // ── Admin auth now uses requireAdmin (Google login + ADMIN_EMAILS allowlist) ──
 
 // ── JWT auth ───────────────────────────────────────────────────
+// Accepts either the website's cookie (vhs_token) or a Bearer token in the
+// Authorization header (used by the Mini Program, which can't rely on cookies).
 function requireAuth(req, res, next) {
-  const token = req.cookies?.vhs_token;
+  const authHeader = req.headers.authorization || "";
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+  const token = req.cookies?.vhs_token || bearerToken;
   if (!token) return res.status(401).json({ error: "Not authenticated." });
   try { req.user = jwt.verify(token, JWT_SECRET); next(); }
-  catch { res.clearCookie("vhs_token"); return res.status(401).json({ error: "Session expired." }); }
+  catch { if (req.cookies?.vhs_token) res.clearCookie("vhs_token"); return res.status(401).json({ error: "Session expired." }); }
 }
 
 // ── Admin authorization: logged-in user whose email is on the allowlist ──
@@ -903,12 +907,173 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, checkMonthlyLi
     };
     getDB().then(db => db.collection("patients").insertOne(record))
       .then(() => {
-        const reportUrl = `https://vitava.cn/r/${record.id}?t=${record.shareToken}`;
-        sendReportSms(req.body.patientPhone || record.phone, record.name, reportUrl)
+        sendReportSms(req.body.patientPhone || record.phone, record.name, record.id, record.shareToken)
           .catch(e => console.error("[sms] unexpected error:", e.message));
       })
       .catch(e => console.log("DB save error:", e.message));
   } catch(e) { console.log("DB parse error:", e.message, "| Raw length:", fullText.length); }
+});
+
+// ══════════════════════════════════════════════════════════════
+// ANALYSIS (non-streaming) — for clients that can't consume SSE,
+// e.g. the WeChat Mini Program. Same auth/rate-limit/quota rules
+// and same request shape ({messages:[...]}) as /api/analyze, but
+// waits for the full result and responds with one JSON object
+// instead of a stream. Uses a lower max_tokens than the website
+// as a modest cost control for this path.
+// ══════════════════════════════════════════════════════════════
+app.post("/api/analyze-sync", requireAuth, globalLimit, analysisLimit, checkMonthlyLimit, validateAnalysis, async (req, res) => {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return res.status(500).json({ error:"Server configuration error." });
+
+  let fullText = "";
+  const msgContent = req.body.messages?.[0]?.content || [];
+  const recordId = Date.now();
+  const savedFiles = [];
+  try {
+    const uploadDir = path.join(__dirname, "uploads", String(recordId));
+    const itemsToSave = Array.isArray(msgContent) ? msgContent.filter(p => (p.type === "image" || p.type === "document") && p.source?.data) : [];
+    if (itemsToSave.length) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+      itemsToSave.forEach((item, idx) => {
+        const mediaType = item.source.media_type || "application/octet-stream";
+        const ext = mediaType.split("/")[1]?.split("+")[0] || "bin";
+        const fileName = `file${idx + 1}.${ext}`;
+        const filePath = path.join(uploadDir, fileName);
+        fs.writeFileSync(filePath, Buffer.from(item.source.data, "base64"));
+        savedFiles.push({ fileName, mediaType, size: fs.statSync(filePath).size });
+      });
+    }
+  } catch (fileErr) {
+    console.error("File save error (sync):", fileErr.message);
+  }
+
+  const imageCount = Array.isArray(msgContent) ? msgContent.filter(p => p.type === 'image').length : 0;
+  const maxTokens = 6000; // lower than the website's 8000 - cost control for this path
+  const sizeNote = imageCount >= 2
+    ? 'Multiple images: max 3 findings, all non-meal text under 80 chars, max 2 recommendations each.'
+    : 'max 5 findings, all non-meal text fields under 120 chars, recommendations max 3 items each under 100 chars.';
+
+  try {
+    const abortCtrl = new AbortController();
+    const streamTimeout = setTimeout(() => abortCtrl.abort(), 120000);
+
+    const upstream = await fetch("https://bloodrx.onrender.com/api/anthropic-proxy", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01" },
+      signal: abortCtrl.signal,
+      body: JSON.stringify({
+        model:"claude-sonnet-4-6", max_tokens:maxTokens, stream:true,
+        system:`You are a health wellness analyst. Return ONLY a single complete valid JSON object. CRITICAL: All string values must use only basic ASCII characters — no special quotes, no newlines inside strings, no backslashes, no unicode escapes. Replace any special characters with spaces. STRICT LIMITS: ${sizeNote} The meal_plan.week field should have all 7 days with brief meal names only (under 60 chars each). Always close the JSON object completely. No medication names or prescriptions.`,
+        messages:req.body.messages,
+      }),
+    });
+
+    if (!upstream.ok) {
+      clearTimeout(streamTimeout);
+      const err = await upstream.json().catch(()=>({}));
+      console.error("Anthropic API error (sync):", upstream.status, err);
+      return res.status(502).json({ error:"Analysis service error. Please try again." });
+    }
+
+    const reader = upstream.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+
+    while (true) {
+      let chunk;
+      try {
+        chunk = await reader.read();
+      } catch(readErr) {
+        console.error("Stream read error (sync):", readErr.message);
+        break;
+      }
+      if (chunk.done) break;
+
+      buf += decoder.decode(chunk.value, { stream:true });
+      const lines = buf.split("\n");
+      buf = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const raw = line.slice(5).trim();
+        if (raw === "[DONE]") continue;
+        try {
+          const ev = JSON.parse(raw);
+          if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") {
+            fullText += ev.delta.text;
+          }
+        } catch(e) { /* skip malformed SSE line */ }
+      }
+    }
+
+    clearTimeout(streamTimeout);
+
+    if (req._monthKey) {
+      getDB().then(db => db.collection("users").updateOne(
+        { id: req.user.id },
+        { $inc: { [`usageMonthly.${req._monthKey}`]: 1 } }
+      )).catch(() => {});
+    }
+  } catch(e) {
+    console.error("Analysis error (sync):", e.message);
+    return res.status(500).json({ error: e.name === "AbortError" ? "Analysis timed out. Please try again." : "Analysis failed: " + e.message });
+  }
+
+  if (!fullText) return res.status(500).json({ error: "Analysis produced no output. Please try again." });
+
+  try {
+    let cleaned = fullText.replace(/```json|```/g,"").trim();
+    cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+    cleaned = cleaned.replace(/\n/g, " ").replace(/\r/g, " ");
+    if (!cleaned.endsWith("}")) {
+      const lastComma = cleaned.lastIndexOf(",");
+      const lastBrace = cleaned.lastIndexOf("}");
+      if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace + 1);
+      else if (lastComma > 0) cleaned = cleaned.slice(0, lastComma) + "}";
+      else cleaned += "}";
+    }
+    const result = JSON.parse(cleaned);
+    const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
+    const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
+    const record = {
+      id: recordId, userId: req.user.id, submittedBy: req.user.username,
+      shareToken: crypto.randomUUID().replace(/-/g, ""),
+      filePaths: savedFiles, filesExpireAt: new Date(Date.now() + 180*24*60*60*1000).toISOString(),
+      familyMemberId: sanitize(g("FamilyMemberId") || ""),
+      familyMemberName: sanitize(g("FamilyMemberName") || ""),
+      name: sanitize(g("Name")) || "Unknown",
+      phone: sanitize(g("Phone")), age: sanitize(g("Age")), gender: sanitize(g("Gender")),
+      complaint: sanitize(g("Health concern")), notes: sanitize(g("Health notes")),
+      vhs_score: Math.min(100,Math.max(0,Number(result.vhs_score)||0)),
+      vhs_label: sanitize(result.vhs_label),
+      summary: sanitize(result.health_assessment),
+      key_health_concerns: sanitize(result.key_health_concerns),
+      detected_languages: sanitize(result.detected_languages),
+      risk_cardiovascular: Math.min(5,Math.max(0,Number(result.risk_profile?.cardiovascular?.score)||0)),
+      risk_metabolic:      Math.min(5,Math.max(0,Number(result.risk_profile?.metabolic?.score)||0)),
+      risk_liver:          Math.min(5,Math.max(0,Number(result.risk_profile?.liver?.score)||0)),
+      risk_kidney:         Math.min(5,Math.max(0,Number(result.risk_profile?.kidney?.score)||0)),
+      risk_inflammation:   Math.min(5,Math.max(0,Number(result.risk_profile?.inflammation?.score)||0)),
+      nutrition:    (result.nutrition_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
+      lifestyle:    (result.lifestyle_recommendations||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
+      supplements:  (result.nutritional_support||[]).map(s=>sanitize(s)).join(" | ").slice(0,500),
+      monitoring_plan: sanitize(result.monitoring_plan),
+      meal_plan: result.meal_plan || null,
+      ip: req.ip||"", created_at: new Date().toISOString(),
+    };
+    getDB().then(db => db.collection("patients").insertOne(record))
+      .then(() => {
+        sendReportSms(req.body.patientPhone || record.phone, record.name, record.id, record.shareToken)
+          .catch(e => console.error("[sms] unexpected error:", e.message));
+      })
+      .catch(e => console.log("DB save error (sync):", e.message));
+
+    return res.json({ ok:true, result, id: record.id, shareToken: record.shareToken });
+  } catch(e) {
+    console.log("DB parse error (sync):", e.message, "| Raw length:", fullText.length);
+    return res.status(500).json({ error: "Failed to parse analysis result. Please try again." });
+  }
 });
 
 // ══════════════════════════════════════════════════════════════
