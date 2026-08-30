@@ -5,6 +5,10 @@ const path       = require("path");
 const fs         = require("fs");
 const crypto     = require("crypto");
 const nodemailer = require("nodemailer");
+const AliyunSmsClient   = require("@alicloud/dysmsapi20170525").default;
+const AliyunOpenApi     = require("@alicloud/openapi-client");
+const { SendSmsRequest } = require("@alicloud/dysmsapi20170525/dist/models/SendSmsRequest");
+const AliyunTeaUtil     = require("@alicloud/tea-util");
 
 // ── Email sending via Resend (HTTPS, works on Render free tier) ──
 async function sendResetEmail(toEmail, resetUrl) {
@@ -62,6 +66,63 @@ function emailHtml(resetUrl) {
       <p style="color:#6b7280;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
     </div>`;
 }
+
+// ── SMS sending via Aliyun SMS (report link) ────────────────────
+function normalizeCnPhone(raw) {
+  let digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length === 13 && digits.startsWith("86")) digits = digits.slice(2);
+  if (digits.length === 11 && digits.startsWith("1")) return digits;
+  return null; // not a recognizable CN mobile number
+}
+
+let _aliyunSmsClient = null;
+function getAliyunSmsClient() {
+  if (_aliyunSmsClient) return _aliyunSmsClient;
+  const config = new AliyunOpenApi.Config({
+    accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID,
+    accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET,
+  });
+  config.endpoint = "dysmsapi.aliyuncs.com";
+  _aliyunSmsClient = new AliyunSmsClient(config);
+  return _aliyunSmsClient;
+}
+
+async function sendReportSms(rawPhone, patientName, reportUrl) {
+  const accessKeyId     = process.env.ALIYUN_ACCESS_KEY_ID;
+  const accessKeySecret = process.env.ALIYUN_ACCESS_KEY_SECRET;
+  const signName        = process.env.ALIYUN_SMS_SIGN;
+  const templateCode    = process.env.ALIYUN_SMS_TEMPLATE;
+  if (!accessKeyId || !accessKeySecret || !signName || !templateCode) {
+    console.warn("[sms] Aliyun SMS not configured (missing ALIYUN_* env vars) - skipping");
+    return;
+  }
+  const phone = normalizeCnPhone(rawPhone);
+  if (!phone) {
+    console.warn("[sms] No valid CN phone number to text - skipping");
+    return;
+  }
+  const masked = phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
+
+  try {
+    const client = getAliyunSmsClient();
+    const req = new SendSmsRequest({
+      phoneNumbers: phone,
+      signName: signName,
+      templateCode: templateCode,
+      templateParam: JSON.stringify({ name: (patientName || "Patient").slice(0, 20), link: reportUrl }),
+    });
+    const resp = await client.sendSmsWithOptions(req, new AliyunTeaUtil.RuntimeOptions({}));
+    const body = resp.body || {};
+    if (body.code !== "OK") {
+      console.error("[sms] Aliyun SMS failed for", masked, "-", body.code, body.message);
+    } else {
+      console.log("[sms] Report link sent to", masked, "- BizId:", body.bizId);
+    }
+  } catch (e) {
+    console.error("[sms] Aliyun SMS request error:", e.message);
+  }
+}
+
 const bcrypt     = require("bcryptjs");
 const jwt        = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -840,7 +901,13 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, checkMonthlyLi
       meal_plan: result.meal_plan || null,
       ip: req.ip||"", created_at: new Date().toISOString(),
     };
-    getDB().then(db => db.collection("patients").insertOne(record)).catch(e => console.log("DB save error:", e.message));
+    getDB().then(db => db.collection("patients").insertOne(record))
+      .then(() => {
+        const reportUrl = `https://vitava.cn/r/${record.id}?t=${record.shareToken}`;
+        sendReportSms(req.body.patientPhone || record.phone, record.name, reportUrl)
+          .catch(e => console.error("[sms] unexpected error:", e.message));
+      })
+      .catch(e => console.log("DB save error:", e.message));
   } catch(e) { console.log("DB parse error:", e.message, "| Raw length:", fullText.length); }
 });
 

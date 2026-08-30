@@ -1,0 +1,11 @@
+public/privacy.html
+public/terms.html
+.env
+.env.*
+*.swp
+node_modules/
+uploads/
+server.js.backup*
+server.js.pre_sms_backup
+server.js.orig_before_sms
+package-lock.json
