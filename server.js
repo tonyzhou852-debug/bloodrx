@@ -1147,8 +1147,22 @@ app.get("/r/:id", globalLimit, async (req, res) => {
 
     // Extra sections
     const monitoring = escHtmlPub(record.monitoring_plan || "");
-    const cvNote = escHtmlPub(record.cv_note || "");
-    const metNote = escHtmlPub(record.met_note || "");
+    const supplements = record.supplements ? record.supplements.split(" | ").filter(Boolean) : [];
+    const mealPlan = record.meal_plan || null;
+
+    // Risk scores
+    const risks = [
+      { label: "心血管", score: record.risk_cardiovascular || 0 },
+      { label: "代谢", score: record.risk_metabolic || 0 },
+      { label: "肝脏", score: record.risk_liver || 0 },
+      { label: "肾脏", score: record.risk_kidney || 0 },
+      { label: "炎症", score: record.risk_inflammation || 0 },
+    ].filter(r => r.score > 0);
+
+    // Patient info
+    const patAge = escHtmlPub(record.age || "");
+    const patGender = escHtmlPub(record.gender || "");
+    const patComplaint = escHtmlPub(record.complaint || "");
 
     const findingsHtml = findings.map(f => {
       const t = escHtmlPub(typeof f === "string" ? f : (f.title || ""));
@@ -1188,9 +1202,10 @@ app.get("/r/:id", globalLimit, async (req, res) => {
   ${summary ? `<div class="summary">${summary}</div>` : ""}</div>
   ${findingsHtml ? `<div class="card"><h2>主要发现</h2>${findingsHtml}</div>` : ""}
   ${recsHtml ? `<div class="card"><h2>健康建议</h2>${recsHtml}</div>` : ""}
+  ${supplements.length ? `<div class="card"><h2>营养补充建议</h2>${supplements.map(s=>`<div class="item"><div class="dot" style="background:#0E9384"></div><div class="item-t" style="font-weight:400;line-height:1.7">${escHtmlPub(s)}</div></div>`).join("")}</div>` : ""}
+  ${risks.length ? `<div class="card"><h2>风险评估</h2>${risks.map(r=>{const pct=Math.round(r.score/5*100);const col=r.score<=1?"#059669":r.score<=3?"#d97706":"#dc2626";return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>${r.label}</span><span style="color:${col};font-weight:600">${r.score}/5</span></div><div style="background:#f0f0f0;border-radius:4px;height:8px"><div style="width:${pct}%;background:${col};height:8px;border-radius:4px"></div></div></div>`;}).join("")}</div>` : ""}
   ${monitoring ? `<div class="card"><h2>复查计划</h2><p style="font-size:14px;color:#33454A;line-height:1.75">${monitoring}</p></div>` : ""}
-  ${cvNote ? `<div class="card"><h2>心血管风险</h2><p style="font-size:14px;color:#33454A;line-height:1.75">${cvNote}</p></div>` : ""}
-  ${metNote ? `<div class="card"><h2>代谢风险</h2><p style="font-size:14px;color:#33454A;line-height:1.75">${metNote}</p></div>` : ""}
+  ${mealPlan && mealPlan.week ? `<div class="card"><h2>饮食建议</h2><table style="width:100%;border-collapse:collapse;font-size:13px">${mealPlan.week.map(d=>`<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:8px 4px;color:#7C9296;width:40px">${escHtmlPub(d.day||"")}</td><td style="padding:8px 4px">${escHtmlPub(d.meals||d.summary||"")}</td></tr>`).join("")}</table></div>` : ""}
   <div class="foot">本报告仅用于健康教育与wellness管理，不构成医疗诊断或处方。<br>沪ICP备2026036977号-1 · 上海裔陇生物科技有限公司</div>
 </div></body></html>`);
   } catch (e) {
