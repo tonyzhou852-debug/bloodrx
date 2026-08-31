@@ -1131,10 +1131,24 @@ app.get("/r/:id", globalLimit, async (req, res) => {
     if (!record) return res.status(404).send("Report not found or link expired.");
 
     const name = escHtmlPub(record.patientName || "用户");
-    const date = escHtmlPub(String(record.createdAt || "").slice(0, 10));
-    const summary = escHtmlPub(record.summary || record.overall_summary || record.vhs_label || "");
-    const findings = Array.isArray(record.findings) ? record.findings : [];
-    const recs = Array.isArray(record.recommendations) ? record.recommendations : [];
+    const date = escHtmlPub(String(record.createdAt || record.created_at || "").slice(0, 10));
+    const summary = escHtmlPub(record.health_assessment || record.summary || record.overall_summary || "");
+
+    // Build findings from key_health_concerns
+    const rawFindings = Array.isArray(record.key_health_concerns) ? record.key_health_concerns : [];
+    const findings = rawFindings.map(f => typeof f === "string" ? { title: f, description: "" } : f);
+
+    // Build recommendations from lifestyle + nutrition
+    const lifestyle = Array.isArray(record.lifestyle_recommendations) ? record.lifestyle_recommendations :
+      (record.lifestyle ? record.lifestyle.split(" | ").filter(Boolean) : []);
+    const nutrition = Array.isArray(record.nutrition_recommendations) ? record.nutrition_recommendations :
+      (record.nutrition ? record.nutrition.split(" | ").filter(Boolean) : []);
+    const recs = [...lifestyle, ...nutrition];
+
+    // Extra sections
+    const monitoring = escHtmlPub(record.monitoring_plan || "");
+    const cvNote = escHtmlPub(record.cv_note || "");
+    const metNote = escHtmlPub(record.met_note || "");
 
     const findingsHtml = findings.map(f => {
       const t = escHtmlPub(typeof f === "string" ? f : (f.title || ""));
@@ -1174,6 +1188,9 @@ app.get("/r/:id", globalLimit, async (req, res) => {
   ${summary ? `<div class="summary">${summary}</div>` : ""}</div>
   ${findingsHtml ? `<div class="card"><h2>主要发现</h2>${findingsHtml}</div>` : ""}
   ${recsHtml ? `<div class="card"><h2>健康建议</h2>${recsHtml}</div>` : ""}
+  ${monitoring ? `<div class="card"><h2>复查计划</h2><p style="font-size:14px;color:#33454A;line-height:1.75">${monitoring}</p></div>` : ""}
+  ${cvNote ? `<div class="card"><h2>心血管风险</h2><p style="font-size:14px;color:#33454A;line-height:1.75">${cvNote}</p></div>` : ""}
+  ${metNote ? `<div class="card"><h2>代谢风险</h2><p style="font-size:14px;color:#33454A;line-height:1.75">${metNote}</p></div>` : ""}
   <div class="foot">本报告仅用于健康教育与wellness管理，不构成医疗诊断或处方。<br>沪ICP备2026036977号-1 · 上海裔陇生物科技有限公司</div>
 </div></body></html>`);
   } catch (e) {
