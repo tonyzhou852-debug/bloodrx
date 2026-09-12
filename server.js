@@ -507,6 +507,89 @@ app.post("/api/auth/login", globalLimit, authLimit, async (req, res) => {
   }
 });
 
+
+// ── In-memory SMS code store (TTL 10 min) ─────────────────────
+const _smsCodeStore = new Map();
+function setSmsCode(phone, code) {
+  _smsCodeStore.set(phone, { code, expires: Date.now() + 10 * 60 * 1000 });
+  setTimeout(() => _smsCodeStore.delete(phone), 10 * 60 * 1000);
+}
+function verifySmsCode(phone, code) {
+  const entry = _smsCodeStore.get(phone);
+  if (!entry) return false;
+  if (Date.now() > entry.expires) { _smsCodeStore.delete(phone); return false; }
+  if (entry.code !== code) return false;
+  _smsCodeStore.delete(phone);
+  return true;
+}
+
+
+// ── Phone SMS Login ────────────────────────────────────────────
+app.post("/api/sms-login/send", globalLimit, authLimit, async (req, res) => {
+  const { phone } = req.body || {};
+  if (!phone || !/^\+?[0-9]{8,15}$/.test(phone.replace(/[\s\-]/g, ""))) {
+    return res.status(400).json({ error: "请输入有效的手机号码。" });
+  }
+  const normalizedPhone = phone.replace(/[\s\-]/g, "");
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  setSmsCode(normalizedPhone, code);
+
+  try {
+    const client = await getAliyunSmsClient();
+    const { SendSmsRequest } = require("@alicloud/dysmsapi20170525/dist/models/SendSmsRequest");
+    const AliyunTeaUtil = require("@alicloud/tea-util");
+    const req2 = new SendSmsRequest({
+      phoneNumbers: normalizedPhone,
+      signName: process.env.ALIYUN_SMS_SIGN,
+      templateCode: process.env.ALIYUN_SMS_LOGIN_TEMPLATE || "SMS_512160574",
+      templateParam: JSON.stringify({ code }),
+    });
+    const resp = await client.sendSmsWithOptions(req2, new AliyunTeaUtil.RuntimeOptions({}));
+    const body = resp.body || {};
+    if (body.code !== "OK") {
+      console.error("[sms-login] Send failed:", body.code, body.message);
+      return res.status(500).json({ error: "短信发送失败，请稍后重试。" });
+    }
+    console.log("[sms-login] Code sent to", normalizedPhone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2"));
+    res.json({ ok: true });
+  } catch (e) {
+    console.error("[sms-login] Error:", e.message);
+    res.status(500).json({ error: "短信发送失败，请稍后重试。" });
+  }
+});
+
+app.post("/api/sms-login/verify", globalLimit, authLimit, async (req, res) => {
+  const { phone, code } = req.body || {};
+  if (!phone || !code) return res.status(400).json({ error: "请输入手机号和验证码。" });
+  const normalizedPhone = phone.replace(/[\s\-]/g, "");
+  if (!verifySmsCode(normalizedPhone, String(code))) {
+    return res.status(401).json({ error: "验证码错误或已过期，请重新获取。" });
+  }
+  try {
+    const db = await getDB();
+    let user = await db.collection("users").findOne({ phone: normalizedPhone });
+    if (!user) {
+      // Create new account
+      user = {
+        id: Date.now(),
+        phone: normalizedPhone,
+        username: "用户" + normalizedPhone.slice(-4),
+        createdAt: new Date()
+      };
+      await db.collection("users").insertOne(user);
+    }
+    const token = jwt.sign(
+      { id: user.id, username: user.username, phone: normalizedPhone },
+      JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+    res.json({ ok: true, token, user: { username: user.username, phone: normalizedPhone } });
+  } catch (e) {
+    console.error("[sms-login] Verify error:", e.message);
+    res.status(500).json({ error: "登录失败，请重试。" });
+  }
+});
+
 app.post("/api/wechat-login", globalLimit, async (req, res) => {
   const { code } = req.body || {};
   if (!code) return res.status(400).json({ error: "Missing code." });
