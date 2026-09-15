@@ -1297,6 +1297,112 @@ app.get("/r/:id", globalLimit, async (req, res) => {
   }
 });
 
+// ── Mini Program non-streaming analyze endpoint ───────────────
+app.post("/api/mp/analyze", requireAuth, globalLimit, analysisLimit, checkMonthlyLimit, async (req, res) => {
+  const { messages, patientName, patientAge, patientGender, patientPhone, chiefComplaint, clinicalNotes, language } = req.body || {};
+  if (!messages || !Array.isArray(messages) || !messages.length)
+    return res.status(400).json({ error: "Invalid request." });
+
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) return res.status(500).json({ error: "API key not configured." });
+
+  // Increment monthly usage
+  if (req._monthKey) {
+    getDB().then(db => db.collection("users").updateOne(
+      { id: req.user.id },
+      { $inc: { [`usageMonthly.${req._monthKey}`]: 1 } }
+    )).catch(() => {});
+  }
+
+  try {
+    const upstream = await fetch("https://bloodrx.onrender.com/api/anthropic-proxy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6", max_tokens: 6000, stream: false,
+        system: `You are a health wellness analyst. Return ONLY a single complete valid JSON object. CRITICAL: All string values must use only basic ASCII characters. No special quotes, no newlines inside strings. No medication names or prescriptions.`,
+        messages,
+      }),
+    });
+
+    if (!upstream.ok) {
+      const err = await upstream.json().catch(() => ({}));
+      return res.status(502).json({ error: "Analysis service error. Please try again." });
+    }
+
+    const data = await upstream.json();
+    const fullText = data.content?.[0]?.text || "";
+    if (!fullText) return res.status(500).json({ error: "Empty response from AI." });
+
+    let result = {};
+    try {
+      const cleaned = fullText.replace(/```json|```/g, "").trim().replace(/\n/g, " ").replace(/\r/g, " ");
+      result = JSON.parse(cleaned);
+    } catch(e) {
+      return res.status(500).json({ error: "Failed to parse analysis result." });
+    }
+
+    const sanitize = s => (s || "").replace(/[<>&"']/g, "").trim();
+    const g = (k) => result[k] || result[k.toLowerCase()] || result[k.replace(/ /g, "_")] || "";
+
+    const record = {
+      id: Date.now(),
+      userId: req.user.id,
+      submittedBy: req.user.username,
+      name: sanitize(patientName || g("Name") || ""),
+      phone: sanitize(patientPhone || g("Phone") || ""),
+      age: sanitize(String(patientAge || g("Age") || "")),
+      gender: sanitize(patientGender === "男" ? "male" : patientGender === "女" ? "female" : patientGender || g("Gender") || ""),
+      complaint: sanitize(chiefComplaint || g("Health concern") || ""),
+      notes: sanitize(clinicalNotes || g("Health notes") || ""),
+      vhs_score: Math.min(100, Math.max(0, Number(result.vhs_score) || 0)),
+      vhs_label: sanitize(result.vhs_label || ""),
+      summary: sanitize(result.health_assessment || ""),
+      key_health_concerns: Array.isArray(result.key_health_concerns) ? result.key_health_concerns.map(s => sanitize(s)) : [],
+      risk_cardiovascular: Math.min(5, Math.max(0, Number(result.risk_profile?.cardiovascular?.score) || 0)),
+      risk_metabolic: Math.min(5, Math.max(0, Number(result.risk_profile?.metabolic?.score) || 0)),
+      risk_liver: Math.min(5, Math.max(0, Number(result.risk_profile?.liver?.score) || 0)),
+      risk_kidney: Math.min(5, Math.max(0, Number(result.risk_profile?.kidney?.score) || 0)),
+      risk_inflammation: Math.min(5, Math.max(0, Number(result.risk_profile?.inflammation?.score) || 0)),
+      nutrition: (result.nutrition_recommendations || []).map(s => sanitize(s)).join(" | ").slice(0, 500),
+      lifestyle: (result.lifestyle_recommendations || []).map(s => sanitize(s)).join(" | ").slice(0, 500),
+      supplements: (result.nutritional_support || []).map(s => sanitize(s)).join(" | ").slice(0, 500),
+      monitoring_plan: sanitize(result.monitoring_plan || ""),
+      meal_plan: result.meal_plan || null,
+      shareToken: require("crypto").randomUUID().replace(/-/g, ""),
+      filePaths: [],
+      filesExpireAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString(),
+      ip: req.ip || "",
+    };
+
+    getDB().then(async db => {
+      await db.collection("patients").insertOne(record);
+      sendReportSms(record.phone, record.name, record.id, record.shareToken);
+    }).catch(e => console.error("MP analyze save error:", e.message));
+
+    res.json(record);
+  } catch(e) {
+    console.error("MP analyze error:", e.message);
+    res.status(500).json({ error: "Analysis failed: " + e.message });
+  }
+});
+
+// ── Delete family member ───────────────────────────────────────
+app.delete("/api/family/members/:memberId", requireAuth, globalLimit, async (req, res) => {
+  const memberId = req.params.memberId;
+  try {
+    const db = await getDB();
+    const user = await db.collection("users").findOne({ id: req.user.id });
+    if (!user) return res.status(404).json({ error: "User not found." });
+    const members = (user.familyMembers || []).filter(m => String(m.id) !== String(memberId));
+    await db.collection("users").updateOne({ id: req.user.id }, { $set: { familyMembers: members } });
+    res.json({ ok: true, members });
+  } catch(e) {
+    res.status(500).json({ error: "Failed to delete member." });
+  }
+});
+
 app.post("/api/admin/patients/delete", adminLimit, requireAdmin, async (req, res) => {
   const { ids } = req.body||{};
   if (!ids||!Array.isArray(ids)||!ids.length||ids.length>100) return res.status(400).json({ error:"Invalid request." });
