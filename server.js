@@ -453,6 +453,30 @@ app.use(express.static(path.join(__dirname,"public"), {
 // AUTH ROUTES
 // ══════════════════════════════════════════════════════════════
 
+
+// ── Robust JSON repair ────────────────────────────────────────
+function repairJson(raw) {
+  let s = raw.replace(/```json|```/g, "").trim();
+  s = s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+  s = s.replace(/\n/g, " ").replace(/\r/g, " ");
+  // Try direct parse first
+  try { return JSON.parse(s); } catch(e) {}
+  // Find last complete closing brace
+  let depth = 0, lastComplete = -1;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '{') depth++;
+    else if (s[i] === '}') { depth--; if (depth === 0) lastComplete = i; }
+  }
+  if (lastComplete > 0) {
+    try { return JSON.parse(s.slice(0, lastComplete + 1)); } catch(e) {}
+  }
+  // Strip trailing incomplete key-value pair
+  const trimmed = s.replace(/,\s*"[^"]*"\s*:\s*[^,}]*$/, "").replace(/,\s*$/, "") + "}";
+  try { return JSON.parse(trimmed); } catch(e) {}
+  // Last resort - extract what we can
+  return null;
+}
+
 app.post("/api/auth/register", globalLimit, authLimit, async (req, res) => {
   const { username, email, password, rememberMe } = req.body || {};
   if (!username || !email || !password) return res.status(400).json({ error:"All fields required." });
@@ -946,20 +970,7 @@ app.post("/api/analyze", requireAuth, globalLimit, analysisLimit, checkMonthlyLi
   // Save to DB (non-blocking, after response ends)
   if (!fullText) return;
   try {
-    let cleaned = fullText.replace(/```json|```/g,"").trim();
-    // Strip control characters
-    cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
-    // Fix unescaped newlines inside JSON strings (common with medical docs)
-    cleaned = cleaned.replace(/\n/g, " ").replace(/\r/g, " ");
-    // Attempt to repair truncated JSON
-    if (!cleaned.endsWith("}")) {
-      const lastComma = cleaned.lastIndexOf(",");
-      const lastBrace = cleaned.lastIndexOf("}");
-      if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace + 1);
-      else if (lastComma > 0) cleaned = cleaned.slice(0, lastComma) + "}";
-      else cleaned += "}";
-    }
-    const result = JSON.parse(cleaned);
+    const result = repairJson(fullText);
     const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
     const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
     const record = {
