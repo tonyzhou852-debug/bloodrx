@@ -1117,17 +1117,7 @@ app.post("/api/analyze-sync", requireAuth, globalLimit, analysisLimit, checkMont
   if (!fullText) return res.status(500).json({ error: "Analysis produced no output. Please try again." });
 
   try {
-    let cleaned = fullText.replace(/```json|```/g,"").trim();
-    cleaned = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
-    cleaned = cleaned.replace(/\n/g, " ").replace(/\r/g, " ");
-    if (!cleaned.endsWith("}")) {
-      const lastComma = cleaned.lastIndexOf(",");
-      const lastBrace = cleaned.lastIndexOf("}");
-      if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace + 1);
-      else if (lastComma > 0) cleaned = cleaned.slice(0, lastComma) + "}";
-      else cleaned += "}";
-    }
-    const result = JSON.parse(cleaned);
+    const result = repairJson(fullText);
     const prompt = req.body.messages.map(m=>typeof m.content==="string"?m.content:Array.isArray(m.content)?m.content.filter(p=>p.type==="text").map(p=>p.text).join(" "):"").join(" ");
     const g = k => { const m=prompt.match(new RegExp(k+":\\s*(.+)")); return m?m[1]:""; };
     const record = {
