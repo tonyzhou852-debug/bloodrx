@@ -477,6 +477,62 @@ function repairJson(raw) {
   return null;
 }
 
+
+// ── Qwen (通义千问) API call ───────────────────────────────────
+async function callQwen(messages, maxTokens, system) {
+  const apiKey = process.env.QWEN_API_KEY;
+  if (!apiKey) throw new Error("QWEN_API_KEY not configured");
+  
+  const qwenMessages = [];
+  if (system) qwenMessages.push({ role: "system", content: system });
+  
+  // Convert Anthropic-style messages to Qwen format
+  for (const msg of messages) {
+    if (typeof msg.content === "string") {
+      qwenMessages.push({ role: msg.role, content: msg.content });
+    } else if (Array.isArray(msg.content)) {
+      // Handle multimodal content (images + text)
+      const parts = [];
+      for (const part of msg.content) {
+        if (part.type === "text") {
+          parts.push({ type: "text", text: part.text });
+        } else if (part.type === "image" && part.source?.data) {
+          parts.push({ 
+            type: "image_url", 
+            image_url: { url: `data:${part.source.media_type};base64,${part.source.data}` }
+          });
+        } else if (part.type === "document" && part.source?.data) {
+          // Qwen doesn't support PDF directly - convert to text instruction
+          parts.push({ type: "text", text: "[PDF document uploaded - please analyze the health report content]" });
+        }
+      }
+      qwenMessages.push({ role: msg.role, content: parts });
+    }
+  }
+
+  const resp = await fetch("https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: "qwen-vl-max",
+      messages: qwenMessages,
+      max_tokens: maxTokens || 6000,
+      stream: false
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(`Qwen API error: ${resp.status} ${JSON.stringify(err)}`);
+  }
+
+  const data = await resp.json();
+  return data.choices?.[0]?.message?.content || "";
+}
+
 app.post("/api/auth/register", globalLimit, authLimit, async (req, res) => {
   const { username, email, password, rememberMe } = req.body || {};
   if (!username || !email || !password) return res.status(400).json({ error:"All fields required." });
@@ -1316,23 +1372,15 @@ app.post("/api/mp/analyze", requireAuth, globalLimit, analysisLimit, checkMonthl
   }
 
   try {
-    const upstream = await fetch("https://bloodrx.onrender.com/api/anthropic-proxy", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6", max_tokens: 6000, stream: false,
-        system: `You are a health wellness analyst. Return ONLY a single complete valid JSON object. CRITICAL: All string values must use only basic ASCII characters. No special quotes, no newlines inside strings. No medication names or prescriptions.`,
-        messages,
-      }),
-    });
-
-    if (!upstream.ok) {
-      const err = await upstream.json().catch(() => ({}));
-      return res.status(502).json({ error: "Analysis service error. Please try again." });
+    const system = `You are a health wellness analyst. Return ONLY a single complete valid JSON object. CRITICAL: All string values must use only basic ASCII characters — no special quotes, no newlines inside strings, no backslashes, no unicode escapes. Replace any special characters with spaces. No medication names or prescriptions. Always close the JSON object completely.`;
+    
+    let fullText = "";
+    try {
+      fullText = await callQwen(messages, 6000, system);
+    } catch(qwenErr) {
+      console.error("Qwen API error:", qwenErr.message);
+      return res.status(502).json({ error: "Analysis service temporarily unavailable. Please try again." });
     }
-
-    const data = await upstream.json();
-    const fullText = data.content?.[0]?.text || "";
     if (!fullText) return res.status(500).json({ error: "Empty response from AI." });
 
     let result = {};
